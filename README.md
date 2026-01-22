@@ -1,7 +1,9 @@
 # QEWide-Tweaks
 An edit of Quality Enhanced Wide that addresses and fixes many of the bugs that that decompilation (and the ones it was based off of) brought.
 ## Original Credits:
-Electr0Gunner,
+BULL3TB0T
+
+Electr0Gunner
 
 Ultra Wide Expansion Team
 ## QEWide-Tweaks Credits:
