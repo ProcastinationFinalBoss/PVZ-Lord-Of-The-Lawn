@@ -70,6 +70,7 @@ PlantDefinition gPlantDefs[SeedType::NUM_SEED_TYPES] = {
     { SeedType::SEED_GOLD_MAGNET,       nullptr, ReanimationType::REANIM_GOLD_MAGNET,   27, 50,     5000,   PlantSubClass::SUBCLASS_NORMAL,     0,      _S("GOLD_MAGNET") },
     { SeedType::SEED_SPIKEROCK,         nullptr, ReanimationType::REANIM_SPIKEROCK,     27, 125,    5000,   PlantSubClass::SUBCLASS_NORMAL,     0,      _S("SPIKEROCK") },
     { SeedType::SEED_COBCANNON,         nullptr, ReanimationType::REANIM_COBCANNON,     16, 500,    5000,   PlantSubClass::SUBCLASS_NORMAL,     600,    _S("COB_CANNON") },
+    { SeedType::SEED_LASERBEAN,        nullptr, ReanimationType::REANIM_LASERBEAN,    0,  325,    750,    PlantSubClass::SUBCLASS_SHOOTER,    300,    _S("LASERBEAN") },
     { SeedType::SEED_IMITATER,          nullptr, ReanimationType::REANIM_IMITATER,      33, 0,      750,    PlantSubClass::SUBCLASS_NORMAL,     0,      _S("IMITATER") },
     { SeedType::SEED_EXPLODE_O_NUT,     nullptr, ReanimationType::REANIM_WALLNUT,       2,  0,      3000,   PlantSubClass::SUBCLASS_NORMAL,     0,      _S("EXPLODE_O_NUT") },
     { SeedType::SEED_GIANT_WALLNUT,     nullptr, ReanimationType::REANIM_WALLNUT,       2,  0,      3000,   PlantSubClass::SUBCLASS_NORMAL,     0,      _S("GIANT_WALLNUT") },
@@ -598,6 +599,7 @@ int Plant::GetDamageRangeFlags(PlantWeapon thePlantWeapon)
     case SeedType::SEED_PUFFSHROOM:
     case SeedType::SEED_SEASHROOM:
     case SeedType::SEED_FUMESHROOM:
+    case SeedType::SEED_LASERBEAN:
     case SeedType::SEED_GLOOMSHROOM:
     case SeedType::SEED_CHOMPER:
         return 9;
@@ -754,6 +756,11 @@ bool Plant::FindTargetAndFire(int theRow, PlantWeapon thePlantWeapon)
     {
         PlayBodyReanim("anim_shooting", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 20, 30.0f);
         mShootingCounter = 50;
+    }
+    else if (mSeedType == SeedType::SEED_LASERBEAN)
+    {
+        PlayBodyReanim("anim_shooting", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 20, 16.0f);
+        mShootingCounter = 95;
     }
     else if (aBodyReanim && aBodyReanim->TrackExists("anim_shooting"))
     {
@@ -920,11 +927,19 @@ void Plant::UpdateShooter()
     if (mLaunchCounter <= 0)
     {
         mLaunchCounter = mLaunchRate - Sexy::Rand(15);
-
+        if (mSeedType == SeedType::SEED_LASERBEAN)
+        {
+            int aPosX = mX + BOARD_WIDTH;
+            int aPosY = mY + mHeight / 2;
+            int aDamageRangeFlags = GetDamageRangeFlags(PlantWeapon::WEAPON_PRIMARY);
+            int aScaleFromZombies = ClampInt((mBoard->GetAllZombiesInRadius(mRow, aPosX, aPosY, BOARD_WIDTH, 0, aDamageRangeFlags) - 1), 0, 9);
+            mLaunchCounter -= aScaleFromZombies * 18.75;
+        }
         if (mSeedType == SeedType::SEED_THREEPEATER)
         {
             LaunchThreepeater();
         }
+
         else if (mSeedType == SeedType::SEED_STARFRUIT)
         {
             LaunchStarFruit();
@@ -2644,6 +2659,18 @@ void Plant::UpdateReanimColor()
     {
         aColorOverride = Color(255, 64, 64);
     }
+    else if (mSeedType == SeedType::SEED_LASERBEAN)
+    {
+        int aPosX = mX + BOARD_WIDTH;
+        int aPosY = mY + mHeight / 2;
+        int aDamageRangeFlags = GetDamageRangeFlags(PlantWeapon::WEAPON_PRIMARY);
+        int aScaleFromZombies = ClampInt((mBoard->GetAllZombiesInRadius(mRow, aPosX, aPosY, BOARD_WIDTH, 0, aDamageRangeFlags) - 1), 0, 9);
+        int aColorScaling = 255 + (-41 / 20 * (100 / 9 * (aScaleFromZombies - 0)));
+        aColorOverride = Color(
+            255,
+            aColorScaling, 
+            aColorScaling);
+    }
     else
     {
         aColorOverride = Color(255, 255, 255);
@@ -2744,6 +2771,13 @@ void Plant::UpdateReanim()
         aScaleY = 0.8f;
         aOffsetX += 12.0f;
         aOffsetY += 12.0f;
+    }
+    if (mSeedType == SeedType::SEED_LASERBEAN)
+    {
+        aScaleX += 0.0625f * mPlantCol;
+        aScaleY += 0.0625f * mPlantCol;
+        aOffsetX -= 3.0f * mPlantCol;
+        aOffsetY -= 5.0f * mPlantCol;
     }
     if (mState == PlantState::STATE_GRAVEBUSTER_EATING)
     {
@@ -3181,6 +3215,12 @@ void Plant::UpdateShooting()
     {
         int aRenderPosition = Board::MakeRenderOrder(RenderLayer::RENDER_LAYER_PARTICLE, mRow, 0);
         AddAttachedParticle(mX + 85, mY + 31, aRenderPosition, ParticleEffect::PARTICLE_FUMECLOUD);
+    }
+    if (mSeedType == SeedType::SEED_LASERBEAN && mShootingCounter == 3)
+    {
+        int aRenderPosition = Board::MakeRenderOrder(RenderLayer::RENDER_LAYER_PARTICLE, mRow, 0);
+        TodParticleSystem* aParticleSystem = AddAttachedParticle(mX + 57, mY + 35 - (1.8 * mPlantCol), aRenderPosition, ParticleEffect::PARTICLE_LASER);
+        aParticleSystem->OverrideColor("LaserGlow", Color(0, 0, 255));
     }
 
     if (mSeedType == SeedType::SEED_GLOOMSHROOM)
@@ -4448,6 +4488,16 @@ void Plant::Fire(Zombie* theTargetZombie, int theRow, PlantWeapon thePlantWeapon
     {
         DoRowAreaDamage(20, 2U);
         mApp->PlayFoley(FoleyType::FOLEY_FUME);
+        return;
+    }
+    if (mSeedType == SeedType::SEED_LASERBEAN)
+    {
+        int aScaleFromColumn = mPlantCol * 4;
+        DoRowAreaDamage(
+            35 +  aScaleFromColumn,
+            2U
+        );
+        mApp->PlayFoleyPitch(FoleyType::FOLEY_LASER, 20.0f);
         return;
     }
     if (mSeedType == SeedType::SEED_GLOOMSHROOM)

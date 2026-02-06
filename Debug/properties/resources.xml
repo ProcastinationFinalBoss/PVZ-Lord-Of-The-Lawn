@@ -599,6 +599,7 @@
 <Sound id="FINALFANFARE" path="finalfanfare" />
 <Sound id="CRAZYDAVESCREAM" path="crazydavescream" />
 <Sound id="CRAZYDAVESCREAM2" path="crazydavescream2" />
+<Sound id="LASER" path="laser" />
 
 </Resources>
 

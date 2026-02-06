@@ -124,9 +124,9 @@ LawnApp::LawnApp()
 	mAutoStartLoadingThread = false;
 	mDebugKeysEnabled = false;
 	mIsFastMode = false;
-	mVersion = "wide-v4.3";
+	mVersion = "v0.1";
 	mReconVersion = "QETweaks " + mVersion;
-	mTitle = _S("Plants vs. Zombies: QEWide-Tweaks " + mVersion);
+	mTitle = _S("Plants vs. Zombies, and the Hell that comes within " + mVersion);
 	mCustomCursorsEnabled = false;
 	mPlayerInfo = nullptr;
 	mLastLevelStats = new LevelStats();

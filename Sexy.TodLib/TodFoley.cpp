@@ -110,7 +110,8 @@ FoleyParams gLawnFoleyParamArray[(int)FoleyType::NUM_FOLEY] = {
 	{ FoleyType::FOLEY_DANCER,                  0.0f,   { &Sexy::SOUND_DANCER}, 6U },
 	{ FoleyType::FOLEY_FINAL_FANFARE,           0.0f,   { &Sexy::SOUND_FINALFANFARE}, 0U },
 	{ FoleyType::FOLEY_CRAZY_DAVE_SCREAM,       0.0f,   { &Sexy::SOUND_CRAZYDAVESCREAM}, 0U },
-	{ FoleyType::FOLEY_CRAZY_DAVE_SCREAM_2,     0.0f,   { &Sexy::SOUND_CRAZYDAVESCREAM2}, 0U }
+	{ FoleyType::FOLEY_CRAZY_DAVE_SCREAM_2,     0.0f,   { &Sexy::SOUND_CRAZYDAVESCREAM2}, 0U },
+	{ FoleyType::FOLEY_LASER,     10.0f,   { &Sexy::SOUND_LASER}, 0U }
 };
 
 FoleyInstance::FoleyInstance()

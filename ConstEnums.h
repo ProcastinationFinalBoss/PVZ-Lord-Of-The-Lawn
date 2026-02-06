@@ -735,6 +735,7 @@ enum ParticleEffect
     PARTICLE_STARBURST,
     PARTICLE_CREDITS_FOG,
     PARTICLE_PERSENT_PICK_UP_ARROW,
+    PARTICLE_LASER,
     NUM_PARTICLES
 };
 enum PlantPriority
@@ -972,6 +973,7 @@ enum ReanimationType
     REANIM_BUSH3_NIGHT,
     REANIM_BUSH4_NIGHT,
     REANIM_BUSH5_NIGHT,
+    REANIM_LASERBEAN,
     NUM_REANIMS
 };
 enum ReanimLoopType
@@ -1098,6 +1100,7 @@ enum SeedType
     ENUM_AUTO_VALUE(SEED_GOLD_MAGNET)                
     ENUM_AUTO_VALUE(SEED_SPIKEROCK)                  
     ENUM_AUTO_VALUE(SEED_COBCANNON)                  
+    ENUM_AUTO_VALUE(SEED_LASERBEAN)                  
     ENUM_AUTO_VALUE(SEED_IMITATER)                   
     ENUM_AUTO_VALUE(SEED_EXPLODE_O_NUT)              
     ENUM_AUTO_VALUE(SEED_GIANT_WALLNUT)              
