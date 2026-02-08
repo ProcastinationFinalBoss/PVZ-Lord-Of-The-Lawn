@@ -74,7 +74,10 @@ enum PlantState
     STATE_ZEN_GARDEN_HAPPY,
     STATE_MARIGOLD_ENDING,
     STATE_FLOWERPOT_INVULNERABLE,
-    STATE_LILYPAD_INVULNERABLE
+    STATE_LILYPAD_INVULNERABLE,
+    STATE_BONKCHOY_PUNCHING,
+    STATE_BONKCHOY_UPPERCUT,
+    STATE_BONKCHOY_PUNCH_LANDED,
 };
 
 enum PLANT_LAYER
@@ -188,7 +191,11 @@ public:
     bool                    mSquished;                      
     bool                    mIsAsleep;                      
     bool                    mIsOnBoard;                     
-    bool                    mHighlighted;                   
+    bool                    mHighlighted;     
+    float                   mBonkChoyPunchCD;
+    int						mBonkchoyUppercut;
+    int                     mBonkchoyFlipped;
+    int                     mFreeInt;
 
 public:
     Plant();
@@ -293,6 +300,9 @@ public:
     void                    GoldMagnetFindTargets();
     bool                    IsAGoldMagnetAboutToSuck();
     bool                    DrawMagnetItemsOnTop();
+    void                    UpdateBonkchoy();
+    void                    UpdateLaserBean();
+
 };
 
 float                       PlantDrawHeightOffset(Board* theBoard, Plant* thePlant, SeedType theSeedType, int theCol, int theRow);

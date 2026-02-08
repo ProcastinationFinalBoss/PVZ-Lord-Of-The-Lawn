@@ -413,6 +413,7 @@ public:
 	bool							IsValidCobCannonSpotHelper(int theGridX, int theGridY);
 	void							MouseDownCobcannonFire(int x, int y, int theClickCount);
 	void							KillAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, bool theBurn, int theDamageRangeFlags);
+	void							DamageAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, int theDamage, int theDamageRangeFlags, float theKnockbackAmount, int theKnockbackDuration, int theStunDuration, SeedType theSeedType);
 	int								GetAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, int theDamageRangeFlags);
 	/*inline*/ int					GetSeedBankExtraWidth();
 	bool							IsFlagWave(int theWaveNumber);

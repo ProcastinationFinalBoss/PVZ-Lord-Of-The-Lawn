@@ -118,7 +118,8 @@ public:
     Rect                            mZombieAttackRect;                          
     int                             mChilledCounter;                            
     int                             mButteredCounter;                           
-    int                             mIceTrapCounter;                            
+    int                             mIceTrapCounter;  
+    int                             mStunCounter;
     bool                            mMindControlled;                            
     bool                            mBlowingAway;                               
     bool                            mHasHead;                                   
@@ -161,8 +162,10 @@ public:
     int                             mFireballRow;                               
     bool                            mIsFireBall;                                
     ReanimationID                   mMoweredReanimID;                           
-    int                             mLastPortalX;                               
-
+    int                             mLastPortalX;           
+    int                             mKnockBackCounter;
+    int                             mKnockBackDirection;
+    float                           mKnockBackForce;
 public:
     Zombie();
     ~Zombie();
@@ -294,6 +297,7 @@ public:
     void                            DrawButter(Graphics* g, const ZombieDrawPosition& theDrawPos);
     bool                            IsImmobilizied();
     void                            ApplyButter();
+    void                            ApplyStun(int theStunDuration);
     float                           ZombieTargetLeadX(float theTime);
     void                            UpdateZombieImp();
     void                            SquishAllInSquare(int theX, int theY, ZombieAttackType theAttackType);
@@ -383,6 +387,7 @@ public:
     /*inline*/ void                 EnableDance(bool theEnableDance);
     void                            BungeeDropPlant();
     void                            RemoveButter();
+    void                            RemoveStun();
     void                            BalloonPropellerHatSpin(bool theSpinning);
     void                            DoDaisies();
     static /*inline*/ bool          ZombieTypeCanGoOnHighGround(ZombieType theZombieType);
@@ -393,6 +398,7 @@ public:
     void                            SetupReanimForLostArm(unsigned int theDamageFlags);
     bool                            IsSquashTarget(Plant* theExcept);
     static /*inline*/ bool			IsZombotany(ZombieType theZombieType);
+    void                            KnockBackZombie(int theDirection, float theForce, int theTime);
 };
 
 class ZombieDefinition

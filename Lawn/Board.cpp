@@ -6582,9 +6582,16 @@ void Board::DrawGameObjects(Graphics* g)
 			if (aPlant->mPlantHealth > 0)
 			{
 				barOffsetY += baseBarOffsetY;
+				int barOffsetX = (aPlant->mSeedType != SeedType::SEED_IMITATER && isPumpkin) || aPlant->mSeedType == SeedType::SEED_TALLNUT ? 10 : 0;
 				if (isPumpkin)
 					barOffsetY += barHeight + textOffsetY + baseTextOffsetY;
 				DrawHealthbar(g, rect, maxColor, aPlant->mPlantMaxHealth, baseColor, aPlant->mPlantHealth, barWidth, barHeight, (aPlant->mSeedType != SeedType::SEED_IMITATER && isPumpkin) || aPlant->mSeedType == SeedType::SEED_TALLNUT ? 10 : 0, barOffsetY, textColor, FONT_BRIANNETOD12, textOffsetY, Color::Black, textOutlineOffset, drawBarOutline);
+				textOffsetY += 20;
+				int barX = rect.mX + (rect.mWidth - barWidth) / 2 - barOffsetX;
+				int barY = rect.mY - barHeight - barOffsetY;
+				SexyString text = StrFormat(_S("%d"), aPlant->mFreeInt);
+				TodDrawString(g, text, barX + (barWidth / 2) + textOutlineOffset, barY - textOffsetY + textOutlineOffset, FONT_BRIANNETOD12, Color::Black, DS_ALIGN_CENTER);
+				TodDrawString(g, text, barX + (barWidth / 2), barY - textOffsetY, FONT_BRIANNETOD12, textColor, DS_ALIGN_CENTER);
 			}
 			break;
 		}
@@ -9728,6 +9735,35 @@ bool Board::PlantingRequirementsMet(SeedType theSeedType)
 	}
 }
 
+
+
+void Board::DamageAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, int theDamage, int theDamageRangeFlags, float theKnockbackAmount, int theKnockbackDuration, int theStunDuration, SeedType theSeedType)
+{
+	Zombie* aZombie = nullptr;
+	while (IterateZombies(aZombie))
+	{
+		if (aZombie->EffectedByDamage(theDamageRangeFlags))
+		{
+			Rect aZombieRect = aZombie->GetZombieRect();
+			int aRowDist = aZombie->mRow - theRow;
+			if (aZombie->mZombieType == ZombieType::ZOMBIE_BOSS)
+			{
+				aRowDist = 0;
+			}
+
+			if (aRowDist <= theRowRange && aRowDist >= -theRowRange && GetCircleRectOverlap(theX, theY, theRadius, aZombieRect))
+			{
+				if (theSeedType == SeedType::SEED_BONKCHOY)
+				{
+					aZombie->TakeDamage(theDamage, 0U);
+					aZombie->KnockBackZombie(1, theKnockbackAmount, theKnockbackDuration);
+					aZombie->ApplyStun(theStunDuration);
+					
+				}
+			}
+		}
+	}
+}
 void Board::KillAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, bool theBurn, int theDamageRangeFlags)
 {
 	Zombie* aZombie = nullptr;

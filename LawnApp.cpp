@@ -2531,6 +2531,10 @@ bool LawnApp::HasSeedType(SeedType theSeedType)
 	{
 		return mPlayerInfo->mPurchases[(int)StoreItem::STORE_ITEM_PLANT_TWINSUNFLOWER] > 0;
 	}
+	if (theSeedType == SeedType::SEED_BONKCHOY)
+	{
+		return mPlayerInfo->mPurchases[(int)StoreItem::STORE_ITEM_PLANT_BONKCHOY] > 0;
+	}
 	if (theSeedType == SeedType::SEED_GLOOMSHROOM)
 	{
 		return mPlayerInfo->mPurchases[(int)StoreItem::STORE_ITEM_PLANT_GLOOMSHROOM] > 0;

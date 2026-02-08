@@ -103,6 +103,7 @@ void Zombie::ZombieInitialize(int theRow, ZombieType theType, bool theVariant, Z
     mChilledCounter = 0;
     mIceTrapCounter = 0;
     mButteredCounter = 0;
+    mStunCounter = 0;
     mMindControlled = false;
     mBlowingAway = false;
     mHasHead = true;
@@ -153,6 +154,9 @@ void Zombie::ZombieInitialize(int theRow, ZombieType theType, bool theVariant, Z
     mIsFireBall = false;
     mMoweredReanimID = ReanimationID::REANIMATIONID_NULL;
     mLastPortalX = -1;
+    mKnockBackCounter = 0;
+    mKnockBackDirection = 1;
+    mKnockBackForce = 1.0f;
     for (int i = 0; i < MAX_ZOMBIE_FOLLOWERS; i++)
     {
         mFollowerZombieID[i] = ZombieID::ZOMBIEID_NULL;
@@ -3281,6 +3285,11 @@ void Zombie::DropHead(unsigned int theDamageFlags)
         mButteredCounter = 0;
         UpdateAnimSpeed();
     }
+    if (mStunCounter > 0)
+    {
+        mStunCounter = 0;
+        UpdateAnimSpeed();
+    }
 
     mHasHead = false;
     SetupReanimForLostHead();
@@ -4151,6 +4160,11 @@ void Zombie::Update()
             }
         }
 
+        if (mKnockBackCounter > 0) {
+            mPosX += mKnockBackForce * mKnockBackDirection;
+            mKnockBackCounter--;
+        }
+
         mX = (int)mPosX;
         mY = (int)mPosY;
 
@@ -4396,6 +4410,14 @@ void Zombie::UpdatePlaying()
         if (mButteredCounter == 0)
         {
             RemoveButter();
+        }
+    }
+    if (mStunCounter > 0)
+    {
+        mStunCounter--;
+        if (mStunCounter == 0)
+        {
+            RemoveStun();
         }
     }
 
@@ -6334,7 +6356,7 @@ void Zombie::CheckSquish(ZombieAttackType theAttackType)
 
 bool Zombie::IsImmobilizied()
 {
-    return mIceTrapCounter > 0 || mButteredCounter > 0;
+    return mIceTrapCounter > 0 || mButteredCounter > 0 || mStunCounter > 0;
 }
 
 bool Zombie::IsMovingAtChilledSpeed()
@@ -6849,6 +6871,11 @@ void Zombie::EatPlant(Plant* thePlant)
     }
 
     thePlant->mPlantHealth -= DAMAGE_PER_EAT;
+    if (thePlant->mSeedType == SeedType::SEED_BONKCHOY)
+    {
+        thePlant->mBonkChoyPunchCD -= 0.15f;
+        thePlant->mBonkChoyPunchCD = ClampFloat(thePlant->mBonkChoyPunchCD, 22.0f, 66.0f);
+    }
     thePlant->mRecentlyEatenCountdown = 50;
     if (mApp->IsIZombieLevel() && mJustGotShotCounter < -500)
     {
@@ -8238,6 +8265,36 @@ void Zombie::BalloonPropellerHatSpin(bool theSpinning)
     }
 }
 
+void Zombie::RemoveStun()
+{
+    if (mZombieType == ZombieType::ZOMBIE_BALLOON)
+    {
+        BalloonPropellerHatSpin(true);
+    }
+
+    if (Zombie::IsZombotany(mZombieType))
+    {
+        Reanimation* aHeadReanim = mApp->ReanimationTryToGet(mSpecialHeadReanimID);
+        if (aHeadReanim)
+        {
+            if (mZombieType == ZombieType::ZOMBIE_PEA_HEAD && aHeadReanim->IsAnimPlaying("anim_shooting"))
+            {
+                aHeadReanim->mAnimRate = 35.0f;
+            }
+            else if (mZombieType == ZombieType::ZOMBIE_GATLING_HEAD && aHeadReanim->IsAnimPlaying("anim_shooting"))
+            {
+                aHeadReanim->mAnimRate = 38.0f;
+            }
+            else
+            {
+                aHeadReanim->mAnimRate = 15.0f;
+            }
+        }
+    }
+
+    UpdateAnimSpeed();
+    StartZombieSound();
+}
 void Zombie::RemoveButter()
 {
     if (mZombieType == ZombieType::ZOMBIE_BALLOON)
@@ -8269,6 +8326,46 @@ void Zombie::RemoveButter()
     StartZombieSound();
 }
 
+void Zombie::ApplyStun(int theStunDuration)
+{
+    if (!mHasHead || !CanBeFrozen())
+        return;
+
+    if (IsTangleKelpTarget() || IsBobsledTeamWithSled() || IsFlying())
+        return;
+
+    mStunCounter = theStunDuration;
+    Zombie* aZombie = mBoard->ZombieTryToGet(mRelatedZombieID);
+    if (aZombie)
+    {
+        aZombie->mRelatedZombieID = ZombieID::ZOMBIEID_NULL;
+        mRelatedZombieID = ZombieID::ZOMBIEID_NULL;
+    }
+
+    if (mZombieType == ZombieType::ZOMBIE_POGO)
+    {
+        mAltitude = 0.0f;
+        if (mOnHighGround)
+        {
+            mAltitude += HIGH_GROUND_HEIGHT;
+        }
+    }
+    else if (mZombieType == ZombieType::ZOMBIE_BALLOON)
+    {
+        BalloonPropellerHatSpin(false);
+    }
+    else if (Zombie::IsZombotany(mZombieType))
+    {
+        Reanimation* aHeadReanim = mApp->ReanimationTryToGet(mSpecialHeadReanimID);
+        if (aHeadReanim)
+        {
+            aHeadReanim->mAnimRate = 0.0f;
+        }
+    }
+
+    UpdateAnimSpeed();
+    StopZombieSound();
+}
 void Zombie::ApplyButter()
 {
     if (!mHasHead || !CanBeFrozen())
@@ -8372,6 +8469,10 @@ void Zombie::MowDown()
     {
         mButteredCounter = 0;
     }
+    if (mStunCounter > 0)
+    {
+        mStunCounter = 0;
+    }
 
     DropShield(0U);
     DropHelm(0U);
@@ -8440,6 +8541,10 @@ void Zombie::ApplyBurn()
     if (mButteredCounter > 0)
     {
         mButteredCounter = 0;
+    }
+    if (mStunCounter > 0)
+    {
+        mStunCounter = 0;
     }
 
     AttachmentDetachCrossFadeParticleType(mAttachmentID, ParticleEffect::PARTICLE_ZAMBONI_SMOKE, nullptr);
@@ -8679,6 +8784,10 @@ void Zombie::PlayDeathAnim(unsigned int theDamageFlags)
     if (mButteredCounter > 0)
     {
         mButteredCounter = 0;
+    }
+    if (mStunCounter > 0)
+    {
+        mStunCounter = 0;
     }
     if (mYuckyFace)
     {
@@ -9698,7 +9807,7 @@ void Zombie::BossBungeeLeave()
     for (int i = 0; i < NUM_BOSS_BUNGEES; i++)
     {
         Zombie* aZombie = mBoard->ZombieTryToGet(mFollowerZombieID[i]);
-        if (aZombie && aZombie->mButteredCounter > 0)
+        if (aZombie && aZombie->mButteredCounter > 0 && aZombie->mStunCounter > 0)
         {
             aZombie->DieWithLoot();
         }
@@ -10435,4 +10544,16 @@ void Zombie::SetupWaterTrack(const char* theTrackName)
     aTrackInstance->mIgnoreExtraAdditiveColor = true;
     aTrackInstance->mIgnoreColorOverride = true;
     aTrackInstance->mIgnoreClipRect = true;
+}
+
+void Zombie::KnockBackZombie(int theDirection, float theForce, int theTime) {
+    if (!mHasHead || !CanBeFrozen())
+        return;
+
+    if (mZombieType == ZombieType::ZOMBIE_ZAMBONI || mZombieType == ZombieType::ZOMBIE_BOSS || IsTangleKelpTarget() || IsBobsledTeamWithSled() || IsFlying())
+        return;
+    mKnockBackCounter = theTime;
+    mKnockBackDirection = theDirection;
+    mKnockBackForce = theForce;
+
 }

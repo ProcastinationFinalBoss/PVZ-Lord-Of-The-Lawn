@@ -71,6 +71,7 @@ PlantDefinition gPlantDefs[SeedType::NUM_SEED_TYPES] = {
     { SeedType::SEED_SPIKEROCK,         nullptr, ReanimationType::REANIM_SPIKEROCK,     27, 125,    5000,   PlantSubClass::SUBCLASS_NORMAL,     0,      _S("SPIKEROCK") },
     { SeedType::SEED_COBCANNON,         nullptr, ReanimationType::REANIM_COBCANNON,     16, 500,    5000,   PlantSubClass::SUBCLASS_NORMAL,     600,    _S("COB_CANNON") },
     { SeedType::SEED_LASERBEAN,        nullptr, ReanimationType::REANIM_LASERBEAN,    0,  325,    750,    PlantSubClass::SUBCLASS_SHOOTER,    300,    _S("LASERBEAN") },
+    { SeedType::SEED_BONKCHOY,        nullptr, ReanimationType::REANIM_BONKCHOY,    0,  225,    750,    PlantSubClass::SUBCLASS_NORMAL,    0,    _S("BONKCHOY") },
     { SeedType::SEED_IMITATER,          nullptr, ReanimationType::REANIM_IMITATER,      33, 0,      750,    PlantSubClass::SUBCLASS_NORMAL,     0,      _S("IMITATER") },
     { SeedType::SEED_EXPLODE_O_NUT,     nullptr, ReanimationType::REANIM_WALLNUT,       2,  0,      3000,   PlantSubClass::SUBCLASS_NORMAL,     0,      _S("EXPLODE_O_NUT") },
     { SeedType::SEED_GIANT_WALLNUT,     nullptr, ReanimationType::REANIM_WALLNUT,       2,  0,      3000,   PlantSubClass::SUBCLASS_NORMAL,     0,      _S("GIANT_WALLNUT") },
@@ -386,6 +387,12 @@ void Plant::PlantInitialize(int theGridX, int theGridY, SeedType theSeedType, Se
     case SeedType::SEED_CHOMPER:
         mState = PlantState::STATE_READY;
         break;
+    case SeedType::SEED_BONKCHOY:
+        mPlantHealth = 450;
+        mState = PlantState::STATE_READY;
+        mBonkChoyPunchCD = 66.0f;
+        mBonkchoyFlipped = false;
+        break;
     case SeedType::SEED_PLANTERN:
     {
         mStateCountdown = 50;
@@ -622,7 +629,6 @@ bool Plant::IsOnHighGround()
 void Plant::SpikeRockTakeDamage()
 {
     Reanimation* aBodyReanim = mApp->ReanimationGet(mBodyReanimID);
-
     SpikeweedAttack();
 
     mPlantHealth -= 50;
@@ -1736,6 +1742,138 @@ void Plant::UpdateCactus()
     }
 }
 
+void Plant::UpdateLaserBean()
+{
+    int aPosX = mX + BOARD_WIDTH;
+    int aPosY = mY + mHeight / 2;
+    int aDamageRangeFlags = GetDamageRangeFlags(PlantWeapon::WEAPON_PRIMARY);
+    int aScaleFromZombies = ClampInt((mBoard->GetAllZombiesInRadius(mRow, aPosX, aPosY, BOARD_WIDTH, 0, aDamageRangeFlags) - 1), 0, 9);
+    mFreeInt = mLaunchRate;
+    mFreeInt -= aScaleFromZombies * 18.75;
+}
+
+void Plant::UpdateBonkchoy()
+{
+    Reanimation* aBodyReanim = mApp->ReanimationTryToGet(mBodyReanimID);
+    float aAnimProgress = aBodyReanim->mAnimTime;
+    int aFrameAtImpact = (int)(aBodyReanim->mFrameCount * 0.5f); // Adjust ratio as needed
+    int aCurrentFrame = (int)(aAnimProgress * aBodyReanim->mFrameCount);
+    mFreeInt = ceilf(mBonkChoyPunchCD);
+    Zombie* aZombie = FindTargetZombie(mRow, PlantWeapon::WEAPON_PRIMARY);
+    int aDamage;
+    if (aZombie)
+    {
+        if (aZombie->mShieldType == ShieldType::SHIELDTYPE_NONE && aZombie->mHelmType == HelmType::HELMTYPE_NONE)
+        {
+            aDamage = 20;
+            if
+                (
+                    (aZombie->mBodyHealth - aDamage <= aZombie->mBodyMaxHealth / 3 && aZombie->CanLoseBodyParts())
+                    ||
+                    (aZombie->mBodyHealth - aDamage <= 0 && !aZombie->CanLoseBodyParts())
+                    )
+            {
+                mBonkchoyUppercut = true;
+            }
+        }
+
+        else
+        {
+            aDamage = 15;
+
+        }
+
+    }
+    if (mState == PlantState::STATE_READY) {
+        if (aZombie)
+        {
+            mStateCountdown = mBonkChoyPunchCD;
+            if (aZombie->GetZombieRect().mX < GetPlantRect().mX)
+            {
+                mBonkchoyFlipped = true;
+            }
+            else
+            {
+                mBonkchoyFlipped = false;
+            }
+
+            if (!mBonkchoyUppercut)
+            {
+                PlayBodyReanim("anim_shooting", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 10,
+                    16.0f + (4.0f / 25 * (-25.0f / 11 * (ceilf(mBonkChoyPunchCD) - 66)))
+                );
+                mState = PlantState::STATE_BONKCHOY_PUNCHING;
+            }
+            else
+            {
+                PlayBodyReanim("anim_uppercut", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 10,
+                    16.0f + (4.0f / 25 * (-25.0f / 11 * (ceilf(mBonkChoyPunchCD) - 66)))
+                );
+                mState = PlantState::STATE_BONKCHOY_UPPERCUT;
+            }
+        }
+        else
+        {
+            if (mStateCountdown <= 0)
+            {
+                mBonkChoyPunchCD = 66.0f;
+            }
+        }
+    }
+    else if (mState == PlantState::STATE_BONKCHOY_PUNCHING)
+    {
+        if (aCurrentFrame >= 4)
+        {
+            if (aZombie)
+            {
+
+                aZombie->TakeDamage(aDamage, 0U);
+                aZombie->ApplyStun(
+                    8 + (1 / 25 * (-25.0f / 11 * (ceilf(mBonkChoyPunchCD) - 66)))
+                );
+                mApp->PlayFoley(FoleyType::FOLEY_BONK);
+                mBonkChoyPunchCD -= 1.25f;
+                mBonkChoyPunchCD = ClampFloat(mBonkChoyPunchCD, 22.0f, 66.0f);
+            }
+
+            mState = PlantState::STATE_BONKCHOY_PUNCH_LANDED;
+        }
+    }
+    else if (mState == PlantState::STATE_BONKCHOY_UPPERCUT)
+    {
+        if (aCurrentFrame >= 2)
+        {
+            if (aZombie)
+            {
+                aZombie->TakeDamage(aDamage, 0U);
+                mBonkChoyPunchCD -= 3.0f;
+                mBonkChoyPunchCD = ClampFloat(mBonkChoyPunchCD, 22.0f, 66.0f);
+            }
+            mApp->PlayFoleyPitch(FoleyType::FOLEY_BONK, 10.0f);
+            int aPosX = mX + mWidth / 2 + 40;
+            int aPosY = mY + mHeight / 2;
+            int aDamageRangeFlags = GetDamageRangeFlags(PlantWeapon::WEAPON_PRIMARY) | 32U;
+            mBoard->DamageAllZombiesInRadius(mRow, aPosX, aPosY, 80, 0, 30, aDamageRangeFlags, 3.0f, 10, 100, mSeedType);
+            mState = PlantState::STATE_BONKCHOY_PUNCH_LANDED;
+        }
+    }
+    else if (mState == PlantState::STATE_BONKCHOY_PUNCH_LANDED)
+    {
+        if (mStateCountdown <= 0)
+        {
+            if (!aZombie)
+            {
+                mBonkchoyFlipped = false;
+            }
+            mStateCountdown = mBonkchoyUppercut ? 1500 : 200;
+            mBonkchoyUppercut = false;
+            mState = PlantState::STATE_READY;
+            PlayIdleAnim(aBodyReanim->mDefinition->mFPS);
+        }
+
+    }
+}
+
 void Plant::UpdateChomper()
 {
     Reanimation* aBodyReanim = mApp->ReanimationTryToGet(mBodyReanimID);
@@ -2558,6 +2696,8 @@ void Plant::UpdateAbilities()
     else if (mSeedType == SeedType::SEED_SPIKEWEED || mSeedType == SeedType::SEED_SPIKEROCK)    UpdateSpikeweed();
     else if (mSeedType == SeedType::SEED_TANGLEKELP)                                            UpdateTanglekelp();
     else if (mSeedType == SeedType::SEED_SCAREDYSHROOM)                                         UpdateScaredyShroom();
+    else if (mSeedType == SeedType::SEED_BONKCHOY)                                              UpdateBonkchoy();
+    else if (mSeedType == SeedType::SEED_LASERBEAN)                                             UpdateLaserBean();
 
     if (mSubclass == PlantSubClass::SUBCLASS_SHOOTER)
     {
@@ -2658,6 +2798,14 @@ void Plant::UpdateReanimColor()
     else if (mSeedType == SeedType::SEED_EXPLODE_O_NUT)
     {
         aColorOverride = Color(255, 64, 64);
+    }
+    else if (mSeedType == SeedType::SEED_BONKCHOY)
+    {
+        aColorOverride = Color(
+            255,
+            255 - (191 / 100 * (-25 / 11 * (ceilf(mBonkChoyPunchCD) - 66))),
+            255 - (191 / 100 * (-25 / 11 * (ceilf(mBonkChoyPunchCD) - 66)))
+        );
     }
     else if (mSeedType == SeedType::SEED_LASERBEAN)
     {
@@ -2793,6 +2941,11 @@ void Plant::UpdateReanim()
     aBodyReanim->Update();
 
     if (mSeedType == SeedType::SEED_LEFTPEATER)
+    {
+        aOffsetX += 80.0f * aScaleX;
+        aScaleX *= -1.0f;
+    }
+    if (mSeedType == SeedType::SEED_BONKCHOY && mBonkchoyFlipped)
     {
         aOffsetX += 80.0f * aScaleX;
         aScaleX *= -1.0f;
@@ -4844,7 +4997,18 @@ Zombie* Plant::FindTargetZombie(int theRow, PlantWeapon thePlantWeapon)
         if (aZombie->EffectedByDamage(aDamageRangeFlags))
         {
             int aExtraRange = 0;
+            if (mSeedType == SeedType::SEED_BONKCHOY)
+            {
+                if (aZombie->mIsEating)
+                {
+                    aExtraRange = 50;
+                }
+                if (aZombie->mZombieType == ZombieType::ZOMBIE_GARGANTUAR || aZombie->mZombieType == ZombieType::ZOMBIE_REDEYE_GARGANTUAR)
+                {
+                    aExtraRange = -20;
+                }
 
+            }
             if (mSeedType == SeedType::SEED_CHOMPER)
             {
                 if (aZombie->mZombiePhase == ZombiePhase::PHASE_DIGGER_WALKING)
@@ -4912,7 +5076,19 @@ Zombie* Plant::FindTargetZombie(int theRow, PlantWeapon thePlantWeapon)
                     aWeight += 10000;  
                 }
             }
-
+            if (mSeedType == SeedType::SEED_BONKCHOY)
+            {
+                if (aZombie->IsDeadOrDying() || !aZombie->mHasHead)
+                {
+                    continue;
+                }
+                int aTotalHealth = aZombie->mBodyHealth + aZombie->mShieldHealth + aZombie->mHelmHealth;
+                aWeight -= aTotalHealth;
+                //if (aZombie->GetZombieRect().mX < GetPlantRect().mX)
+                //{
+                //    aWeight -= 100000;
+                //}
+            }
             if (aBestZombie == nullptr || aWeight > aHighestWeight)
             {
                 aHighestWeight = aWeight;
@@ -5177,6 +5353,7 @@ Rect Plant::GetPlantAttackRect(PlantWeapon thePlantWeapon)
     case SeedType::SEED_LEFTPEATER:     aRect = Rect(0,             mY,             mX,                 mHeight);               break;
     case SeedType::SEED_SQUASH:         aRect = Rect(mX + 20,       mY,             mWidth - 35,        mHeight);               break;
     case SeedType::SEED_CHOMPER:        aRect = Rect(mX + 80,       mY,             40,                 mHeight);               break;
+    case SeedType::SEED_BONKCHOY:        aRect = Rect(mX - 60,       mY,             (60 * 2) + 80, mHeight);               break;
     case SeedType::SEED_SPIKEWEED:
     case SeedType::SEED_SPIKEROCK:      aRect = Rect(mX + 20,       mY,             mWidth - 50,        mHeight);               break;
     case SeedType::SEED_POTATOMINE:     aRect = Rect(mX,            mY,             mWidth - 25,        mHeight);               break;
