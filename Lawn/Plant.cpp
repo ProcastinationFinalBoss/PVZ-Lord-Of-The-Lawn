@@ -72,6 +72,7 @@ PlantDefinition gPlantDefs[SeedType::NUM_SEED_TYPES] = {
     { SeedType::SEED_COBCANNON,         nullptr, ReanimationType::REANIM_COBCANNON,     16, 500,    5000,   PlantSubClass::SUBCLASS_NORMAL,     600,    _S("COB_CANNON") },
     { SeedType::SEED_LASERBEAN,        nullptr, ReanimationType::REANIM_LASERBEAN,    0,  325,    750,    PlantSubClass::SUBCLASS_SHOOTER,    300,    _S("LASERBEAN") },
     { SeedType::SEED_BONKCHOY,        nullptr, ReanimationType::REANIM_BONKCHOY,    0,  225,    750,    PlantSubClass::SUBCLASS_NORMAL,    0,    _S("BONKCHOY") },
+    { SeedType::SEED_CHILLPEAR,        nullptr, ReanimationType::REANIM_CHILLPEAR,    0,  50,    1000,    PlantSubClass::SUBCLASS_NORMAL,    0,    _S("CHILLPEAR") },
     { SeedType::SEED_IMITATER,          nullptr, ReanimationType::REANIM_IMITATER,      33, 0,      750,    PlantSubClass::SUBCLASS_NORMAL,     0,      _S("IMITATER") },
     { SeedType::SEED_EXPLODE_O_NUT,     nullptr, ReanimationType::REANIM_WALLNUT,       2,  0,      3000,   PlantSubClass::SUBCLASS_NORMAL,     0,      _S("EXPLODE_O_NUT") },
     { SeedType::SEED_GIANT_WALLNUT,     nullptr, ReanimationType::REANIM_WALLNUT,       2,  0,      3000,   PlantSubClass::SUBCLASS_NORMAL,     0,      _S("GIANT_WALLNUT") },
@@ -263,6 +264,9 @@ void Plant::PlantInitialize(int theGridX, int theGridY, SeedType theSeedType, Se
 
         break;
     }
+    case SeedType::SEED_CHILLPEAR:
+        mPlantHealth = 10;
+        break;
     case SeedType::SEED_WALLNUT:
         mPlantHealth = 4000;
         mBlinkCountdown = 1000 + Sexy::Rand(1000);
@@ -388,7 +392,6 @@ void Plant::PlantInitialize(int theGridX, int theGridY, SeedType theSeedType, Se
         mState = PlantState::STATE_READY;
         break;
     case SeedType::SEED_BONKCHOY:
-        mPlantHealth = 450;
         mState = PlantState::STATE_READY;
         mBonkChoyPunchCD = 66.0f;
         mBonkchoyFlipped = false;
@@ -1829,7 +1832,7 @@ void Plant::UpdateBonkchoy()
 
                 aZombie->TakeDamage(aDamage, 0U);
                 aZombie->ApplyStun(
-                    8 + (1 / 25 * (-25.0f / 11 * (ceilf(mBonkChoyPunchCD) - 66)))
+                    9 /*+ (1 / 25 * (-25.0f / 11 * (ceilf(mBonkChoyPunchCD) - 66)))*/
                 );
                 mApp->PlayFoley(FoleyType::FOLEY_BONK);
                 mBonkChoyPunchCD -= 1.25f;
@@ -1849,11 +1852,11 @@ void Plant::UpdateBonkchoy()
                 mBonkChoyPunchCD -= 3.0f;
                 mBonkChoyPunchCD = ClampFloat(mBonkChoyPunchCD, 22.0f, 66.0f);
             }
-            mApp->PlayFoleyPitch(FoleyType::FOLEY_BONK, 10.0f);
-            int aPosX = mX + mWidth / 2 + 40;
+            mApp->PlayFoleyPitch(FoleyType::FOLEY_BONK, 5.0f);
+            int aPosX = mX + mWidth / 2 + 50;
             int aPosY = mY + mHeight / 2;
             int aDamageRangeFlags = GetDamageRangeFlags(PlantWeapon::WEAPON_PRIMARY) | 32U;
-            mBoard->DamageAllZombiesInRadius(mRow, aPosX, aPosY, 80, 0, 30, aDamageRangeFlags, 3.0f, 10, 100, mSeedType);
+            mBoard->DamageAllZombiesInRadius(mRow, aPosX, aPosY, 100, 0, 30, aDamageRangeFlags, 3.0f, 10, 100, mSeedType);
             mState = PlantState::STATE_BONKCHOY_PUNCH_LANDED;
         }
     }

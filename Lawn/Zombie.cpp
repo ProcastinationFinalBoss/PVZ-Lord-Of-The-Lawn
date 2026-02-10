@@ -6890,6 +6890,38 @@ void Zombie::EatPlant(Plant* thePlant)
         mApp->PlaySample(SOUND_GULP);
 
         mBoard->mPlantsEaten++;
+        if (thePlant->mSeedType == SeedType::SEED_CHILLPEAR)
+        {
+            if (mZombieType != ZombieType::ZOMBIE_IMP)
+            {
+                DieWithLoot();
+                Zombie* aZombie = mBoard->AddZombie(ZOMBIE_IMP, 0, true);
+                aZombie->mPosX = mPosX;
+                aZombie->mPosY = mPosY;
+                aZombie->mRow = mRow;
+                aZombie->mRenderOrder = mRenderOrder;
+                TodParticleSystem* aParticle = mApp->AddTodParticle(mPosX + 60, mPosY + 60, mRenderOrder + 1, ParticleEffect::PARTICLE_MOWER_CLOUD);
+                aParticle = mApp->AddTodParticle(mPosX + 60, mPosY + 60, mRenderOrder + 2, ParticleEffect::PARTICLE_IMITATER_MORPH);
+                mApp->PlayFoley(FoleyType::FOLEY_IMP);
+                mApp->PlayFoley(FoleyType::FOLEY_FLOOP);
+                aZombie->ApplyChill(false);
+            }
+            else
+            {
+                int aPosX = mPosX + mWidth / 2;
+                int aPosY = mPosY + mHeight / 2;
+                //mBoard->KillAllZombiesInRadius(mRow, aPosX, aPosY, 115, 1, true, 63U);
+
+
+                mBoard->FreezeAllZombiesInRadius(mRow, aPosX + 200, aPosY, 200, 0, 100, 63U, 100, 1000, SeedType::SEED_NONE);
+                TodParticleSystem* aParticle = mApp->AddTodParticle(aPosX + 10, aPosY + 35, mRenderOrder + 1, ParticleEffect::PARTICLE_FUMECLOUD);
+                OverrideParticleScale(aParticle);                
+                //aParticle->OverrideColor(  Color(64, 64, 255) );
+
+                TakeDamage(1800, 10U);
+                mApp->PlayFoleyPitch(FoleyType::FOLEY_YUCK, 20.0f);
+            }
+        }
         thePlant->Die();
         mBoard->mChallenge->ZombieAtePlant(this, thePlant);
 
@@ -8334,7 +8366,14 @@ void Zombie::ApplyStun(int theStunDuration)
     if (IsTangleKelpTarget() || IsBobsledTeamWithSled() || IsFlying())
         return;
 
-    mStunCounter = theStunDuration;
+    if (mStunCounter <= 0)
+    {
+        mStunCounter = theStunDuration;
+    }
+    else
+    {
+        mStunCounter += theStunDuration;
+    }
     Zombie* aZombie = mBoard->ZombieTryToGet(mRelatedZombieID);
     if (aZombie)
     {

@@ -102,6 +102,15 @@ struct BungeeDropGrid
 	int								mGridArrayCount;
 };
 
+// In Board.h, add this structure near the top with other definitions:
+struct DebugAreaRect
+{
+	Rect mRect;
+	int mTimer;
+};
+
+
+
 class Board : public Widget, public ButtonListener
 {
 public:
@@ -235,6 +244,9 @@ public:
 	int								mGargantuarsKilled;
 	int								mCoinBankX;
 	int								mCoinBankY;
+	// In the Board class, replace the single freeze debug members with:
+	static const int MAX_DEBUG_AREA_RECTS = 5;
+	DebugAreaRect mAreaDebugRects[MAX_DEBUG_AREA_RECTS];
 
 public:
 	Board(LawnApp* theApp);
@@ -414,6 +426,7 @@ public:
 	void							MouseDownCobcannonFire(int x, int y, int theClickCount);
 	void							KillAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, bool theBurn, int theDamageRangeFlags);
 	void							DamageAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, int theDamage, int theDamageRangeFlags, float theKnockbackAmount, int theKnockbackDuration, int theStunDuration, SeedType theSeedType);
+	void							FreezeAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, int theDamage, int theDamageRangeFlags, int theFreezeDuration, int theSlowDuration, SeedType theSeedType);
 	int								GetAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, int theDamageRangeFlags);
 	/*inline*/ int					GetSeedBankExtraWidth();
 	bool							IsFlagWave(int theWaveNumber);

@@ -5685,7 +5685,17 @@ void Board::Update()
 	{
 		mApp->UpdateCrazyDave();
 	}
-
+	// In Board::Update(), replace the single timer decrement with:
+	if (!mPaused)
+	{
+		for (int i = 0; i < MAX_DEBUG_AREA_RECTS; i++)
+		{
+			if (mAreaDebugRects[i].mTimer > 0)
+			{
+				mAreaDebugRects[i].mTimer--;
+			}
+		}
+	}
 	if (mPaused)
 	{
 		mChallenge->Update();
@@ -5693,6 +5703,7 @@ void Board::Update()
 		mCursorObject->mVisible = false;
 		return;
 	}
+
 
 	bool aDisabled = !CanInteractWithBoardButtons() || mIgnoreMouseUp;
 	if (!mMenuButton->mBtnNoDraw)
@@ -7169,7 +7180,21 @@ void Board::DrawDebugObjectRects(Graphics* g)
 {
 	if (mDebugTextMode != DebugTextMode::DEBUG_TEXT_COLLISION)
 		return;
+	// Draw all freeze area rects with fade effect
+	for (int i = 0; i < MAX_DEBUG_AREA_RECTS; i++)
+	{
+		if (mAreaDebugRects[i].mTimer > 0)
+		{
+			// Fade out effect based on age
+			int anAlpha = ClampInt((mAreaDebugRects[i].mTimer * 255) / 120, 0, 255);
 
+			g->SetColor(Color(0, 150 - (i * 20), 255 - (i * 30), anAlpha)); // Gradually change color
+			g->DrawRect(mAreaDebugRects[i].mRect);
+
+			g->SetColor(Color(0, 150 - (i * 20), 255 - (i * 30), anAlpha / 3));
+			g->FillRect(mAreaDebugRects[i].mRect);
+		}
+	}
 	{
 		Plant* aPlant = nullptr;
 		while (IteratePlants(aPlant))
@@ -9735,6 +9760,51 @@ bool Board::PlantingRequirementsMet(SeedType theSeedType)
 	}
 }
 
+void Board::FreezeAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, int theDamage, int theDamageRangeFlags, int theFreezeDuration, int theSlowDuration, SeedType theSeedType)
+{
+	// Create freeze area rect
+	int freezeAreaLeft = theX - theRadius;
+	int freezeAreaTop = theY - (theRowRange * 80);
+	int freezeAreaWidth = theRadius * 2;
+	int freezeAreaHeight = 80 + ((theRowRange * 80) * 2);
+	Rect freezeAreaRect(freezeAreaLeft, freezeAreaTop, freezeAreaWidth, freezeAreaHeight);
+
+	// Add to debug rect array (shift old ones if full)
+	for (int i = MAX_DEBUG_AREA_RECTS - 1; i > 0; i--)
+	{
+		mAreaDebugRects[i] = mAreaDebugRects[i - 1];
+	}
+	mAreaDebugRects[0].mRect = freezeAreaRect;
+	mAreaDebugRects[0].mTimer = 300;
+
+	Zombie* aZombie = nullptr;
+	while (IterateZombies(aZombie))
+	{
+		if (aZombie->EffectedByDamage(theDamageRangeFlags))
+		{
+			Rect aZombieRect = aZombie->GetZombieRect();
+			int aRowDist = aZombie->mRow - theRow;
+			if (aZombie->mZombieType == ZombieType::ZOMBIE_BOSS)
+			{
+				aRowDist = 0;
+			}
+
+			if (aRowDist <= theRowRange && aRowDist >= -theRowRange && GetCircleRectOverlap(theX, theY, theRadius, aZombieRect))
+			{
+				aZombie->TakeDamage(theDamage, 0U);
+				aZombie->ApplyChill(false);
+				if (theFreezeDuration > 0)
+				{
+					aZombie->HitIceTrap();
+					aZombie->mIceTrapCounter = theFreezeDuration;
+
+				}
+				aZombie->mChilledCounter = theSlowDuration;
+			}
+		}
+	}
+}
+
 
 
 void Board::DamageAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, int theDamage, int theDamageRangeFlags, float theKnockbackAmount, int theKnockbackDuration, int theStunDuration, SeedType theSeedType)
@@ -9766,6 +9836,20 @@ void Board::DamageAllZombiesInRadius(int theRow, int theX, int theY, int theRadi
 }
 void Board::KillAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, bool theBurn, int theDamageRangeFlags)
 {
+	// Create freeze area rect
+	int freezeAreaLeft = theX - theRadius;
+	int freezeAreaTop = theY - (theRowRange * 80);
+	int freezeAreaWidth = theRadius * 2;
+	int freezeAreaHeight = 80 + ((theRowRange * 80) * 2);
+	Rect freezeAreaRect(freezeAreaLeft, freezeAreaTop, freezeAreaWidth, freezeAreaHeight);
+
+	// Add to debug rect array (shift old ones if full)
+	for (int i = MAX_DEBUG_AREA_RECTS - 1; i > 0; i--)
+	{
+		mAreaDebugRects[i] = mAreaDebugRects[i - 1];
+	}
+	mAreaDebugRects[0].mRect = freezeAreaRect;
+	mAreaDebugRects[0].mTimer = 300;
 	Zombie* aZombie = nullptr;
 	while (IterateZombies(aZombie))
 	{

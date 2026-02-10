@@ -27,7 +27,7 @@ static StoreItem gStoreItemSpots[NUM_STORE_PAGES][MAX_PAGE_SPOTS] =
       STORE_ITEM_PLANT_GATLINGPEA,  STORE_ITEM_PLANT_TWINSUNFLOWER, STORE_ITEM_PLANT_GLOOMSHROOM,   STORE_ITEM_PLANT_CATTAIL },
     { STORE_ITEM_PLANT_SPIKEROCK,   STORE_ITEM_PLANT_GOLD_MAGNET,   STORE_ITEM_PLANT_WINTERMELON,   STORE_ITEM_PLANT_COBCANNON,
       STORE_ITEM_PLANT_IMITATER,    STORE_ITEM_FIRSTAID,            STORE_ITEM_INVALID,             STORE_ITEM_INVALID },
-    { STORE_ITEM_PLANT_BONKCHOY,   STORE_ITEM_INVALID,   STORE_ITEM_INVALID,   STORE_ITEM_INVALID,
+    { STORE_ITEM_PLANT_BONKCHOY,    STORE_ITEM_PLANT_CHILLPEAR,   STORE_ITEM_INVALID,   STORE_ITEM_INVALID,
       STORE_ITEM_INVALID,    STORE_ITEM_INVALID,            STORE_ITEM_INVALID,             STORE_ITEM_INVALID },
     { STORE_ITEM_POTTED_MARIGOLD_1, STORE_ITEM_POTTED_MARIGOLD_2,   STORE_ITEM_POTTED_MARIGOLD_3,   STORE_ITEM_GOLD_WATERINGCAN,
       STORE_ITEM_FERTILIZER,        STORE_ITEM_BUG_SPRAY,           STORE_ITEM_PHONOGRAPH,          STORE_ITEM_GARDENING_GLOVE },
@@ -230,6 +230,10 @@ bool StoreScreen::IsItemUnavailable(StoreItem theStoreItem)
     */
 
     if (theStoreItem == STORE_ITEM_PLANT_BONKCHOY)
+    {
+        return mApp->IsTrialStageLocked() || (!mApp->HasFinishedAdventure() && mApp->mPlayerInfo->mLevel < 42);
+    }
+    if (theStoreItem == STORE_ITEM_PLANT_CHILLPEAR)
     {
         return mApp->IsTrialStageLocked() || (!mApp->HasFinishedAdventure() && mApp->mPlayerInfo->mLevel < 42);
     }
@@ -574,7 +578,8 @@ void StoreScreen::UpdateMouse()
                 case STORE_ITEM_TREE_FOOD:              aMessageIndex = 2031;                           break;
                 case STORE_ITEM_FIRSTAID:               aMessageIndex = 2033;                           break;
                 case STORE_ITEM_PVZ:                    aMessageIndex = 2034;                           break;
-                case STORE_ITEM_PLANT_BONKCHOY:                    aMessageIndex = 9000;                           break;
+                case STORE_ITEM_PLANT_BONKCHOY:                    aMessageIndex = 9001;                           break;
+                case STORE_ITEM_PLANT_CHILLPEAR:                    aMessageIndex = 9002;                           break;
                 default:                                TOD_ASSERT();                                   break;
                 }
                 if (mApp->mCrazyDaveMessageIndex != aMessageIndex)
@@ -861,6 +866,7 @@ int StoreScreen::GetItemCost(StoreItem theStoreItem)
     switch (theStoreItem)
     {
     case STORE_ITEM_PLANT_BONKCHOY:                   return 500;
+    case STORE_ITEM_PLANT_CHILLPEAR:                   return 500;
     case STORE_ITEM_PLANT_GATLINGPEA:                   return 500;
     case STORE_ITEM_PLANT_TWINSUNFLOWER:                return 500;
     case STORE_ITEM_PLANT_GLOOMSHROOM:                  return 750;
