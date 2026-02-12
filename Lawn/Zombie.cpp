@@ -120,6 +120,7 @@ void Zombie::ZombieInitialize(int theRow, ZombieType theType, bool theVariant, Z
     mAnimTicksPerFrame = 12;
     mAnimFrames = 12;
     mZombieAge = 0;
+    mChilledZombieAge = 0;
     mTargetCol = -1;
     mZombiePhase = ZombiePhase::PHASE_ZOMBIE_NORMAL;
     mZombieHeight = ZombieHeight::HEIGHT_ZOMBIE_NORMAL;
@@ -3220,7 +3221,14 @@ void Zombie::OverrideParticleColor(TodParticleSystem* aParticle)
         }
         else if (mChilledCounter > 0 || mIceTrapCounter > 0)
         {
-            aParticle->OverrideColor(nullptr, Color(75, 75, 255, 255));
+            int aChilledCounter = ClampInt(mChilledCounter, 0, 1500);
+            float scaleFactor = -1.0f / 15.0f * (aChilledCounter - 1500.0f);
+            aParticle->OverrideColor(nullptr,     Color(
+        (int)(75 + 49.0f / 100.0f * scaleFactor),
+        (int)(75 + 49.0f / 100.0f * scaleFactor),
+        (int)(255 - 131.0f / 100.0f * scaleFactor),
+        255)
+            );
             aParticle->OverrideExtraAdditiveDraw(nullptr, true);
         }
     }
@@ -3275,6 +3283,36 @@ void Zombie::SetupReanimForLostHead()
     ReanimShowPrefix("anim_tongue", RENDER_GROUP_HIDDEN);
 }
 
+void Zombie::ColdExplode()
+{
+    if (mZombieType != ZombieType::ZOMBIE_BOSS)
+    {
+        int aPosX = mX + mWidth / 2;
+        int aPosY = mY + mHeight / 2;
+        int aChilledZombieAge = mChilledZombieAge + (mChilledCounter / 4);
+        if (aChilledZombieAge > 600 && aChilledZombieAge <= 1800)
+        {
+            mBoard->FreezeAllZombiesInRadius(mRow, aPosX, aPosY, 60, 0, 20 + ((mChilledZombieAge - 600) / 60), 63U, 0, 50, SeedType::SEED_NONE, true);
+            TodParticleSystem* aParticle = mApp->AddTodParticle(mPosX + 60.0f, mPosY + 40.0f, mRenderOrder + 1, ParticleEffect::PARTICLE_ICEBALL_DEATH);
+            aParticle->OverrideScale(nullptr, 0.5f);
+        }
+        else if (aChilledZombieAge > 1800 && aChilledZombieAge <= 3000)
+        {
+            mBoard->FreezeAllZombiesInRadius(mRow, aPosX, aPosY, 115, 1, 40 + ((mChilledZombieAge - 1800) / 60), 63U, 0, 300, SeedType::SEED_NONE, true);
+            TodParticleSystem* aParticle = mApp->AddTodParticle(mPosX + 60.0f, mPosY + 40.0f, mRenderOrder + 1, ParticleEffect::PARTICLE_ICEBALL_DEATH);
+            aParticle->OverrideScale(nullptr, 1.0f);
+        }
+        else if (aChilledZombieAge > 3000)
+        {
+            mBoard->FreezeAllZombiesInRadius(mRow, aPosX, aPosY, 250, 3, 60 + ((aChilledZombieAge - 3000) / 60), 63U, 100, 500, SeedType::SEED_NONE, true);
+            TodParticleSystem* aParticle = mApp->AddTodParticle(mPosX + 60.0f, mPosY + 40.0f, mRenderOrder + 1, ParticleEffect::PARTICLE_ICEBALL_DEATH);
+            aParticle->OverrideScale(nullptr, 2.5f);
+        }
+        mChilledZombieAge = 0;
+    }
+
+}
+
 void Zombie::DropHead(unsigned int theDamageFlags)
 {
     if (!CanLoseBodyParts() || !mHasHead)
@@ -3290,7 +3328,12 @@ void Zombie::DropHead(unsigned int theDamageFlags)
         mStunCounter = 0;
         UpdateAnimSpeed();
     }
-
+    if (mChilledCounter > 0)
+    {
+        mChilledCounter = 0;
+        ColdExplode();
+        UpdateAnimSpeed();
+    }
     mHasHead = false;
     SetupReanimForLostHead();
     if (TestBit(theDamageFlags, DamageFlags::DAMAGE_DOESNT_LEAVE_BODY))
@@ -4084,6 +4127,11 @@ void Zombie::Update()
     TOD_ASSERT(!mDead);
 
     mZombieAge++;
+    if (mChilledCounter > 0)
+    {
+        mChilledZombieAge++;
+    }
+    mFreeInt = mChilledZombieAge;
     bool doUpdate = false;
     if (mApp->mGameScene == GameScenes::SCENE_LEVEL_INTRO && mZombieType == ZombieType::ZOMBIE_BOSS)
     {
@@ -4398,9 +4446,15 @@ void Zombie::UpdatePlaying()
     }
     if (mChilledCounter > 0)
     {
-        mChilledCounter--;
+        if (mIceTrapCounter <= 0)
+        {
+            mChilledCounter--;
+        }
+        UpdateAnimSpeed();
+
         if (mChilledCounter == 0)
         {
+            ColdExplode();
             UpdateAnimSpeed();
         }
     }
@@ -4972,7 +5026,17 @@ void Zombie::DrawZombiePart(Graphics* g, Image* theImage, int theFrame, int theR
     else if (mChilledCounter > 0 || mIceTrapCounter > 0)
     {
         g->SetColorizeImages(true);
-        g->SetColor(Color(75, 75, 255, anAlpha));
+        int aChilledCounter = ClampInt(mChilledCounter, 0, 1500);
+        float scaleFactor = -1.0f / 15.0f * (aChilledCounter - 1500.0f);
+        g->SetColor(
+            Color(
+                (int)(75 + 49.0f / 100.0f * scaleFactor),
+                (int)(75 + 49.0f / 100.0f * scaleFactor),
+                (int)(255 - 131.0f / 100.0f * scaleFactor),
+                anAlpha)
+        );
+
+
         g->DrawImageMirror(theImage, aDestRect, aSrcRect, aMirror);
 
         g->SetDrawMode(Graphics::DRAWMODE_ADDITIVE);
@@ -5493,7 +5557,13 @@ void Zombie::DrawReanim(Graphics* g, const ZombieDrawPosition& theDrawPos, int t
     }
     else if (mChilledCounter > 0 || mIceTrapCounter > 0)
     {
-        aColorOverride = Color(75, 75, 255, aFadeAlpha);
+        int aChilledCounter = ClampInt(mChilledCounter, 0, 1500);
+        float scaleFactor = -1.0f / 15.0f * (aChilledCounter - 1500.0f);
+        aColorOverride = Color(
+            (int)(75 + 49.0f / 100.0f * scaleFactor),
+            (int)(75 + 49.0f / 100.0f * scaleFactor),
+            (int)(255 - 131.0f / 100.0f * scaleFactor),
+            aFadeAlpha);
         aExtraAdditiveColor = aColorOverride;
         aEnableExtraAdditiveDraw = true;
     }
@@ -6408,7 +6478,11 @@ void Zombie::ApplyAnimRate(float theAnimRate)
     Reanimation* aBodyReanim = mApp->ReanimationTryToGet(mBodyReanimID);
     if (aBodyReanim)
     {
-        aBodyReanim->mAnimRate = IsMovingAtChilledSpeed() ? theAnimRate * 0.5f : theAnimRate;
+        int aChilledCounter = ClampInt(mChilledCounter, 0, 1500);
+        float scaleFactor = -1.0f / 15.0f * (aChilledCounter - 1500.0f);
+        aBodyReanim->mAnimRate = IsMovingAtChilledSpeed() ? 
+        theAnimRate * (0.4f + (0.006f * scaleFactor)) :
+        theAnimRate;
     }
 }
 
@@ -6633,7 +6707,9 @@ void Zombie::CheckIfPreyCaught()
     int aTicksBetweenEats = TICKS_BETWEEN_EATS;
     if (mChilledCounter > 0)
     {
-        aTicksBetweenEats *= 2;
+        int aChilledCounter = ClampInt(mChilledCounter, 0, 1500);
+        float scaleFactor = -1.0f / 15.0f * (aChilledCounter - 1500.0f);
+        aTicksBetweenEats *= 2.5f + (-0.0150f * scaleFactor);
     }
     if (mZombieAge % aTicksBetweenEats != 0)
     {
@@ -6911,12 +6987,10 @@ void Zombie::EatPlant(Plant* thePlant)
                 int aPosX = mPosX + mWidth / 2;
                 int aPosY = mPosY + mHeight / 2;
                 //mBoard->KillAllZombiesInRadius(mRow, aPosX, aPosY, 115, 1, true, 63U);
-
-
-                mBoard->FreezeAllZombiesInRadius(mRow, aPosX + 200, aPosY, 200, 0, 100, 63U, 100, 1000, SeedType::SEED_NONE);
+                mBoard->FreezeAllZombiesInRadius(mRow, aPosX + 200, aPosY, 200, 0, 100, 63U, 100, 1000, SeedType::SEED_NONE, true);
                 TodParticleSystem* aParticle = mApp->AddTodParticle(aPosX + 10, aPosY + 35, mRenderOrder + 1, ParticleEffect::PARTICLE_FUMECLOUD);
                 OverrideParticleScale(aParticle);                
-                //aParticle->OverrideColor(  Color(64, 64, 255) );
+                aParticle->OverrideColor(nullptr, Color(90, 90, 255) );
 
                 TakeDamage(1800, 10U);
                 mApp->PlayFoleyPitch(FoleyType::FOLEY_YUCK, 20.0f);
@@ -7340,13 +7414,17 @@ void Zombie::ApplyChill(bool theIsIceTrap)
         mApp->PlayFoley(FoleyType::FOLEY_FROZEN);
     }
 
-    int aChillTime = 1000;
+    int aChillTime = mChilledCounter;
     if (theIsIceTrap)
     {
-        aChillTime = 2000;
+        aChillTime = 1500;
     }
-    mChilledCounter = max(aChillTime, mChilledCounter);
-
+    else
+    {
+        aChillTime += 300;
+    }
+    //mChilledCounter = max(aChillTime, mChilledCounter);
+    mChilledCounter = ClampInt(aChillTime, 0, 2000);
     UpdateAnimSpeed();
 }
 
@@ -7842,8 +7920,40 @@ float Zombie::GetPosYBasedOnRow(int theRow)
 
 Zombie::~Zombie()
 {
+    // keep legacy cleanup (was already present)
     AttachmentDie(mAttachmentID);
     StopZombieSound();
+
+    //// --- NEW: proactively remove/detach external owners that may hold iterators/references
+    //// Remove any reanimations that other systems (attachments, tracks) may keep pointers/iterators to.
+    //if (mApp) {
+    //    if (mBodyReanimID != ReanimationID::REANIMATIONID_NULL) {
+    //        mApp->RemoveReanimation(mBodyReanimID);
+    //        mBodyReanimID = ReanimationID::REANIMATIONID_NULL;
+    //    }
+    //    if (mSpecialHeadReanimID != ReanimationID::REANIMATIONID_NULL) {
+    //        mApp->RemoveReanimation(mSpecialHeadReanimID);
+    //        mSpecialHeadReanimID = ReanimationID::REANIMATIONID_NULL;
+    //    }
+    //    if (mMoweredReanimID != ReanimationID::REANIMATIONID_NULL) {
+    //        mApp->RemoveReanimation(mMoweredReanimID);
+    //        mMoweredReanimID = ReanimationID::REANIMATIONID_NULL;
+    //    }
+    //}
+
+    //// Detach any attachment handles that might have stashed iterators/references.
+    //// (AttachmentDetach is used elsewhere in the codebase to safely unbind attachments.)
+    //if (mAttachmentID != AttachmentID::ATTACHMENTID_NULL) {
+    //    AttachmentDetach(mAttachmentID);
+    //    mAttachmentID = AttachmentID::ATTACHMENTID_NULL;
+    //}
+
+    //// If you have additional attachment/track IDs stored on the Zombie (other attachment IDs),
+    //// detach them here similarly.
+
+    //// Now safe to explicitly clear string members while no external systems should hold iterators
+    //// pointing into them.
+    //mFreeString.clear();
 }
 
 bool Zombie::CanBeChilled()
@@ -8512,6 +8622,13 @@ void Zombie::MowDown()
     {
         mStunCounter = 0;
     }
+    if (mChilledCounter > 0)
+    {
+        mChilledCounter = 0;
+        ColdExplode();
+        UpdateAnimSpeed();
+    }
+
 
     DropShield(0U);
     DropHelm(0U);
@@ -8552,6 +8669,7 @@ void Zombie::RemoveColdEffects()
     if (mChilledCounter > 0)
     {
         mChilledCounter = 0;
+        ColdExplode();
         UpdateAnimSpeed();
     }
 }
@@ -8827,6 +8945,12 @@ void Zombie::PlayDeathAnim(unsigned int theDamageFlags)
     if (mStunCounter > 0)
     {
         mStunCounter = 0;
+    }
+    if (mChilledCounter > 0 && !CanLoseBodyParts())
+    {
+        mChilledCounter = 0;
+        ColdExplode();
+        UpdateAnimSpeed();
     }
     if (mYuckyFace)
     {

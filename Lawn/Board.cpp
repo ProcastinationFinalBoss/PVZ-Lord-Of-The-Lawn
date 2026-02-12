@@ -6544,6 +6544,12 @@ void Board::DrawGameObjects(Graphics* g)
 				barOffsetY += baseBarOffsetY + barHeight + textOffsetY + baseTextOffsetY;
 				DrawHealthbar(g, rect, maxColor, aZombie->mShieldMaxHealth, Color(0, 255, 255), aZombie->mShieldHealth, barWidth, barHeight, 0, barOffsetY, textColor, FONT_BRIANNETOD12, textOffsetY, Color::Black, textOutlineOffset, drawBarOutline);
 			}
+			textOffsetY += 20;
+			int barX = rect.mX + (rect.mWidth - barWidth) / 2;
+			int barY = rect.mY - barHeight - barOffsetY;
+			SexyString text = StrFormat(_S("mFreeInt: %d"), aZombie->mFreeInt);
+			TodDrawString(g, text, barX + (barWidth / 2) + textOutlineOffset, barY - textOffsetY + textOutlineOffset, FONT_BRIANNETOD12, Color::Black, DS_ALIGN_CENTER);
+			TodDrawString(g, text, barX + (barWidth / 2), barY - textOffsetY, FONT_BRIANNETOD12, textColor, DS_ALIGN_CENTER);
 			break;
 		}
 		case RenderObjectType::RENDER_ITEM_HEALTHBAR_PLANT:
@@ -9760,7 +9766,7 @@ bool Board::PlantingRequirementsMet(SeedType theSeedType)
 	}
 }
 
-void Board::FreezeAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, int theDamage, int theDamageRangeFlags, int theFreezeDuration, int theSlowDuration, SeedType theSeedType)
+void Board::FreezeAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, int theDamage, int theDamageRangeFlags, int theFreezeDuration, int theSlowDuration, SeedType theSeedType, bool theStack)
 {
 	// Create freeze area rect
 	int freezeAreaLeft = theX - theRadius;
@@ -9778,6 +9784,8 @@ void Board::FreezeAllZombiesInRadius(int theRow, int theX, int theY, int theRadi
 	mAreaDebugRects[0].mTimer = 300;
 
 	Zombie* aZombie = nullptr;
+	mApp->PlayFoley(FoleyType::FOLEY_FROZEN);
+
 	while (IterateZombies(aZombie))
 	{
 		if (aZombie->EffectedByDamage(theDamageRangeFlags))
@@ -9791,15 +9799,49 @@ void Board::FreezeAllZombiesInRadius(int theRow, int theX, int theY, int theRadi
 
 			if (aRowDist <= theRowRange && aRowDist >= -theRowRange && GetCircleRectOverlap(theX, theY, theRadius, aZombieRect))
 			{
-				aZombie->TakeDamage(theDamage, 0U);
-				aZombie->ApplyChill(false);
-				if (theFreezeDuration > 0)
+				aZombie->TakeDamage(theDamage, 8U);
+				if (!theStack)
 				{
-					aZombie->HitIceTrap();
-					aZombie->mIceTrapCounter = theFreezeDuration;
+					if (aZombie->CanBeChilled() && theSlowDuration > 0)
+					{
+						aZombie->mChilledCounter = theSlowDuration;
+						aZombie->mChilledCounter = ClampInt(aZombie->mChilledCounter, 0, 2000);
+					}
+					if (aZombie->CanBeFrozen() && theFreezeDuration > 0)
+					{
+						aZombie->mIceTrapCounter = theFreezeDuration;
+						aZombie->mIceTrapCounter = ClampInt(aZombie->mIceTrapCounter, 0, 2000);
+						aZombie->StopZombieSound();
+						if (aZombie->mZombieType == ZombieType::ZOMBIE_BALLOON)
+						{
+							aZombie->BalloonPropellerHatSpin(false);
+						}
+
+					}
+					aZombie->UpdateAnimSpeed();
+				}
+				else
+				{
+					if (aZombie->CanBeChilled() && theSlowDuration > 0)
+					{
+						aZombie->mChilledCounter += theSlowDuration;
+						aZombie->mChilledCounter = ClampInt(aZombie->mChilledCounter, 0, 2000);
+					}
+					if (aZombie->CanBeFrozen() && theFreezeDuration > 0)
+					{
+						aZombie->mIceTrapCounter += theFreezeDuration;
+						aZombie->mIceTrapCounter = ClampInt(aZombie->mIceTrapCounter, 0, 2000);
+						aZombie->StopZombieSound();
+						if (aZombie->mZombieType == ZombieType::ZOMBIE_BALLOON)
+						{
+							aZombie->BalloonPropellerHatSpin(false);
+						}
+
+					}
+					aZombie->UpdateAnimSpeed();
+
 
 				}
-				aZombie->mChilledCounter = theSlowDuration;
 			}
 		}
 	}
@@ -9809,6 +9851,21 @@ void Board::FreezeAllZombiesInRadius(int theRow, int theX, int theY, int theRadi
 
 void Board::DamageAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, int theDamage, int theDamageRangeFlags, float theKnockbackAmount, int theKnockbackDuration, int theStunDuration, SeedType theSeedType)
 {
+	// Create freeze area rect
+	int freezeAreaLeft = theX - theRadius;
+	int freezeAreaTop = theY - (theRowRange * 80);
+	int freezeAreaWidth = theRadius * 2;
+	int freezeAreaHeight = 80 + ((theRowRange * 80) * 2);
+	Rect freezeAreaRect(freezeAreaLeft, freezeAreaTop, freezeAreaWidth, freezeAreaHeight);
+
+	// Add to debug rect array (shift old ones if full)
+	for (int i = MAX_DEBUG_AREA_RECTS - 1; i > 0; i--)
+	{
+		mAreaDebugRects[i] = mAreaDebugRects[i - 1];
+	}
+	mAreaDebugRects[0].mRect = freezeAreaRect;
+	mAreaDebugRects[0].mTimer = 300;
+
 	Zombie* aZombie = nullptr;
 	while (IterateZombies(aZombie))
 	{

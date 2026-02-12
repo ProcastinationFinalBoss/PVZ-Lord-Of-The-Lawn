@@ -245,7 +245,7 @@ public:
 	int								mCoinBankX;
 	int								mCoinBankY;
 	// In the Board class, replace the single freeze debug members with:
-	static const int MAX_DEBUG_AREA_RECTS = 5;
+	static const int MAX_DEBUG_AREA_RECTS = 10;
 	DebugAreaRect mAreaDebugRects[MAX_DEBUG_AREA_RECTS];
 
 public:
@@ -426,7 +426,7 @@ public:
 	void							MouseDownCobcannonFire(int x, int y, int theClickCount);
 	void							KillAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, bool theBurn, int theDamageRangeFlags);
 	void							DamageAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, int theDamage, int theDamageRangeFlags, float theKnockbackAmount, int theKnockbackDuration, int theStunDuration, SeedType theSeedType);
-	void							FreezeAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, int theDamage, int theDamageRangeFlags, int theFreezeDuration, int theSlowDuration, SeedType theSeedType);
+	void							FreezeAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, int theDamage, int theDamageRangeFlags, int theFreezeDuration, int theSlowDuration, SeedType theSeedType, bool theStack);
 	int								GetAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, int theDamageRangeFlags);
 	/*inline*/ int					GetSeedBankExtraWidth();
 	bool							IsFlagWave(int theWaveNumber);

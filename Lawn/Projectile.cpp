@@ -682,6 +682,10 @@ void Projectile::UpdateNormalMotion()
 		mVelY *= 0.97f;
 		mShadowY += mVelY;
 	}
+	else if (mProjectileType == ProjectileType::PROJECTILE_SNOWPEA)
+	{
+		mPosX += 6.66f;
+	}
 	else
 	{
 		mPosX += 3.33f;

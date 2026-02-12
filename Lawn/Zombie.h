@@ -103,7 +103,8 @@ public:
     int                             mJustGotShotCounter;                        
     int                             mShieldJustGotShotCounter;                  
     int                             mShieldRecoilCounter;                       
-    int                             mZombieAge;                                 
+    int                             mZombieAge;   
+    int                             mChilledZombieAge;
     ZombieHeight                    mZombieHeight;                              
     int                             mPhaseCounter;                              
     int                             mFromWave;                                  
@@ -166,6 +167,8 @@ public:
     int                             mKnockBackCounter;
     int                             mKnockBackDirection;
     float                           mKnockBackForce;
+    //SexyString                      mFreeString;
+    int                             mFreeInt;
 public:
     Zombie();
     ~Zombie();
@@ -399,6 +402,7 @@ public:
     bool                            IsSquashTarget(Plant* theExcept);
     static /*inline*/ bool			IsZombotany(ZombieType theZombieType);
     void                            KnockBackZombie(int theDirection, float theForce, int theTime);
+    void                            ColdExplode();
 };
 
 class ZombieDefinition
