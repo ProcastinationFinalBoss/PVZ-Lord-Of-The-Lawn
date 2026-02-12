@@ -436,7 +436,7 @@ void SeedChooserScreen::Draw(Graphics* g)
 	{
 		ChosenSeed& aChosenSeed = mChosenSeeds[aSeedType];
 		ChosenSeedState aSeedState = aChosenSeed.mSeedState;
-		if (mApp->SeedTypeAvailable(aSeedType) && (aSeedState == SEED_FLYING_TO_BANK || aSeedState == SEED_FLYING_TO_CHOOSER))
+		if (mApp->SeedTypeAvailable(aSeedType) && (aSeedState == SEED_FLYING_TO_BANK))
 		{
 			DrawSeedPacket(g, aChosenSeed.mX, aChosenSeed.mY, aChosenSeed.mSeedType, aChosenSeed.mImitaterType, 0, 255, true, false);
 		}
@@ -906,17 +906,17 @@ void SeedChooserScreen::ClickedSeedInBank(ChosenSeed& theChosenSeed)
 			mSeedsInFlight++;
 		}
 	}
-	theChosenSeed.mTimeStartMotion = mSeedChooserAge;
-	theChosenSeed.mTimeEndMotion = mSeedChooserAge + 25;
-	theChosenSeed.mStartX = theChosenSeed.mX;
-	theChosenSeed.mStartY = theChosenSeed.mY;
-	GetSeedPositionInChooser(theChosenSeed.mSeedType, theChosenSeed.mEndX, theChosenSeed.mEndY);
+	//theChosenSeed.mTimeStartMotion = mSeedChooserAge;
+	//theChosenSeed.mTimeEndMotion = mSeedChooserAge + 25;
+	//theChosenSeed.mStartX = theChosenSeed.mX;
+	//theChosenSeed.mStartY = theChosenSeed.mY;
+	GetSeedPositionInChooser(theChosenSeed.mSeedType, theChosenSeed.mX, theChosenSeed.mY);
 	theChosenSeed.mY += theChosenSeed.mSeedType == SEED_IMITATER ? 0 : mScrollPosition;
-	theChosenSeed.mSeedState = SEED_FLYING_TO_CHOOSER;
+	theChosenSeed.mSeedState = SEED_IN_CHOOSER;
 	theChosenSeed.mImitaterType = SEED_NONE;
 	theChosenSeed.mSeedIndexInBank = 0;
 	mSeedsInBank--;
-	mSeedsInFlight++;
+	//mSeedsInFlight++;
 	RemoveToolTip();
 	EnableStartButton(false);
 	mApp->PlaySample(Sexy::SOUND_TAP);

@@ -4448,8 +4448,9 @@ void Zombie::UpdatePlaying()
     {
         if (mIceTrapCounter <= 0)
         {
-            mChilledCounter--;
+            mChilledCounter -= 1 * mChilledZombieAge / 2000.0f;
         }
+        mChilledCounter = ClampInt(mChilledCounter, 0, 2000);
         UpdateAnimSpeed();
 
         if (mChilledCounter == 0)
@@ -6981,13 +6982,14 @@ void Zombie::EatPlant(Plant* thePlant)
                 mApp->PlayFoley(FoleyType::FOLEY_IMP);
                 mApp->PlayFoley(FoleyType::FOLEY_FLOOP);
                 aZombie->ApplyChill(false);
+                mChilledCounter = 1000;
             }
             else
             {
                 int aPosX = mPosX + mWidth / 2;
                 int aPosY = mPosY + mHeight / 2;
                 //mBoard->KillAllZombiesInRadius(mRow, aPosX, aPosY, 115, 1, true, 63U);
-                mBoard->FreezeAllZombiesInRadius(mRow, aPosX + 200, aPosY, 200, 0, 100, 63U, 100, 1000, SeedType::SEED_NONE, true);
+                mBoard->FreezeAllZombiesInRadius(mRow, aPosX + 200, aPosY, 200, 0, 100, 63U, 500, 1000, SeedType::SEED_NONE, true);
                 TodParticleSystem* aParticle = mApp->AddTodParticle(aPosX + 10, aPosY + 35, mRenderOrder + 1, ParticleEffect::PARTICLE_FUMECLOUD);
                 OverrideParticleScale(aParticle);                
                 aParticle->OverrideColor(nullptr, Color(90, 90, 255) );
@@ -7924,8 +7926,6 @@ Zombie::~Zombie()
     AttachmentDie(mAttachmentID);
     StopZombieSound();
 
-    //// --- NEW: proactively remove/detach external owners that may hold iterators/references
-    //// Remove any reanimations that other systems (attachments, tracks) may keep pointers/iterators to.
     //if (mApp) {
     //    if (mBodyReanimID != ReanimationID::REANIMATIONID_NULL) {
     //        mApp->RemoveReanimation(mBodyReanimID);
@@ -7941,18 +7941,12 @@ Zombie::~Zombie()
     //    }
     //}
 
-    //// Detach any attachment handles that might have stashed iterators/references.
-    //// (AttachmentDetach is used elsewhere in the codebase to safely unbind attachments.)
+
     //if (mAttachmentID != AttachmentID::ATTACHMENTID_NULL) {
     //    AttachmentDetach(mAttachmentID);
     //    mAttachmentID = AttachmentID::ATTACHMENTID_NULL;
     //}
-
-    //// If you have additional attachment/track IDs stored on the Zombie (other attachment IDs),
-    //// detach them here similarly.
-
-    //// Now safe to explicitly clear string members while no external systems should hold iterators
-    //// pointing into them.
+    // 
     //mFreeString.clear();
 }
 

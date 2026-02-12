@@ -25,7 +25,8 @@ ProjectileDefinition gProjectileDefinition[] = {
 	{ ProjectileType::PROJECTILE_KERNEL,        0,  20  },
 	{ ProjectileType::PROJECTILE_COBBIG,        0,  300 },
 	{ ProjectileType::PROJECTILE_BUTTER,        0,  40  },
-	{ ProjectileType::PROJECTILE_ZOMBIE_PEA,    0,  20  }
+	{ ProjectileType::PROJECTILE_ZOMBIE_PEA,    0,  20  },
+	{ ProjectileType::PROJECTILE_PIERCE_SPIKE,    0,  20  }
 };
 
 Projectile::Projectile()
@@ -61,6 +62,7 @@ void Projectile::ProjectileInitialize(int theX, int theY, int theRenderOrder, in
 	mCobTargetRow = 0;
 	mTargetZombieID = ZombieID::ZOMBIEID_NULL;
 	mOnHighGround = mBoard->mGridSquareType[aGridX][theRow] == GridSquareType::GRIDSQUARE_HIGH_GROUND;
+
 	if (mBoard->StageHasRoof())
 	{
 		mShadowY -= 12.0f;
@@ -73,7 +75,8 @@ void Projectile::ProjectileInitialize(int theX, int theY, int theRenderOrder, in
 	mProjectileAge = 0;
 	mClickBackoffCounter = 0;
 	mAnimTicksPerFrame = 0;
-
+	memset(mPiercedZombies, 0, sizeof(mPiercedZombies));
+	mNumPierced = 0;
 	if (mProjectileType == ProjectileType::PROJECTILE_CABBAGE || mProjectileType == ProjectileType::PROJECTILE_BUTTER)
 	{
 		mRotation = -7 * PI / 25;  // DEG_TO_RAD(-50.4f);
@@ -208,6 +211,23 @@ Zombie* Projectile::FindCollisionTarget()
 	{
 		if ((aZombie->mZombieType == ZombieType::ZOMBIE_BOSS || aZombie->mRow == mRow) && aZombie->EffectedByDamage((unsigned int)mDamageRangeFlags))
 		{
+
+			if (mProjectileType == ProjectileType::PROJECTILE_PIERCE_SPIKE && mNumPierced > 0)
+			{
+				unsigned int theZombieID = mBoard->mZombies.DataArrayGetID(aZombie);
+				bool isAlreadyPierced = false;
+
+				for (int i = 0; i < mNumPierced; ++i)
+				{
+					if (mPiercedZombies[i] == theZombieID)
+					{
+						isAlreadyPierced = true;
+						break;
+					}
+				}
+
+				if (isAlreadyPierced)	continue;
+			}
 			if (aZombie->mZombiePhase == ZombiePhase::PHASE_SNORKEL_WALKING_IN_POOL && mPosZ >= 45.0f)
 			{
 				continue;
@@ -328,6 +348,7 @@ void Projectile::CheckForHighGround()
 		mProjectileType == ProjectileType::PROJECTILE_SNOWPEA ||
 		mProjectileType == ProjectileType::PROJECTILE_FIREBALL ||
 		mProjectileType == ProjectileType::PROJECTILE_SPIKE ||
+		mProjectileType == ProjectileType::PROJECTILE_PIERCE_SPIKE ||
 		mProjectileType == ProjectileType::PROJECTILE_COBBIG)
 	{
 		if (aShadowDelta < 28.0f)
@@ -610,7 +631,19 @@ void Projectile::UpdateNormalMotion()
 {
 	if (mMotionType == ProjectileMotion::MOTION_BACKWARDS)
 	{
-		mPosX -= 3.33f;
+		if ((mPosX + mWidth < 9.99f + BOARD_ADDITIONAL_WIDTH) && !mSplitPeaBounce)
+		{
+			mSplitPeaBounce = true;
+		}
+		//mPosX -= 3.33f;
+		if (!mSplitPeaBounce)
+		{
+			mPosX -= 3.33f;
+		}
+		else
+		{
+			mPosX += 3.33f;
+		}
 	}
 	else if (mMotionType == ProjectileMotion::MOTION_HOMING)
 	{
@@ -650,11 +683,22 @@ void Projectile::UpdateNormalMotion()
 	}
 	else if (mMotionType == ProjectileMotion::MOTION_BEE)
 	{
+		//if ((mPosX > WIDE_BOARD_WIDTH || mPosX + mWidth < 0.0f + BOARD_ADDITIONAL_WIDTH) && !mSplitPeaBounce)
+		//{
+		//	mSplitPeaBounce = true;
+		//}
 		if (mProjectileAge < 60)
 		{
 			mPosY -= 0.5f;
 		}
-		mPosX += 3.33f;
+		//if (!mSplitPeaBounce)
+		//{
+		//	mPosX -= 3.33f;
+		//}
+		//else
+		//{
+			mPosX += 3.33f;
+		//}
 	}
 	else if (mMotionType == ProjectileMotion::MOTION_FLOAT_OVER)
 	{
@@ -669,11 +713,19 @@ void Projectile::UpdateNormalMotion()
 	}
 	else if (mMotionType == ProjectileMotion::MOTION_BEE_BACKWARDS)
 	{
+
 		if (mProjectileAge < 60)
 		{
 			mPosY -= 0.5f;
 		}
-		mPosX -= 3.33f;
+		//if (mSplitPeaBounce)
+		//{
+			mPosX -= 3.33f;
+		//}
+		//else
+		//{
+		//	mPosX += 3.33f;
+		//}
 	}
 	else if (mMotionType == ProjectileMotion::MOTION_THREEPEATER)
 	{
@@ -685,6 +737,22 @@ void Projectile::UpdateNormalMotion()
 	else if (mProjectileType == ProjectileType::PROJECTILE_SNOWPEA)
 	{
 		mPosX += 6.66f;
+	}
+	else if (mSeedTypeOwner == SeedType::SEED_SPLITPEA)
+	{
+		if (mPosX + 9.99f > WIDE_BOARD_WIDTH && !mSplitPeaBounce)
+		{
+			mSplitPeaBounce = true;
+		}
+		//mPosX += 3.33f;
+		if (mSplitPeaBounce)
+		{
+			mPosX -= 3.33f;
+		}
+		else
+		{
+			mPosX += 3.33f;
+		}
 	}
 	else
 	{
@@ -795,6 +863,32 @@ void Projectile::PlayImpactSound(Zombie* theZombie)
 
 void Projectile::DoImpact(Zombie* theZombie)
 {
+	if (theZombie && mProjectileType == ProjectileType::PROJECTILE_PIERCE_SPIKE)
+	{
+		unsigned int theZombieID = mBoard->mZombies.DataArrayGetID(theZombie);
+		bool isAlreadyPierced = false;
+		if (mNumPierced > 0)
+		{
+			for (int i = 0; i < mNumPierced; ++i)
+			{
+				if (mPiercedZombies[i] == theZombieID)
+				{
+					isAlreadyPierced = true;
+					break;
+				}
+			}
+		}
+
+		if (isAlreadyPierced)
+		{
+			return;
+		}
+		else
+		{
+			mPiercedZombies[mNumPierced++] = theZombieID;
+		}
+
+	}
 	PlayImpactSound(theZombie);
 
 	if (IsSplashDamage(theZombie))
@@ -907,6 +1001,8 @@ void Projectile::DoImpact(Zombie* theZombie)
 			mApp->AddTodParticle(aSplatPosX, aSplatPosY, mRenderOrder + 1, aEffect);
 		}
 	}
+	if (mProjectileType == ProjectileType::PROJECTILE_PIERCE_SPIKE && mNumPierced < 4)
+		return;
 
 	Die();
 }
@@ -927,6 +1023,7 @@ void Projectile::Update()
 		mProjectileType == ProjectileType::PROJECTILE_BUTTER || 
 		mProjectileType == ProjectileType::PROJECTILE_COBBIG || 
 		mProjectileType == ProjectileType::PROJECTILE_ZOMBIE_PEA || 
+		mProjectileType == ProjectileType::PROJECTILE_PIERCE_SPIKE || 
 		mProjectileType == ProjectileType::PROJECTILE_SPIKE)
 	{
 		aTime = 0;
@@ -970,6 +1067,10 @@ void Projectile::Draw(Graphics* g)
 		aImage = nullptr;
 	}
 	else if (mProjectileType == ProjectileType::PROJECTILE_SPIKE)
+	{
+		aImage = IMAGE_PROJECTILECACTUS;
+	}
+	else if (mProjectileType == ProjectileType::PROJECTILE_PIERCE_SPIKE)
 	{
 		aImage = IMAGE_PROJECTILECACTUS;
 	}
@@ -1167,6 +1268,10 @@ Rect Projectile::GetProjectileRect()
 		return Rect(mX, mY, mWidth - 10, mHeight);
 	}
 	else if (mProjectileType == ProjectileType::PROJECTILE_SPIKE)
+	{
+		return Rect(mX - 25, mY, mWidth + 25, mHeight);
+	}
+	else if (mProjectileType == ProjectileType::PROJECTILE_PIERCE_SPIKE)
 	{
 		return Rect(mX - 25, mY, mWidth + 25, mHeight);
 	}

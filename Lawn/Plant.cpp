@@ -50,7 +50,7 @@ PlantDefinition gPlantDefs[SeedType::NUM_SEED_TYPES] = {
     { SeedType::SEED_PLANTERN,          nullptr, ReanimationType::REANIM_PLANTERN,      38, 25,     3000,   PlantSubClass::SUBCLASS_NORMAL,     2500,   _S("PLANTERN") },
     { SeedType::SEED_CACTUS,            nullptr, ReanimationType::REANIM_CACTUS,        15, 125,    750,    PlantSubClass::SUBCLASS_SHOOTER,    150,    _S("CACTUS") },
     { SeedType::SEED_BLOVER,            nullptr, ReanimationType::REANIM_BLOVER,        18, 100,    750,    PlantSubClass::SUBCLASS_NORMAL,     0,      _S("BLOVER") },
-    { SeedType::SEED_SPLITPEA,          nullptr, ReanimationType::REANIM_SPLITPEA,      32, 125,    750,    PlantSubClass::SUBCLASS_SHOOTER,    150,    _S("SPLIT_PEA") },
+    { SeedType::SEED_SPLITPEA,          nullptr, ReanimationType::REANIM_SPLITPEA,      32, 250,    750,    PlantSubClass::SUBCLASS_SHOOTER,    150,    _S("SPLIT_PEA") },
     { SeedType::SEED_STARFRUIT,         nullptr, ReanimationType::REANIM_STARFRUIT,     30, 125,    750,    PlantSubClass::SUBCLASS_SHOOTER,    150,    _S("STARFRUIT") },
     { SeedType::SEED_PUMPKINSHELL,      nullptr, ReanimationType::REANIM_PUMPKIN,       25, 125,    3000,   PlantSubClass::SUBCLASS_NORMAL,     0,      _S("PUMPKIN") },
     { SeedType::SEED_MAGNETSHROOM,      nullptr, ReanimationType::REANIM_MAGNETSHROOM,  35, 100,    750,    PlantSubClass::SUBCLASS_NORMAL,     0,      _S("MAGNET_SHROOM") },
@@ -4687,6 +4687,8 @@ void Plant::Fire(Zombie* theTargetZombie, int theRow, PlantWeapon thePlantWeapon
         aProjectileType = ProjectileType::PROJECTILE_PUFF;
         break;
     case SeedType::SEED_CACTUS:
+        aProjectileType = ProjectileType::PROJECTILE_PIERCE_SPIKE;
+        break;
     case SeedType::SEED_CATTAIL:
         aProjectileType = ProjectileType::PROJECTILE_SPIKE;
         break;
@@ -4852,6 +4854,7 @@ void Plant::Fire(Zombie* theTargetZombie, int theRow, PlantWeapon thePlantWeapon
 
     Projectile* aProjectile = mBoard->AddProjectile(aOriginX, aOriginY, mRenderOrder - 1, theRow, aProjectileType);
     aProjectile->mDamageRangeFlags = GetDamageRangeFlags(thePlantWeapon);
+    aProjectile->mSeedTypeOwner = mSeedType;
 
     if (mSeedType == SeedType::SEED_CABBAGEPULT || mSeedType == SeedType::SEED_KERNELPULT ||
         mSeedType == SeedType::SEED_MELONPULT || mSeedType == SeedType::SEED_WINTERMELON)
@@ -5347,9 +5350,9 @@ Rect Plant::GetPlantAttackRect(PlantWeapon thePlantWeapon)
     {
         aRect = Rect(mX, mY, mWidth - 20, mHeight);
     }
-    else if (thePlantWeapon == PlantWeapon::WEAPON_SECONDARY && mSeedType == SeedType::SEED_SPLITPEA)
+    else if (/*thePlantWeapon == PlantWeapon::WEAPON_SECONDARY && */mSeedType == SeedType::SEED_SPLITPEA)
     {
-        aRect = Rect(0, mY, mX + 16, mHeight);
+        aRect = Rect(-80 + BOARD_ADDITIONAL_WIDTH, mY, BOARD_WIDTH, mHeight);
     }
     else switch (mSeedType)
     {

@@ -102,7 +102,6 @@ struct BungeeDropGrid
 	int								mGridArrayCount;
 };
 
-// In Board.h, add this structure near the top with other definitions:
 struct DebugAreaRect
 {
 	Rect mRect;
@@ -244,7 +243,6 @@ public:
 	int								mGargantuarsKilled;
 	int								mCoinBankX;
 	int								mCoinBankY;
-	// In the Board class, replace the single freeze debug members with:
 	static const int MAX_DEBUG_AREA_RECTS = 10;
 	DebugAreaRect mAreaDebugRects[MAX_DEBUG_AREA_RECTS];
 
