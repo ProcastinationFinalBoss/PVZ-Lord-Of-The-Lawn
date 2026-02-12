@@ -50,7 +50,11 @@ public:
     float                   mCobTargetX;            
     int                     mCobTargetRow;          
     ZombieID                mTargetZombieID;        
-    int                     mLastPortalX;           
+    int                     mLastPortalX;       
+    bool                    mSplitPeaBounce;
+    unsigned int            mPiercedZombies[4];
+    int                     mNumPierced;
+    SeedType                mSeedTypeOwner;
 
 public:
     Projectile();
