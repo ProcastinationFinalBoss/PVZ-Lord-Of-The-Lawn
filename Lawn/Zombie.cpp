@@ -3304,7 +3304,7 @@ void Zombie::ColdExplode()
         }
         else if (aChilledZombieAge > 3000)
         {
-            mBoard->FreezeAllZombiesInRadius(mRow, aPosX, aPosY, 250, 3, 60 + ((aChilledZombieAge - 3000) / 60), 63U, 100, 500, SeedType::SEED_NONE, true);
+            mBoard->FreezeAllZombiesInRadius(mRow, aPosX, aPosY, 155, 3, 60 + ((aChilledZombieAge - 3000) / 60), 63U, 100, 500, SeedType::SEED_NONE, true);
             TodParticleSystem* aParticle = mApp->AddTodParticle(mPosX + 60.0f, mPosY + 40.0f, mRenderOrder + 1, ParticleEffect::PARTICLE_ICEBALL_DEATH);
             aParticle->OverrideScale(nullptr, 2.5f);
         }
@@ -6982,7 +6982,7 @@ void Zombie::EatPlant(Plant* thePlant)
                 mApp->PlayFoley(FoleyType::FOLEY_IMP);
                 mApp->PlayFoley(FoleyType::FOLEY_FLOOP);
                 aZombie->ApplyChill(false);
-                mChilledCounter = 1000;
+                aZombie->mChilledCounter = 1000;
             }
             else
             {

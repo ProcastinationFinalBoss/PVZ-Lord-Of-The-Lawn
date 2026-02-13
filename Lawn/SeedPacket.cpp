@@ -296,8 +296,10 @@ void DrawSeedPacket(Graphics* g, float x, float y, SeedType theSeedType, SeedTyp
 		aPacketBackground = 8;
 	else if ((theSeedType >= SeedType::SEED_ZOMBIE_NORMAL && theSeedType < SeedType::NUM_ZOMBIE_SEEDS) && USE_ZOMBIE_SEED_VARIANT)
 		aPacketBackground = 9;
+	else if (theSeedType > 39)
+		aPacketBackground = 16;
 	else
-		aPacketBackground = 2;
+		aPacketBackground = 10 + floor(theSeedType / 8);
 
 	if (g->mScaleX > 1)
 	{

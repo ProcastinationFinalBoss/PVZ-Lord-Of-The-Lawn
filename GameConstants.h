@@ -89,7 +89,7 @@ const bool			HAS_FAST_FORWARD_BUTTON = true;
 ////////////////////////////////////////////////////////////
 
 const bool			SHOULD_FOG_COVER_FULLY = false; // Console : false
-const bool			USE_OLD_STYLE_SEEDPACKET = false; // PC : true - Console : false
-const bool			USE_OLD_STYLE_TOOLTIP = false; // PC : true - Console : false
+const bool			USE_OLD_STYLE_SEEDPACKET = true; // PC : true - Console : false
+const bool			USE_OLD_STYLE_TOOLTIP = true; // PC : true - Console : false
 const bool			USE_ZOMBIE_SEED_VARIANT = true;
-const bool			USE_CONSOLE_SEED_VARIANTS = true; // PC: false - Console : true
+const bool			USE_CONSOLE_SEED_VARIANTS = false; // PC: false - Console : true
