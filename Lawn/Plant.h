@@ -305,7 +305,9 @@ public:
     bool                    DrawMagnetItemsOnTop();
     void                    UpdateBonkchoy();
     void                    UpdateLaserBean();
-    int                     Plant::CalculateLaneZombieHealth(int theRow);
+    int                     CalculateLaneZombieHealth(int theRow);
+    void                    SlowAllZombies();
+    void                    UpdateGoldBloom();
 
 };
 

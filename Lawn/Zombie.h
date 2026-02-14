@@ -169,6 +169,8 @@ public:
     float                           mKnockBackForce;
     //SexyString                      mFreeString;
     int                             mFreeInt;
+    int                             mSlowCounter;
+    int                             mBlowCounter;
 public:
     Zombie();
     ~Zombie();
@@ -403,6 +405,7 @@ public:
     static /*inline*/ bool			IsZombotany(ZombieType theZombieType);
     void                            KnockBackZombie(int theDirection, float theForce, int theTime);
     void                            ColdExplode();
+    void                            PlantsStackIceTrap();
 };
 
 class ZombieDefinition

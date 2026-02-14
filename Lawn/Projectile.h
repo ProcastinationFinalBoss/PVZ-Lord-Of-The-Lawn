@@ -52,7 +52,8 @@ public:
     ZombieID                mTargetZombieID;        
     int                     mLastPortalX;       
     bool                    mSplitPeaBounce;
-    unsigned int            mPiercedZombies[4];
+    unsigned int            mPiercedZombies[40];
+    unsigned int            mPiercedZombiesSNOW[3];
     int                     mNumPierced;
     SeedType                mSeedTypeOwner;
 

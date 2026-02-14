@@ -571,7 +571,8 @@ void Zombie::ZombieInitialize(int theRow, ZombieType theType, bool theVariant, Z
         aPropellerReanim->mLoopType = ReanimLoopType::REANIM_LOOP_FULL_LAST_FRAME;
         aPropellerReanim->AttachToAnotherReanimation(aBodyReanim, "hat");
 
-        mFlyingHealth = 20;
+        mFlyingHealth = 150;
+        mBodyHealth = 850;
         mZombieRect = Rect(36, 30, 42, 115);
         mZombieAttackRect = Rect(20, 30, 50, 115);
         mVariant = false;
@@ -1137,6 +1138,10 @@ void Zombie::PickRandomSpeed()
     {
         mVelX = RandRangeFloat(0.79f, 0.81f);
     }
+    //else if (mZombiePhase == ZombiePhase::PHASE_BALLOON_WALKING || mZombieType == ZombieType::ZOMBIE_BALLOON)
+    //{
+    //    mVelX = RandRangeFloat(0.11f, 0.23f);
+    //}
     else if (mZombiePhase == ZombiePhase::PHASE_NEWSPAPER_MAD || mZombiePhase == ZombiePhase::PHASE_DOLPHIN_WALKING || 
         mZombiePhase == ZombiePhase::PHASE_DOLPHIN_WALKING_WITHOUT_DOLPHIN)
     {
@@ -1597,13 +1602,35 @@ void Zombie::UpdateZombieFlyer()
         }
     }
 
+
+
     if (mZombiePhase == ZombiePhase::PHASE_BALLOON_POPPING)
     {
         Reanimation* aBodyReanim = mApp->ReanimationGet(mBodyReanimID);
         if (aBodyReanim->mLoopCount > 0)
         {
             mZombiePhase = ZombiePhase::PHASE_BALLOON_WALKING;
+            mPhaseCounter = 1000;
             StartWalkAnim(0);
+        }
+    }
+    else if (mZombiePhase == ZombiePhase::PHASE_BALLOON_WALKING)
+    {
+        Reanimation* aBodyReanim = mApp->ReanimationGet(mBodyReanimID);
+        aBodyReanim->SetTruncateDisappearingFrames(nullptr, false);
+        if (mPhaseCounter <= 0)
+        {
+            StopEating();
+            mZombiePhase = ZombiePhase::PHASE_BALLOON_FLYING;
+            PlayZombieReanim("anim_idle", ReanimLoopType::REANIM_LOOP, 0, aBodyReanim->mAnimRate);
+            mFlyingHealth = 150;
+        }
+    }
+    else if (mZombiePhase == ZombiePhase::PHASE_BALLOON_FLYING && mApp->mGameMode != GameMode::GAMEMODE_CHALLENGE_HIGH_GRAVITY)
+    {
+        if (mAltitude < 25.0f)
+        {
+            mAltitude += 0.5f;
         }
     }
 
@@ -3224,8 +3251,8 @@ void Zombie::OverrideParticleColor(TodParticleSystem* aParticle)
             int aChilledCounter = ClampInt(mChilledCounter, 0, 1500);
             float scaleFactor = -1.0f / 15.0f * (aChilledCounter - 1500.0f);
             aParticle->OverrideColor(nullptr,     Color(
-        (int)(75 + 49.0f / 100.0f * scaleFactor),
-        (int)(75 + 49.0f / 100.0f * scaleFactor),
+        (int)(25 + 99.0f / 100.0f * scaleFactor),
+        (int)(25 + 99.0f / 100.0f * scaleFactor),
         (int)(255 - 131.0f / 100.0f * scaleFactor),
         255)
             );
@@ -3304,7 +3331,7 @@ void Zombie::ColdExplode()
         }
         else if (aChilledZombieAge > 3000)
         {
-            mBoard->FreezeAllZombiesInRadius(mRow, aPosX, aPosY, 155, 3, 60 + ((aChilledZombieAge - 3000) / 60), 63U, 100, 500, SeedType::SEED_NONE, true);
+            mBoard->FreezeAllZombiesInRadius(mRow, aPosX, aPosY, 115, 1, 80, 63U, 100, 500, SeedType::SEED_NONE, true);
             TodParticleSystem* aParticle = mApp->AddTodParticle(mPosX + 60.0f, mPosY + 40.0f, mRenderOrder + 1, ParticleEffect::PARTICLE_ICEBALL_DEATH);
             aParticle->OverrideScale(nullptr, 2.5f);
         }
@@ -4078,9 +4105,9 @@ void Zombie::UpdateZombiePosition()
     UpdateZombieWalking();
     CheckForZombieStep();
 
-    if (mBlowingAway)
+    if (mBlowingAway && mBlowCounter > 0)
     {
-        mPosX += 10.0f;
+        mPosX += 1.0f;
         if (mX > 850 + BOARD_ADDITIONAL_WIDTH)
         {
             DieWithLoot();
@@ -4127,11 +4154,7 @@ void Zombie::Update()
     TOD_ASSERT(!mDead);
 
     mZombieAge++;
-    if (mChilledCounter > 0)
-    {
-        mChilledZombieAge++;
-    }
-    mFreeInt = mChilledZombieAge;
+
     bool doUpdate = false;
     if (mApp->mGameScene == GameScenes::SCENE_LEVEL_INTRO && mZombieType == ZombieType::ZOMBIE_BOSS)
     {
@@ -4434,7 +4457,10 @@ void Zombie::UpdatePlaying()
 
         mGroanCounter = Rand(1000) + 500;
     }
-
+    if (mChilledCounter > 0)
+    {
+        mChilledZombieAge++;
+    }
     if (mIceTrapCounter > 0)
     {
         mIceTrapCounter--;
@@ -4451,13 +4477,11 @@ void Zombie::UpdatePlaying()
             mChilledCounter -= 1 * mChilledZombieAge / 2000.0f;
         }
         mChilledCounter = ClampInt(mChilledCounter, 0, 2000);
-        UpdateAnimSpeed();
-
         if (mChilledCounter == 0)
         {
             ColdExplode();
-            UpdateAnimSpeed();
         }
+        UpdateAnimSpeed();
     }
     if (mButteredCounter > 0)
     {
@@ -4475,6 +4499,20 @@ void Zombie::UpdatePlaying()
             RemoveStun();
         }
     }
+    if (mSlowCounter > 0)
+    {
+        mSlowCounter--;
+        //if (mSlowCounter == 0)
+        {
+            UpdateAnimSpeed();
+        }
+    }
+    if (mBlowCounter > 0)
+    {
+        mBlowCounter--;
+
+    }
+    mFreeInt = mSlowCounter;
 
     if (mZombiePhase == ZombiePhase::PHASE_RISING_FROM_GRAVE)
     {
@@ -5031,8 +5069,8 @@ void Zombie::DrawZombiePart(Graphics* g, Image* theImage, int theFrame, int theR
         float scaleFactor = -1.0f / 15.0f * (aChilledCounter - 1500.0f);
         g->SetColor(
             Color(
-                (int)(75 + 49.0f / 100.0f * scaleFactor),
-                (int)(75 + 49.0f / 100.0f * scaleFactor),
+                (int)(25 + 99.0f / 100.0f * scaleFactor),
+                (int)(25 + 99.0f / 100.0f * scaleFactor),
                 (int)(255 - 131.0f / 100.0f * scaleFactor),
                 anAlpha)
         );
@@ -5561,8 +5599,8 @@ void Zombie::DrawReanim(Graphics* g, const ZombieDrawPosition& theDrawPos, int t
         int aChilledCounter = ClampInt(mChilledCounter, 0, 1500);
         float scaleFactor = -1.0f / 15.0f * (aChilledCounter - 1500.0f);
         aColorOverride = Color(
-            (int)(75 + 49.0f / 100.0f * scaleFactor),
-            (int)(75 + 49.0f / 100.0f * scaleFactor),
+            (int)(25 + 99.0f / 100.0f * scaleFactor),
+            (int)(25 + 99.0f / 100.0f * scaleFactor),
             (int)(255 - 131.0f / 100.0f * scaleFactor),
             aFadeAlpha);
         aExtraAdditiveColor = aColorOverride;
@@ -6193,7 +6231,7 @@ bool Zombie::CanTargetPlant(Plant* thePlant, ZombieAttackType theAttackType)
     if (mApp->IsWallnutBowlingLevel() && theAttackType != ZombieAttackType::ATTACKTYPE_VAULT)
         return false;
 
-    if (thePlant->NotOnGround() || thePlant->mSeedType == SeedType::SEED_TANGLEKELP)
+    if (thePlant->NotOnGround() || thePlant->mSeedType == SeedType::SEED_TANGLEKELP || thePlant->mSeedType == SeedType::SEED_BLOVER )
         return false;
 
     if (!mInPool && mBoard->IsPoolSquare(thePlant->mPlantCol, thePlant->mRow))
@@ -6432,7 +6470,7 @@ bool Zombie::IsImmobilizied()
 
 bool Zombie::IsMovingAtChilledSpeed()
 {
-    if (mChilledCounter > 0)
+    if (mChilledCounter > 0 || (mSlowCounter > 0 && !mIsEating))
         return true;
 
     if (mZombieType == ZombieType::ZOMBIE_DANCER || mZombieType == ZombieType::ZOMBIE_BACKUP_DANCER)
@@ -6479,10 +6517,12 @@ void Zombie::ApplyAnimRate(float theAnimRate)
     Reanimation* aBodyReanim = mApp->ReanimationTryToGet(mBodyReanimID);
     if (aBodyReanim)
     {
+        //int anAnimRateApply = theAnimRate;
         int aChilledCounter = ClampInt(mChilledCounter, 0, 1500);
-        float scaleFactor = -1.0f / 15.0f * (aChilledCounter - 1500.0f);
+        float aChillScaleFactor = -1.0f / 15.0f * (aChilledCounter - 1500.0f);
+        float aSlowFactor = mSlowCounter > 0 ? pow(0.75f, mSlowCounter / 500.0f) : 1.0f;
         aBodyReanim->mAnimRate = IsMovingAtChilledSpeed() ? 
-        theAnimRate * (0.4f + (0.006f * scaleFactor)) :
+        theAnimRate * (0.4f + (0.006f * aChillScaleFactor)) * aSlowFactor :
         theAnimRate;
     }
 }
@@ -6712,6 +6752,7 @@ void Zombie::CheckIfPreyCaught()
         float scaleFactor = -1.0f / 15.0f * (aChilledCounter - 1500.0f);
         aTicksBetweenEats *= 2.5f + (-0.0150f * scaleFactor);
     }
+
     if (mZombieAge % aTicksBetweenEats != 0)
     {
         return;
@@ -7423,7 +7464,13 @@ void Zombie::ApplyChill(bool theIsIceTrap)
     }
     else
     {
-        aChillTime += 300;
+        if (mChilledCounter >= 1500) {
+            aChillTime += 75;
+        }
+        else
+        {
+            aChillTime += 265;
+        }
     }
     //mChilledCounter = max(aChillTime, mChilledCounter);
     mChilledCounter = ClampInt(aChillTime, 0, 2000);
@@ -7434,7 +7481,7 @@ void Zombie::DropShield(unsigned int theDamageFlags)
 {
     if (mShieldType == ShieldType::SHIELDTYPE_NONE)
         return;
-
+    /*/*/
     //ZombieDrawPosition aDrawPos;
     //GetDrawPos(aDrawPos);
     if (mShieldType == ShieldType::SHIELDTYPE_DOOR)
@@ -7625,6 +7672,14 @@ int Zombie::TakeHelmDamage(int theDamage, unsigned int theDamageFlags)
     if (TestBit(theDamageFlags, (int)DamageFlags::DAMAGE_FREEZE))
     {
         ApplyChill(false);
+        if (mChilledCounter >= 1500 && mChilledCounter < 2000) {
+            PlantsStackIceTrap();
+        }
+        else if (mChilledCounter >= 2000)
+        {
+            mChilledZombieAge = 3000;
+            RemoveColdEffects();
+        }
     }
     if (mHelmHealth == 0)
     {
@@ -7707,7 +7762,7 @@ int Zombie::TakeFlyingDamage(int theDamage, unsigned int theDamageFlags)
     int aDamageActual = min(mFlyingHealth, theDamage);
     int aDamageRemaining = theDamage - aDamageActual;
     mFlyingHealth -= aDamageActual;
-    if (mFlyingHealth == 0)
+    if (mFlyingHealth <= 0)
     {
         LandFlyer(theDamageFlags);
     }
@@ -7725,6 +7780,14 @@ void Zombie::TakeBodyDamage(int theDamage, unsigned int theDamageFlags)
     if (TestBit(theDamageFlags, (int)DamageFlags::DAMAGE_FREEZE))
     {
         ApplyChill(false);
+        if (mChilledCounter >= 1500 && mChilledCounter < 2000) {
+            PlantsStackIceTrap();
+        }
+        else if (mChilledCounter >= 2000)
+        {
+            mChilledZombieAge = 3000;
+            RemoveColdEffects();
+        }
     }
 
     int aBodyHealthOrigin = mBodyHealth;
@@ -8338,6 +8401,26 @@ void Zombie::HitIceTrap()
     }
 
     TakeDamage(20, 1U);
+    UpdateAnimSpeed();
+}
+void Zombie::PlantsStackIceTrap()
+{
+    if (!CanBeFrozen())
+        return;
+
+    if (mIceTrapCounter <= 0)
+    {
+        mIceTrapCounter = 10;
+    }
+    else {
+        mIceTrapCounter += 10;
+    }
+    mIceTrapCounter = ClampInt(mIceTrapCounter, 0, 2000);
+    StopZombieSound();
+    if (mZombieType == ZombieType::ZOMBIE_BALLOON)
+    {
+        BalloonPropellerHatSpin(false);
+    }
     UpdateAnimSpeed();
 }
 

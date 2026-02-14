@@ -820,7 +820,8 @@ enum ProjectileType
     PROJECTILE_BUTTER = 12,  
     PROJECTILE_ZOMBIE_PEA = 13,  
     PROJECTILE_PIERCE_SPIKE = 14,  
-    NUM_PROJECTILES = 15
+    PROJECTILE_PIERCE_SNOW = 15,  
+    NUM_PROJECTILES = 16
 };
 enum ReanimationType
 {

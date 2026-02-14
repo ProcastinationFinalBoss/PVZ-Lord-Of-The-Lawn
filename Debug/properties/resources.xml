@@ -199,6 +199,7 @@
 <Image id="WINTERMELON_PARTICLES" path="WinterMelon_particles" cols="9" />
 <Image id="PROJECTILE_STAR" path="Projectile_star" />
 <Image id="PROJECTILEPRIMALPEA" path="projectileprimal" />
+<Image id="PROJECTILEPRIMALSNOWPEA" path="projectileprimalsnow" />
 
 <!-- Background -->
 <Image id="SEEDBANK" path="SeedBank" minsubdivide="" />

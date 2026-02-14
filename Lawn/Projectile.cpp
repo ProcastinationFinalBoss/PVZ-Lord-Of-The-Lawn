@@ -26,7 +26,8 @@ ProjectileDefinition gProjectileDefinition[] = {
 	{ ProjectileType::PROJECTILE_COBBIG,        0,  300 },
 	{ ProjectileType::PROJECTILE_BUTTER,        0,  40  },
 	{ ProjectileType::PROJECTILE_ZOMBIE_PEA,    0,  20  },
-	{ ProjectileType::PROJECTILE_PIERCE_SPIKE,    0,  20  }
+	{ ProjectileType::PROJECTILE_PIERCE_SPIKE,    0,  30  },
+	{ ProjectileType::PROJECTILE_PIERCE_SNOW,    0,  20  }
 };
 
 Projectile::Projectile()
@@ -76,6 +77,7 @@ void Projectile::ProjectileInitialize(int theX, int theY, int theRenderOrder, in
 	mClickBackoffCounter = 0;
 	mAnimTicksPerFrame = 0;
 	memset(mPiercedZombies, 0, sizeof(mPiercedZombies));
+	memset(mPiercedZombiesSNOW, 0, sizeof(mPiercedZombiesSNOW));
 	mNumPierced = 0;
 	if (mProjectileType == ProjectileType::PROJECTILE_CABBAGE || mProjectileType == ProjectileType::PROJECTILE_BUTTER)
 	{
@@ -92,7 +94,7 @@ void Projectile::ProjectileInitialize(int theX, int theY, int theRenderOrder, in
 		mRotation = 0.0f;
 		mRotationSpeed = RandRangeFloat(-0.2f, -0.08f);
 	}
-	else if (mProjectileType == ProjectileType::PROJECTILE_SNOWPEA)
+	else if (mProjectileType == ProjectileType::PROJECTILE_SNOWPEA || mProjectileType == ProjectileType::PROJECTILE_PIERCE_SNOW)
 	{
 		TodParticleSystem* aParticle = mApp->AddTodParticle(mPosX + 8.0f, mPosY + 13.0f, 400000, ParticleEffect::PARTICLE_SNOWPEA_TRAIL);
 		AttachParticle(mAttachmentID, aParticle, 8.0f, 13.0f);
@@ -228,6 +230,22 @@ Zombie* Projectile::FindCollisionTarget()
 
 				if (isAlreadyPierced)	continue;
 			}
+			if (mProjectileType == ProjectileType::PROJECTILE_PIERCE_SNOW && mNumPierced > 0)
+			{
+				unsigned int theZombieID = mBoard->mZombies.DataArrayGetID(aZombie);
+				bool isAlreadyPierced = false;
+
+				for (int i = 0; i < mNumPierced; ++i)
+				{
+					if (mPiercedZombiesSNOW[i] == theZombieID)
+					{
+						isAlreadyPierced = true;
+						break;
+					}
+				}
+
+				if (isAlreadyPierced)	continue;
+			}
 			if (aZombie->mZombiePhase == ZombiePhase::PHASE_SNORKEL_WALKING_IN_POOL && mPosZ >= 45.0f)
 			{
 				continue;
@@ -333,6 +351,7 @@ bool Projectile::CantHitHighGround()
 
 	return (
 		mProjectileType == ProjectileType::PROJECTILE_PEA ||
+		mProjectileType == ProjectileType::PROJECTILE_PIERCE_SNOW ||
 		mProjectileType == ProjectileType::PROJECTILE_SNOWPEA ||
 		mProjectileType == ProjectileType::PROJECTILE_STAR ||
 		mProjectileType == ProjectileType::PROJECTILE_PUFF ||
@@ -349,6 +368,7 @@ void Projectile::CheckForHighGround()
 		mProjectileType == ProjectileType::PROJECTILE_FIREBALL ||
 		mProjectileType == ProjectileType::PROJECTILE_SPIKE ||
 		mProjectileType == ProjectileType::PROJECTILE_PIERCE_SPIKE ||
+		mProjectileType == ProjectileType::PROJECTILE_PIERCE_SNOW ||
 		mProjectileType == ProjectileType::PROJECTILE_COBBIG)
 	{
 		if (aShadowDelta < 28.0f)
@@ -408,7 +428,7 @@ unsigned int Projectile::GetDamageFlags(Zombie* theZombie)
 		SetBit(aDamageFlags, (int)DamageFlags::DAMAGE_BYPASSES_SHIELD, true);
 	}
 
-	if (mProjectileType == ProjectileType::PROJECTILE_SNOWPEA || mProjectileType == ProjectileType::PROJECTILE_WINTERMELON)
+	if (mProjectileType == ProjectileType::PROJECTILE_SNOWPEA || mProjectileType == ProjectileType::PROJECTILE_WINTERMELON || mProjectileType == ProjectileType::PROJECTILE_PIERCE_SNOW)
 	{
 		SetBit(aDamageFlags, (int)DamageFlags::DAMAGE_FREEZE, true);
 	}
@@ -734,7 +754,7 @@ void Projectile::UpdateNormalMotion()
 		mVelY *= 0.97f;
 		mShadowY += mVelY;
 	}
-	else if (mProjectileType == ProjectileType::PROJECTILE_SNOWPEA)
+	else if (mProjectileType == ProjectileType::PROJECTILE_PIERCE_SNOW)
 	{
 		mPosX += 6.66f;
 	}
@@ -889,6 +909,32 @@ void Projectile::DoImpact(Zombie* theZombie)
 		}
 
 	}
+	if (theZombie && mProjectileType == ProjectileType::PROJECTILE_PIERCE_SNOW)
+	{
+		unsigned int theZombieID = mBoard->mZombies.DataArrayGetID(theZombie);
+		bool isAlreadyPierced = false;
+		if (mNumPierced > 0)
+		{
+			for (int i = 0; i < mNumPierced; ++i)
+			{
+				if (mPiercedZombiesSNOW[i] == theZombieID)
+				{
+					isAlreadyPierced = true;
+					break;
+				}
+			}
+		}
+
+		if (isAlreadyPierced)
+		{
+			return;
+		}
+		else
+		{
+			mPiercedZombiesSNOW[mNumPierced++] = theZombieID;
+		}
+
+	}
 	PlayImpactSound(theZombie);
 
 	if (IsSplashDamage(theZombie))
@@ -902,8 +948,13 @@ void Projectile::DoImpact(Zombie* theZombie)
 	}
 	else if (theZombie)
 	{
+		int aDamage = GetProjectileDef().mDamage;
+		if (mProjectileType != ProjectileType::PROJECTILE_PIERCE_SPIKE && mProjectileType != ProjectileType::PROJECTILE_SPIKE && theZombie->IsFlying())
+		{
+			aDamage /= 3;
+		}
 		unsigned int aDamageFlags = GetDamageFlags(theZombie);
-		theZombie->TakeDamage(GetProjectileDef().mDamage, aDamageFlags);
+		theZombie->TakeDamage(aDamage, aDamageFlags);
 	}
 
 	float aLastPosX = mPosX - mVelX;
@@ -933,6 +984,11 @@ void Projectile::DoImpact(Zombie* theZombie)
 		aEffect = ParticleEffect::PARTICLE_PEA_SPLAT;
 	}
 	else if (mProjectileType == ProjectileType::PROJECTILE_SNOWPEA)
+	{
+		aSplatPosX -= 15.0f;
+		aEffect = ParticleEffect::PARTICLE_SNOWPEA_SPLAT;
+	}
+	else if (mProjectileType == ProjectileType::PROJECTILE_PIERCE_SNOW)
 	{
 		aSplatPosX -= 15.0f;
 		aEffect = ParticleEffect::PARTICLE_SNOWPEA_SPLAT;
@@ -1001,7 +1057,9 @@ void Projectile::DoImpact(Zombie* theZombie)
 			mApp->AddTodParticle(aSplatPosX, aSplatPosY, mRenderOrder + 1, aEffect);
 		}
 	}
-	if (mProjectileType == ProjectileType::PROJECTILE_PIERCE_SPIKE && mNumPierced < 4)
+	if (mProjectileType == ProjectileType::PROJECTILE_PIERCE_SPIKE && mNumPierced < 40)
+		return;
+	if (mProjectileType == ProjectileType::PROJECTILE_PIERCE_SNOW && mNumPierced < 3)
 		return;
 
 	Die();
@@ -1024,6 +1082,7 @@ void Projectile::Update()
 		mProjectileType == ProjectileType::PROJECTILE_COBBIG || 
 		mProjectileType == ProjectileType::PROJECTILE_ZOMBIE_PEA || 
 		mProjectileType == ProjectileType::PROJECTILE_PIERCE_SPIKE || 
+		mProjectileType == ProjectileType::PROJECTILE_PIERCE_SNOW || 
 		mProjectileType == ProjectileType::PROJECTILE_SPIKE)
 	{
 		aTime = 0;
@@ -1061,6 +1120,10 @@ void Projectile::Draw(Graphics* g)
 	else if (mProjectileType == ProjectileType::PROJECTILE_SNOWPEA)
 	{
 		aImage = IMAGE_PROJECTILESNOWPEA;
+	}
+	else if (mProjectileType == ProjectileType::PROJECTILE_PIERCE_SNOW)
+	{
+		aImage = IMAGE_PROJECTILEPRIMALSNOWPEA;
 	}
 	else if (mProjectileType == ProjectileType::PROJECTILE_FIREBALL)
 	{
@@ -1191,6 +1254,7 @@ void Projectile::DrawShadow(Graphics* g)
 		break;
 
 	case ProjectileType::PROJECTILE_SNOWPEA:
+	case ProjectileType::PROJECTILE_PIERCE_SNOW:
 		aOffsetX += -1.0f;
 		aScale = 1.3f;
 		break;
@@ -1236,7 +1300,7 @@ void Projectile::Die()
 {
 	mDead = true;
 
-	if (mProjectileType == ProjectileType::PROJECTILE_PUFF || mProjectileType == ProjectileType::PROJECTILE_SNOWPEA)
+	if (mProjectileType == ProjectileType::PROJECTILE_PUFF || mProjectileType == ProjectileType::PROJECTILE_SNOWPEA || mProjectileType == ProjectileType::PROJECTILE_PIERCE_SNOW)
 	{
 		AttachmentCrossFade(mAttachmentID, "FadeOut");
 		AttachmentDetach(mAttachmentID);
@@ -1251,6 +1315,7 @@ Rect Projectile::GetProjectileRect()
 {
 	if (mProjectileType == ProjectileType::PROJECTILE_PEA || 
 		mProjectileType == ProjectileType::PROJECTILE_SNOWPEA ||
+		mProjectileType == ProjectileType::PROJECTILE_PIERCE_SNOW ||
 		mProjectileType == ProjectileType::PROJECTILE_ZOMBIE_PEA)
 	{
 		return Rect(mX - 15, mY, mWidth + 15, mHeight);
