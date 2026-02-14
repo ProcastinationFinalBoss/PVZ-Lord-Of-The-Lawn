@@ -196,6 +196,9 @@ public:
     int						mBonkchoyUppercut;
     int                     mBonkchoyFlipped;
     int                     mFreeInt;
+    int                     mThreePeaTargets;
+    int                     mThreePeaRowOffset;
+    int                     mThreePeaRowLesserOffset;
 
 public:
     Plant();
@@ -302,6 +305,7 @@ public:
     bool                    DrawMagnetItemsOnTop();
     void                    UpdateBonkchoy();
     void                    UpdateLaserBean();
+    int                     Plant::CalculateLaneZombieHealth(int theRow);
 
 };
 

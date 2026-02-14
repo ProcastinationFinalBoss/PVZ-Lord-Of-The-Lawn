@@ -40,7 +40,7 @@ PlantDefinition gPlantDefs[SeedType::NUM_SEED_TYPES] = {
     { SeedType::SEED_DOOMSHROOM,        nullptr, ReanimationType::REANIM_DOOMSHROOM,    20, 125,    5000,   PlantSubClass::SUBCLASS_NORMAL,     0,      _S("DOOM_SHROOM") },
     { SeedType::SEED_LILYPAD,           nullptr, ReanimationType::REANIM_LILYPAD,       19, 25,     750,    PlantSubClass::SUBCLASS_NORMAL,     0,      _S("LILY_PAD") },
     { SeedType::SEED_SQUASH,            nullptr, ReanimationType::REANIM_SQUASH,        21, 50,     3000,   PlantSubClass::SUBCLASS_NORMAL,     0,      _S("SQUASH") },
-    { SeedType::SEED_THREEPEATER,       nullptr, ReanimationType::REANIM_THREEPEATER,   12, 325,    750,    PlantSubClass::SUBCLASS_SHOOTER,    150,    _S("THREEPEATER") },
+    { SeedType::SEED_THREEPEATER,       nullptr, ReanimationType::REANIM_THREEPEATER,   12, 400,    750,    PlantSubClass::SUBCLASS_SHOOTER,    150,    _S("THREEPEATER") },
     { SeedType::SEED_TANGLEKELP,        nullptr, ReanimationType::REANIM_TANGLEKELP,    17, 25,     3000,   PlantSubClass::SUBCLASS_NORMAL,     0,      _S("TANGLE_KELP") },
     { SeedType::SEED_JALAPENO,          nullptr, ReanimationType::REANIM_JALAPENO,      11, 125,    5000,   PlantSubClass::SUBCLASS_NORMAL,     0,      _S("JALAPENO") },
     { SeedType::SEED_SPIKEWEED,         nullptr, ReanimationType::REANIM_SPIKEWEED,     22, 100,    750,    PlantSubClass::SUBCLASS_NORMAL,     0,      _S("SPIKEWEED") },
@@ -264,9 +264,9 @@ void Plant::PlantInitialize(int theGridX, int theGridY, SeedType theSeedType, Se
 
         break;
     }
-    case SeedType::SEED_CHILLPEAR:
-        mPlantHealth = 10;
-        break;
+    //case SeedType::SEED_CHILLPEAR:
+    //    mPlantHealth = 10;
+    //    break;
     case SeedType::SEED_WALLNUT:
         mPlantHealth = 4000;
         mBlinkCountdown = 1000 + Sexy::Rand(1000);
@@ -815,32 +815,119 @@ void Plant::LaunchThreepeater()
         (mBoard->RowCanHaveZombies(rowAbove) && FindTargetZombie(rowAbove, PlantWeapon::WEAPON_PRIMARY)) ||
         (mBoard->RowCanHaveZombies(rowBelow) && FindTargetZombie(rowBelow, PlantWeapon::WEAPON_PRIMARY)))
     {
+        bool hasRowAbove = mBoard->RowCanHaveZombies(rowAbove) && FindTargetZombie(rowAbove, PlantWeapon::WEAPON_PRIMARY) != nullptr;
+        bool hasRowCenter = FindTargetZombie(mRow, PlantWeapon::WEAPON_PRIMARY) != nullptr;
+        bool hasRowBelow = mBoard->RowCanHaveZombies(rowBelow) && FindTargetZombie(rowBelow, PlantWeapon::WEAPON_PRIMARY) != nullptr;
+
+        mThreePeaTargets = (hasRowAbove ? 1 : 0) + (hasRowCenter ? 1 : 0) + (hasRowBelow ? 1 : 0);
+
         Reanimation* aHeadReanim1 = mApp->ReanimationGet(mHeadReanimID);
         Reanimation* aHeadReanim2 = mApp->ReanimationGet(mHeadReanimID2);
         Reanimation* aHeadReanim3 = mApp->ReanimationGet(mHeadReanimID3);
-
-        if (mBoard->RowCanHaveZombies(rowBelow))
+        if (mThreePeaTargets == 1)
         {
+            if (hasRowAbove)
+            {
+                mThreePeaRowOffset = -1;
+            }
+            else if (hasRowBelow)
+            {
+                mThreePeaRowOffset = 1;
+            }
+            else if (hasRowCenter)
+            {
+                mThreePeaRowOffset = 0;
+            }
+
             aHeadReanim1->StartBlend(10);
             aHeadReanim1->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
             aHeadReanim1->mAnimRate = 20.0f;
             aHeadReanim1->SetFramesForLayer("anim_shooting1");
-        }
+            
 
-        aHeadReanim2->StartBlend(10);
-        aHeadReanim2->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
-        aHeadReanim2->mAnimRate = 20.0f;
-        aHeadReanim2->SetFramesForLayer("anim_shooting2");
+            aHeadReanim2->StartBlend(10);
+            aHeadReanim2->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
+            aHeadReanim2->mAnimRate = 20.0f;
+            aHeadReanim2->SetFramesForLayer("anim_shooting2");
 
-        if (mBoard->RowCanHaveZombies(rowAbove))
-        {
+
             aHeadReanim3->StartBlend(10);
             aHeadReanim3->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
             aHeadReanim3->mAnimRate = 20.0f;
             aHeadReanim3->SetFramesForLayer("anim_shooting3");
-        }
 
-        mShootingCounter = 35;
+
+            mShootingCounter = 68;
+        }
+        else if (mThreePeaTargets == 2)
+        {
+            int bestHealth = 0;
+            int betterRow = 0;
+            int lesserRow = 0;
+            for (int i = rowAbove; i <= rowBelow; i++)
+            {
+                if (CalculateLaneZombieHealth(i) > bestHealth)
+                {
+                    bestHealth = CalculateLaneZombieHealth(i);
+                    betterRow = i;
+                }
+            }
+            for (int i = rowAbove; i <= rowBelow; i++)
+            {
+                if (i != betterRow && CalculateLaneZombieHealth(i) > 0)
+                {
+                    lesserRow = i;
+                }
+            }
+            mThreePeaRowOffset = betterRow - mRow; 
+            mThreePeaRowLesserOffset = lesserRow - mRow;
+            mFreeInt = lesserRow + 1;
+
+            aHeadReanim1->StartBlend(10);
+            aHeadReanim1->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
+            aHeadReanim1->mAnimRate = 20.0f;
+            aHeadReanim1->SetFramesForLayer("anim_shooting1");
+
+
+            aHeadReanim2->StartBlend(10);
+            aHeadReanim2->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
+            aHeadReanim2->mAnimRate = 20.0f;
+            aHeadReanim2->SetFramesForLayer("anim_shooting2");
+
+
+            aHeadReanim3->StartBlend(10);
+            aHeadReanim3->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
+            aHeadReanim3->mAnimRate = 20.0f;
+            aHeadReanim3->SetFramesForLayer("anim_shooting3");
+
+
+            mShootingCounter = 51;
+        }
+        else
+        {
+            if (mBoard->RowCanHaveZombies(rowBelow))
+            {
+                aHeadReanim1->StartBlend(10);
+                aHeadReanim1->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
+                aHeadReanim1->mAnimRate = 20.0f;
+                aHeadReanim1->SetFramesForLayer("anim_shooting1");
+            }
+
+            aHeadReanim2->StartBlend(10);
+            aHeadReanim2->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
+            aHeadReanim2->mAnimRate = 20.0f;
+            aHeadReanim2->SetFramesForLayer("anim_shooting2");
+
+            if (mBoard->RowCanHaveZombies(rowAbove))
+            {
+                aHeadReanim3->StartBlend(10);
+                aHeadReanim3->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
+                aHeadReanim3->mAnimRate = 20.0f;
+                aHeadReanim3->SetFramesForLayer("anim_shooting3");
+            }
+
+            mShootingCounter = 35;
+        }
     }
 }
 
@@ -3409,6 +3496,42 @@ void Plant::UpdateShooting()
             }
         }
     }
+    else if (mSeedType == SeedType::SEED_THREEPEATER && mThreePeaTargets < 3)
+    {
+        Reanimation* aHeadReanim2 = mApp->ReanimationGet(mHeadReanimID2);
+        Reanimation* aHeadReanim3 = mApp->ReanimationGet(mHeadReanimID3);
+        Reanimation* aHeadReanim1 = mApp->ReanimationGet(mHeadReanimID);
+        if (mThreePeaTargets == 1)
+        {
+            if (aHeadReanim1->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD && mShootingCounter == 51)
+            {
+                Fire(nullptr, mRow + mThreePeaRowOffset, PlantWeapon::WEAPON_PRIMARY);
+            }
+            if (aHeadReanim2->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD && mShootingCounter == 35)
+            {
+                Fire(nullptr, mRow + mThreePeaRowOffset, PlantWeapon::WEAPON_PRIMARY);
+            }
+            if (aHeadReanim3->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD && mShootingCounter == 18)
+            {
+                Fire(nullptr, mRow + mThreePeaRowOffset, PlantWeapon::WEAPON_PRIMARY);
+            }
+        }
+        else if (mThreePeaTargets == 2)
+        {
+            if (aHeadReanim1->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD && mShootingCounter == 35)
+            {
+                Fire(nullptr, mRow + mThreePeaRowLesserOffset, PlantWeapon::WEAPON_PRIMARY);
+            }
+            if (aHeadReanim2->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD && mShootingCounter == 35)
+            {
+                Fire(nullptr, mRow + mThreePeaRowOffset, PlantWeapon::WEAPON_PRIMARY);
+            }
+            if (aHeadReanim3->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD && mShootingCounter == 18)
+            {
+                Fire(nullptr, mRow + mThreePeaRowOffset, PlantWeapon::WEAPON_PRIMARY);
+            }
+        }
+    }
     else if (mShootingCounter == 1)
     {
         if (mSeedType == SeedType::SEED_THREEPEATER)
@@ -3431,6 +3554,7 @@ void Plant::UpdateShooting()
             {
                 Fire(nullptr, rowAbove, PlantWeapon::WEAPON_PRIMARY);
             }
+            
         }
         else if (mSeedType == SeedType::SEED_SPLITPEA)
         {
@@ -5414,4 +5538,20 @@ void Plant::PlayIdleAnim(float theRate)
             aBodyReanim->mAnimRate = 0.0f;
         }
     }
+}
+int Plant::CalculateLaneZombieHealth(int theRow)
+{
+    int aTotalHealth = 0;
+    int aDamageRangeFlags = GetDamageRangeFlags(PlantWeapon::WEAPON_PRIMARY);
+
+    Zombie* aZombie = nullptr;
+    while (mBoard->IterateZombies(aZombie))
+    {
+        if (aZombie->mRow == theRow && aZombie->EffectedByDamage(aDamageRangeFlags))
+        {
+            aTotalHealth += aZombie->mBodyHealth + aZombie->mShieldHealth + aZombie->mHelmHealth;
+        }
+    }
+
+    return aTotalHealth;
 }

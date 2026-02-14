@@ -631,7 +631,7 @@ void Projectile::UpdateNormalMotion()
 {
 	if (mMotionType == ProjectileMotion::MOTION_BACKWARDS)
 	{
-		if ((mPosX + mWidth < 9.99f + BOARD_ADDITIONAL_WIDTH) && !mSplitPeaBounce)
+		if ((mPosX + mWidth < 9.99f + BOARD_ADDITIONAL_WIDTH) && !mSplitPeaBounce && mSeedTypeOwner == SeedType::SEED_SPLITPEA)
 		{
 			mSplitPeaBounce = true;
 		}
