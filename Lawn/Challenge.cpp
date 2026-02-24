@@ -1662,7 +1662,7 @@ void Challenge::UpdateConveyorBelt()
 		aSeedPickCount = 8;
 		aSeedPickArray[0].mItem = SEED_LILYPAD;
 		aSeedPickArray[0].mWeight = 25;
-		aSeedPickArray[1].mItem = SEED_SEASHROOM;
+		aSeedPickArray[1].mItem = SEED_LILYPAD;
 		aSeedPickArray[1].mWeight = 10;
 		aSeedPickArray[2].mItem = SEED_MAGNETSHROOM;
 		aSeedPickArray[2].mWeight = 5;

@@ -428,7 +428,20 @@ GridItem* Board::GetCraterAt(int theGridX, int theGridY)
 
 GridItem* Board::GetGraveStoneAt(int theGridX, int theGridY)
 {
-	return GetGridItemAt(GridItemType::GRIDITEM_GRAVESTONE, theGridX, theGridY);
+	if (GetGridItemAt(GridItemType::GRIDITEM_GRAVESTONE, theGridX, theGridY))
+	{
+		return GetGridItemAt(GridItemType::GRIDITEM_GRAVESTONE, theGridX, theGridY);
+
+	}
+	else if (GetGridItemAt(GridItemType::GRIDITEM_PVZ2_GRAVE, theGridX, theGridY))
+	{
+		return GetGridItemAt(GridItemType::GRIDITEM_PVZ2_GRAVE, theGridX, theGridY);
+
+	}
+}
+GridItem* Board::GetPVZ2GraveAt(int theGridX, int theGridY)
+{
+	return GetGridItemAt(GridItemType::GRIDITEM_PVZ2_GRAVE, theGridX, theGridY);
 }
 
 GridItem* Board::GetLadderAt(int theGridX, int theGridY)
@@ -465,6 +478,7 @@ bool Board::CanAddGraveStoneAt(int theGridX, int theGridY)
 		{
 			if (aGridItem->mGridItemType == GridItemType::GRIDITEM_GRAVESTONE || 
 				aGridItem->mGridItemType == GridItemType::GRIDITEM_CRATER || 
+				aGridItem->mGridItemType == GridItemType::GRIDITEM_PVZ2_GRAVE || 
 				aGridItem->mGridItemType == GridItemType::GRIDITEM_LADDER)
 				return false;
 		}
@@ -485,6 +499,19 @@ GridItem* Board::AddALadder(int theGridX, int theGridY)
 	aLadder->mGridX = theGridX;
 	aLadder->mGridY = theGridY;
 	return aLadder;
+}
+
+GridItem* Board::AddAPVZ2Grave(int theGridX, int theGridY)
+{
+	GridItem* aGraveStone = mGridItems.DataArrayAlloc();
+	aGraveStone->mGridItemType = GridItemType::GRIDITEM_PVZ2_GRAVE;
+	aGraveStone->mGridItemCounter = -Rand(50);
+	aGraveStone->mRenderOrder = MakeRenderOrder(RenderLayer::RENDER_LAYER_GRAVE_STONE, theGridY, 3);
+	//aGraveStone->mRenderOrder = MakeRenderOrder(RenderLayer::RENDER_LAYER_PLANT, theGridY, 800);
+	aGraveStone->mGridX = theGridX;
+	aGraveStone->mGridY = theGridY;
+	aGraveStone->mPVZ2GraveHealth = 700;
+	return aGraveStone;
 }
 
 GridItem* Board::AddACrater(int theGridX, int theGridY)
@@ -536,7 +563,7 @@ void Board::AddGraveStones(int theGridX, int theCount, MTRand& theLevelRNG)
 		//}
 		if (CanAddGraveStoneAt(theGridX, aGridY))
 		{
-			GridItem* aGraveStone = AddAGraveStone(theGridX, aGridY);
+			GridItem* aGraveStone = AddAPVZ2Grave(theGridX, aGridY);
 			++i;
 		}
 	}
@@ -2802,7 +2829,7 @@ PlantingReason Board::CanPlantAt(int theGridX, int theGridY, SeedType theSeedTyp
 		return PlantingReason::PLANTING_NOT_HERE;
 	}
 	Plant* aNormalPlant = aPlantOnLawn.mNormalPlant;
-	if (theSeedType == SeedType::SEED_LILYPAD || theSeedType == SeedType::SEED_TANGLEKELP || theSeedType == SeedType::SEED_SEASHROOM)
+	if (theSeedType == SeedType::SEED_LILYPAD || theSeedType == SeedType::SEED_TANGLEKELP /*|| theSeedType == SeedType::SEED_SEASHROOM*/)
 	{
 		if (!IsPoolSquare(theGridX, theGridY))
 		{
@@ -3569,13 +3596,13 @@ void Board::MouseDownWithPlant(int x, int y, int theClickCount)
 				DisplayAdvice(_S("[ADVICE_TANGLEKELP_ON_WATER]"), MessageStyle::MESSAGE_STYLE_HINT_FAST, AdviceType::ADVICE_PLANT_TANGLEKELP_ON_WATER);
 			}
 		}
-		else if (aPlantingSeedType == SeedType::SEED_SEASHROOM)
-		{
-			if (aReason == PlantingReason::PLANTING_ONLY_IN_POOL)
-			{
-				DisplayAdvice(_S("[ADVICE_SEASHROOM_ON_WATER]"), MessageStyle::MESSAGE_STYLE_HINT_FAST, AdviceType::ADVICE_PLANT_SEASHROOM_ON_WATER);
-			}
-		}
+		//else if (aPlantingSeedType == SeedType::SEED_SEASHROOM)
+		//{
+		//	if (aReason == PlantingReason::PLANTING_ONLY_IN_POOL)
+		//	{
+		//		DisplayAdvice(_S("[ADVICE_SEASHROOM_ON_WATER]"), MessageStyle::MESSAGE_STYLE_HINT_FAST, AdviceType::ADVICE_PLANT_SEASHROOM_ON_WATER);
+		//	}
+		//}
 		else if (aReason == PlantingReason::PLANTING_ONLY_ON_GROUND)
 		{
 			DisplayAdvice(_S("[ADVICE_POTATO_MINE_ON_LILY]"), MessageStyle::MESSAGE_STYLE_HINT_FAST, AdviceType::ADVICE_PLANT_POTATOE_MINE_ON_LILY);
@@ -4950,6 +4977,19 @@ void Board::StopAllZombieSounds()
 	{
 		aZombie->StopZombieSound();
 	}
+}
+bool Board::GetTanks()
+{
+	Zombie* aZombie = nullptr;
+	bool aTankGot = false;
+	while (IterateZombies(aZombie))
+	{
+		if (aZombie->mZombieType == ZombieType::ZOMBIE_REDEYE_GARGANTUAR && aZombie->mItsGargover == false)
+		{
+			aTankGot = true;
+		}
+	}
+	return aTankGot;
 }
 
 int Board::GetSurvivalFlagsCompleted()
@@ -7236,6 +7276,16 @@ void Board::DrawDebugObjectRects(Graphics* g)
 				g->SetColor(Color(255, 0, 0));
 				g->DrawRect(aAttackRect);
 			}
+		}
+	}
+	{
+		GridItem* aGridItem = nullptr;
+		while (IterateGridItems(aGridItem))
+		{
+
+				Rect aRect = aGridItem->GetPVZ2GraveRect();
+				g->SetColor(Color(0, 255, 0));
+				g->DrawRect(aRect);
 		}
 	}
 	{
@@ -9729,7 +9779,7 @@ void Board::UpdateGridItems()
 	GridItem* aGridItem = nullptr;
 	while (IterateGridItems(aGridItem))
 	{
-		if (mEnableGraveStones && aGridItem->mGridItemType == GridItemType::GRIDITEM_GRAVESTONE && aGridItem->mGridItemCounter < 100)
+		if (mEnableGraveStones && (aGridItem->mGridItemType == GridItemType::GRIDITEM_GRAVESTONE || aGridItem->mGridItemType == GridItemType::GRIDITEM_PVZ2_GRAVE) && aGridItem->mGridItemCounter < 100)
 		{
 			aGridItem->mGridItemCounter++;
 		}
@@ -9885,6 +9935,21 @@ void Board::DamageAllZombiesInRadius(int theRow, int theX, int theY, int theRadi
 			}
 		}
 	}
+	int aGridX = PixelToGridXKeepOnBoard(theX, theY);
+	int aGridY = PixelToGridYKeepOnBoard(theX, theY);
+	GridItem* aGridItem = nullptr;
+	while (IterateGridItems(aGridItem))
+	{
+		Rect aGridItemRect = aGridItem->GetPVZ2GraveRect();
+		int aRowDist = aGridItem->mGridY - theRow;
+		if (aGridItem->mGridItemType == GridItemType::GRIDITEM_PVZ2_GRAVE)
+		{
+			if (aRowDist <= theRowRange && aRowDist >= -theRowRange && GetCircleRectOverlap(theX, theY, theRadius, aGridItemRect))
+			{
+				aGridItem->TakeDamage(theDamage, 0U);
+			}
+		}
+	}
 }
 void Board::KillAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, bool theBurn, int theDamageRangeFlags)
 {
@@ -9931,7 +9996,7 @@ void Board::KillAllZombiesInRadius(int theRow, int theX, int theY, int theRadius
 	GridItem* aGridItem = nullptr;
 	while (IterateGridItems(aGridItem))
 	{
-		if (aGridItem->mGridItemType == GridItemType::GRIDITEM_LADDER)
+		if (aGridItem->mGridItemType == GridItemType::GRIDITEM_LADDER || aGridItem->mGridItemType == GridItemType::GRIDITEM_PVZ2_GRAVE)
 		{
 			if (GridInRange(aGridItem->mGridX, aGridItem->mGridY, aGridX, aGridY, theRowRange, theRowRange))
 			{

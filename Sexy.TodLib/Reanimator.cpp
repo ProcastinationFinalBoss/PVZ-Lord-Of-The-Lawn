@@ -169,6 +169,7 @@ ReanimationParams gLawnReanimationArray[(int)ReanimationType::NUM_REANIMS] = {
 	{ ReanimationType::REANIM_LASERBEAN,							"reanim\\LaserBean.reanim",							0 },
 	{ ReanimationType::REANIM_BONKCHOY,							"reanim\\BonkChoy.reanim",							0 },
 	{ ReanimationType::REANIM_CHILLPEAR,							"reanim\\ChillPear.reanim",							0 },
+	{ ReanimationType::REANIM_GOLDBLOOM,							"reanim\\GoldBloom.reanim",							0 },
 };
 
 static std::map<Image*, std::string> gImagePathCache;

@@ -199,6 +199,36 @@ bool Projectile::PeaAboutToHitTorchwood()
 	return false;
 }
 
+GridItem* Projectile::FindCollisionTargetPVZ2Grave()
+{
+	Rect aProjectileRect = GetProjectileRect();
+	GridItem* aBestGridItem = nullptr;
+	int aMinX = 0;
+	GridItem* aGridItem = nullptr;
+	while (mBoard->IterateGridItems(aGridItem))
+	{
+		if (aGridItem->mGridItemType == GridItemType::GRIDITEM_PVZ2_GRAVE)
+		{
+			if (aGridItem->mGridY == mRow /*&& !TestBit((unsigned int)mDamageRangeFlags, (int)DamageRangeFlags::DAMAGES_FLYING)*/)
+			{
+				Rect aGridItemRect = aGridItem->GetPVZ2GraveRect();
+				if (GetRectOverlap(aProjectileRect, aGridItemRect) > 0)
+				{
+					if (aBestGridItem == nullptr || (int)aGridItem->mPosX < aMinX)
+					{
+						aBestGridItem = aGridItem;
+						aMinX = (int)aGridItem->mPosX;
+					}
+
+				}
+			}
+		}
+	}
+	return aBestGridItem;
+
+}
+
+
 Zombie* Projectile::FindCollisionTarget()
 {
 	if (PeaAboutToHitTorchwood())  
@@ -332,6 +362,13 @@ void Projectile::CheckForCollision()
 		return;
 	}
 
+	GridItem* aGridItem = FindCollisionTargetPVZ2Grave();
+	if (aGridItem)
+	{
+		DoImpactToGrave(aGridItem);
+		return;
+	}
+
 	Zombie* aZombie = FindCollisionTarget();
 	if (aZombie)
 	{
@@ -342,6 +379,7 @@ void Projectile::CheckForCollision()
 
 		DoImpact(aZombie);
 	}
+
 }
 
 bool Projectile::CantHitHighGround()
@@ -373,6 +411,7 @@ void Projectile::CheckForHighGround()
 	{
 		if (aShadowDelta < 28.0f)
 		{
+
 			DoImpact(nullptr);
 			return;
 		}
@@ -436,12 +475,40 @@ unsigned int Projectile::GetDamageFlags(Zombie* theZombie)
 	return aDamageFlags;
 }
 
+bool Projectile::IsGridItemHitBySplash(GridItem* theGridItem)
+{
+	Rect aProjectileRect = GetProjectileRect();
+	if (mProjectileType == ProjectileType::PROJECTILE_FIREBALL)
+	{
+		aProjectileRect.mWidth = 100;
+	}
+	else
+	{
+		aProjectileRect.mWidth += 70;
+		aProjectileRect.mX -= 35;
+		
+	}
+	int aRowDeviation = theGridItem->mGridY - mRow;
+	Rect aGridItemRect = theGridItem->GetPVZ2GraveRect();
+	if (aRowDeviation > 1 || aRowDeviation < -1)
+	{
+		return false;
+	}
+	return GetRectOverlap(aProjectileRect, aGridItemRect) >= 0 /*&& !TestBit((unsigned int)mDamageRangeFlags, (int)DamageRangeFlags::DAMAGES_FLYING)*/;
+
+}
+
 bool Projectile::IsZombieHitBySplash(Zombie* theZombie)
 {
 	Rect aProjectileRect = GetProjectileRect();
 	if (mProjectileType == ProjectileType::PROJECTILE_FIREBALL)
 	{
 		aProjectileRect.mWidth = 100;
+	}
+	else
+	{
+		aProjectileRect.mWidth += 40;
+		aProjectileRect.mX -= 40;
 	}
 
 	int aRowDeviation = theZombie->mRow - mRow;
@@ -470,6 +537,80 @@ bool Projectile::IsZombieHitBySplash(Zombie* theZombie)
 	return theZombie->EffectedByDamage((unsigned int)mDamageRangeFlags) && GetRectOverlap(aProjectileRect, aZombieRect) >= 0;
 }
 
+void Projectile::DoSplashDamageToGraves(GridItem* theGridItem)
+{
+	const ProjectileDefinition& aProjectileDef = GetProjectileDef();
+
+	int aZombiesGetSplashed = 0;
+	Zombie* aZombie = nullptr;
+	while (mBoard->IterateZombies(aZombie))
+	{
+		if (IsZombieHitBySplash(aZombie))
+		{
+			aZombiesGetSplashed++;
+		}
+	}
+
+	int aGridItemsGetSplashed = 0;
+	GridItem* aGridItem = nullptr;
+	while (mBoard->IterateGridItems(aGridItem))
+	{
+		if (aGridItem != theGridItem && IsGridItemHitBySplash(aGridItem))
+		{ 
+			aGridItemsGetSplashed++;
+		}
+	}
+
+	int aOriginalDamage = aProjectileDef.mDamage;
+	int aSplashDamage = aProjectileDef.mDamage / 3;
+	int aMaxSplashDamageAmount = aSplashDamage * 7;
+	if (mProjectileType == ProjectileType::PROJECTILE_FIREBALL)
+	{
+		aMaxSplashDamageAmount = aOriginalDamage;
+	}
+	int aSplashDamageAmount = aSplashDamage * aZombiesGetSplashed;
+	int aSplashDamageAmountThroughGraves = aSplashDamage * aGridItemsGetSplashed;
+	if (aSplashDamageAmount > aMaxSplashDamageAmount)
+	{
+		//aSplashDamage *= aMaxSplashDamageAmount / aSplashDamage;
+		aSplashDamage = aOriginalDamage * aMaxSplashDamageAmount / (aSplashDamageAmount * 3);
+		aSplashDamage = max(aSplashDamage, 1);
+	}
+
+	aZombie = nullptr;
+	while (mBoard->IterateZombies(aZombie))
+	{
+		if (IsZombieHitBySplash(aZombie))
+		{
+			unsigned int aDamageFlags = GetDamageFlags(aZombie);
+			aZombie->TakeDamage(aSplashDamage, aDamageFlags);
+
+		}
+	}
+	if (aSplashDamageAmountThroughGraves > aMaxSplashDamageAmount)
+	{
+		//aSplashDamage *= aMaxSplashDamageAmount / aSplashDamage;
+		aSplashDamage = aOriginalDamage * aMaxSplashDamageAmount / (aSplashDamageAmountThroughGraves * 3);
+		aSplashDamage = max(aSplashDamage, 1);
+	}
+	aGridItem = nullptr;
+	while (mBoard->IterateGridItems(aGridItem))
+	{
+		if (IsGridItemHitBySplash(aGridItem))
+		{
+			if (aGridItem == theGridItem)
+			{
+				aGridItem->TakeDamage(aOriginalDamage, 0U);
+			}
+			else
+			{
+				aGridItem->TakeDamage(aSplashDamage, 0U);
+
+			}
+		}
+	}
+}
+
 void Projectile::DoSplashDamage(Zombie* theZombie)
 {
 	const ProjectileDefinition& aProjectileDef = GetProjectileDef();
@@ -484,6 +625,16 @@ void Projectile::DoSplashDamage(Zombie* theZombie)
 		}
 	}
 
+	int aGridItemsGetSplashed = 0;
+	GridItem* aGridItem = nullptr;
+	while (mBoard->IterateGridItems(aGridItem))
+	{
+		if (IsGridItemHitBySplash(aGridItem))
+		{
+			aGridItemsGetSplashed++;
+		}
+	}
+
 	int aOriginalDamage = aProjectileDef.mDamage;
 	int aSplashDamage = aProjectileDef.mDamage / 3;
 	int aMaxSplashDamageAmount = aSplashDamage * 7;
@@ -492,6 +643,7 @@ void Projectile::DoSplashDamage(Zombie* theZombie)
 		aMaxSplashDamageAmount = aOriginalDamage;
 	}
 	int aSplashDamageAmount = aSplashDamage * aZombiesGetSplashed;
+	int aSplashDamageAmountThroughGraves = aSplashDamage * aGridItemsGetSplashed;
 	if (aSplashDamageAmount > aMaxSplashDamageAmount)
 	{
 		//aSplashDamage *= aMaxSplashDamageAmount / aSplashDamage;
@@ -513,6 +665,20 @@ void Projectile::DoSplashDamage(Zombie* theZombie)
 			{
 				aZombie->TakeDamage(aSplashDamage, aDamageFlags);
 			}
+		}
+	}
+	if (aSplashDamageAmountThroughGraves > aMaxSplashDamageAmount)
+	{
+		//aSplashDamage *= aMaxSplashDamageAmount / aSplashDamage;
+		aSplashDamage = aOriginalDamage * aMaxSplashDamageAmount / (aSplashDamageAmountThroughGraves * 3);
+		aSplashDamage = max(aSplashDamage, 1);
+	}
+	aGridItem = nullptr;
+	while (mBoard->IterateGridItems(aGridItem))
+	{
+		if (IsGridItemHitBySplash(aGridItem))
+		{
+			aGridItem->TakeDamage(aSplashDamage, 0U);
 		}
 	}
 }
@@ -585,6 +751,7 @@ void Projectile::UpdateLobMotion()
 
 	Plant* aPlant = nullptr;
 	Zombie* aZombie = nullptr;
+	GridItem* aGridItem = nullptr;
 	if (mProjectileType == ProjectileType::PROJECTILE_BASKETBALL || mProjectileType == ProjectileType::PROJECTILE_ZOMBIE_PEA)
 	{
 		aPlant = FindCollisionTargetPlant();
@@ -592,6 +759,10 @@ void Projectile::UpdateLobMotion()
 	else
 	{
 		aZombie = FindCollisionTarget();
+		if (aZombie == nullptr)
+		{
+			aGridItem = FindCollisionTargetPVZ2Grave();
+		}
 	}
 
 	float aGroundZ = 80.0f;
@@ -600,7 +771,7 @@ void Projectile::UpdateLobMotion()
 		aGroundZ = -40.0f;
 	}
 	bool hitGround = mPosZ > aGroundZ;
-	if (aZombie == nullptr && aPlant == nullptr && !hitGround)
+	if (aGridItem == nullptr && aZombie == nullptr && aPlant == nullptr && !hitGround)
 	{
 		return;
 	}
@@ -643,7 +814,14 @@ void Projectile::UpdateLobMotion()
 	}
 	else
 	{
-		DoImpact(aZombie);
+		if (aGridItem != nullptr)
+		{
+			DoImpactToGrave(aGridItem);
+		}
+		else
+		{
+			DoImpact(aZombie);
+		}
 	}
 }
 
@@ -881,6 +1059,152 @@ void Projectile::PlayImpactSound(Zombie* theZombie)
 	}
 }
 
+void Projectile::DoImpactToGrave(GridItem* theGridItem)
+{
+	if (theGridItem && mProjectileType == ProjectileType::PROJECTILE_PIERCE_SPIKE)
+	{
+		unsigned int theGridItemID = mBoard->mGridItems.DataArrayGetID(theGridItem);
+		bool isAlreadyPierced = false;
+		if (mNumPierced > 0)
+		{
+			for (int i = 0; i < mNumPierced; ++i)
+			{
+				if (mPiercedZombies[i] == theGridItemID)
+				{
+					isAlreadyPierced = true;
+					break;
+				}
+			}
+		}
+
+		if (isAlreadyPierced)
+		{
+			return;
+		}
+		else
+		{
+			mPiercedZombies[mNumPierced++] = theGridItemID;
+		}
+
+	}
+	if (theGridItem && mProjectileType == ProjectileType::PROJECTILE_PIERCE_SNOW)
+	{
+		unsigned int theGridItemID = mBoard->mGridItems.DataArrayGetID(theGridItem);
+		bool isAlreadyPierced = false;
+		if (mNumPierced > 0)
+		{
+			for (int i = 0; i < mNumPierced; ++i)
+			{
+				if (mPiercedZombiesSNOW[i] == theGridItemID)
+				{
+					isAlreadyPierced = true;
+					break;
+				}
+			}
+		}
+
+		if (isAlreadyPierced)
+		{
+			return;
+		}
+		else
+		{
+			mPiercedZombiesSNOW[mNumPierced++] = theGridItemID;
+		}
+
+	}
+	PlayImpactSound(nullptr);
+
+	if (IsSplashDamage(nullptr))
+	{
+		DoSplashDamageToGraves(theGridItem);
+	}
+	/*else*/ if (theGridItem)
+	{
+		int aDamage = GetProjectileDef().mDamage;
+		unsigned int aDamageFlags = 0U;
+		theGridItem->TakeDamage(aDamage, aDamageFlags);
+	}
+
+	float aLastPosX = mPosX + 40 /*- mVelX*/;
+	float aLastPosY = mPosY + mPosZ /*- mVelY - mVelZ*/;
+	ParticleEffect aEffect = ParticleEffect::PARTICLE_NONE;
+	float aSplatPosX = mPosX + 12.0f;
+	float aSplatPosY = mPosY + 12.0f;
+	if (mProjectileType == ProjectileType::PROJECTILE_MELON)
+	{
+		mApp->AddTodParticle(aLastPosX + 30.0f, aLastPosY + 30.0f, mRenderOrder + 1, ParticleEffect::PARTICLE_MELONSPLASH);
+	}
+	else if (mProjectileType == ProjectileType::PROJECTILE_WINTERMELON)
+	{
+		mApp->AddTodParticle(aLastPosX + 30.0f, aLastPosY + 30.0f, mRenderOrder + 1, ParticleEffect::PARTICLE_WINTERMELON);
+	}
+	else if (mProjectileType == ProjectileType::PROJECTILE_COBBIG)
+	{
+		int aRenderOrder = Board::MakeRenderOrder(RenderLayer::RENDER_LAYER_GROUND, mCobTargetRow, 2);
+		mApp->AddTodParticle(mPosX + 80.0f, mPosY + 40.0f, aRenderOrder, ParticleEffect::PARTICLE_BLASTMARK);
+		mApp->AddTodParticle(mPosX + 80.0f, mPosY + 40.0f, mRenderOrder + 1, ParticleEffect::PARTICLE_POPCORNSPLASH);
+		mApp->PlaySample(SOUND_DOOMSHROOM);
+		mBoard->ShakeBoard(3, -4);
+	}
+	else if (mProjectileType == ProjectileType::PROJECTILE_PEA)
+	{
+		aSplatPosX -= 15.0f;
+		aEffect = ParticleEffect::PARTICLE_PEA_SPLAT;
+	}
+	else if (mProjectileType == ProjectileType::PROJECTILE_SNOWPEA)
+	{
+		aSplatPosX -= 15.0f;
+		aEffect = ParticleEffect::PARTICLE_SNOWPEA_SPLAT;
+	}
+	else if (mProjectileType == ProjectileType::PROJECTILE_PIERCE_SNOW)
+	{
+		aSplatPosX -= 15.0f;
+		aEffect = ParticleEffect::PARTICLE_SNOWPEA_SPLAT;
+	}
+	else if (mProjectileType == ProjectileType::PROJECTILE_FIREBALL)
+	{
+		if (IsSplashDamage(nullptr))
+		{
+			Reanimation* aFireReanim = mApp->AddReanimation(mPosX + 38.0f, mPosY - 20.0f, mRenderOrder + 1, ReanimationType::REANIM_JALAPENO_FIRE);
+			aFireReanim->mAnimTime = 0.25f;
+			aFireReanim->mAnimRate = 24.0f;
+			aFireReanim->OverrideScale(0.7f, 0.4f);
+		}
+	}
+	else if (mProjectileType == ProjectileType::PROJECTILE_STAR)
+	{
+		aEffect = ParticleEffect::PARTICLE_STAR_SPLAT;
+	}
+	else if (mProjectileType == ProjectileType::PROJECTILE_PUFF)
+	{
+		aSplatPosX -= 20.0f;
+		aEffect = ParticleEffect::PARTICLE_PUFF_SPLAT;
+	}
+	else if (mProjectileType == ProjectileType::PROJECTILE_CABBAGE)
+	{
+		aSplatPosX = aLastPosX - 38.0f;
+		aSplatPosY = aLastPosY + 23.0f;
+		aEffect = ParticleEffect::PARTICLE_CABBAGE_SPLAT;
+	}
+	else if (mProjectileType == ProjectileType::PROJECTILE_BUTTER)
+	{
+		aSplatPosX = aLastPosX - 20.0f;
+		aSplatPosY = aLastPosY + 63.0f;
+		aEffect = ParticleEffect::PARTICLE_BUTTER_SPLAT;
+	}
+
+	if (aEffect != ParticleEffect::PARTICLE_NONE)
+	{
+			mApp->AddTodParticle(aSplatPosX, aSplatPosY, mRenderOrder + 1, aEffect);
+	}
+	if (mProjectileType == ProjectileType::PROJECTILE_PIERCE_SPIKE && mNumPierced < 40)
+		return;
+	if (mProjectileType == ProjectileType::PROJECTILE_PIERCE_SNOW && mNumPierced < 3)
+		return;
+
+	Die();
+}
 void Projectile::DoImpact(Zombie* theZombie)
 {
 	if (theZombie && mProjectileType == ProjectileType::PROJECTILE_PIERCE_SPIKE)
@@ -1057,10 +1381,14 @@ void Projectile::DoImpact(Zombie* theZombie)
 			mApp->AddTodParticle(aSplatPosX, aSplatPosY, mRenderOrder + 1, aEffect);
 		}
 	}
-	if (mProjectileType == ProjectileType::PROJECTILE_PIERCE_SPIKE && mNumPierced < 40)
-		return;
-	if (mProjectileType == ProjectileType::PROJECTILE_PIERCE_SNOW && mNumPierced < 3)
-		return;
+	float aShadowDelta = mShadowY - mPosY;
+	if (aShadowDelta >= 28.0f)
+	{
+		if (mProjectileType == ProjectileType::PROJECTILE_PIERCE_SPIKE && mNumPierced < 40)
+			return;
+		if (mProjectileType == ProjectileType::PROJECTILE_PIERCE_SNOW && mNumPierced < 3)
+			return;
+	}
 
 	Die();
 }

@@ -330,7 +330,7 @@ namespace Sexy
 		bool					mTest3D;
 		DWORD					mMinVidMemory3D;
 		DWORD					mRecommendedVidMemory3D;
-		CursorWidget*			mCursor;
+		CursorWidget* mCursor;
 
 		bool					mWidescreenAware;
 		Rect					mScreenBounds;
@@ -595,7 +595,7 @@ namespace Sexy
 		virtual bool			AppCanRestore();
 		virtual void			ShowFPS(bool show);
 		static LRESULT CALLBACK	WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-		
+
 		void					SwitchLanguage();
 		void					ReloadLanguages();
 		void					LoadCurrentLanguage();

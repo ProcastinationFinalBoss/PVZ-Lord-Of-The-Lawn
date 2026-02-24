@@ -38,12 +38,35 @@ GridItem::GridItem()
     mTransparentCounter = 0;
     mSunCount = 0;
     mMotionTrailCount = 0;
+    mJustGotShotCounter = 0;
 }
 
+void GridItem::TakeDamage(int theDamage, unsigned int theDamageFlags)
+{
+    if (mGridItemType != GRIDITEM_PVZ2_GRAVE)
+        return;
+
+    int aDamageRemaining = theDamage;
+    if (!TestBit(theDamageFlags, (int)DamageFlags::DAMAGE_DOESNT_CAUSE_FLASH))
+    {
+        mJustGotShotCounter = 25;
+    }
+    mPVZ2GraveHealth -= theDamage;
+    if (mPVZ2GraveHealth < 0)
+    {
+        GridItemDie();
+    }
+
+}
 void GridItem::GridItemDie()
 {
     mDead = true;
     
+    if (mGridItemType == GridItemType::GRIDITEM_PVZ2_GRAVE)
+    {
+        mApp->AddTodParticle(mBoard->GridToPixelX(mGridX, mGridY) + 40, mBoard->GridToPixelY(mGridX, mGridY) + 90, mRenderOrder + 4, ParticleEffect::PARTICLE_GRAVE_BUSTER_DIE);
+    }
+
     Reanimation* aGridItemReanim = mApp->ReanimationTryToGet(mGridItemReanimID);
     if (aGridItemReanim)
     {
@@ -75,6 +98,7 @@ void GridItem::DrawGridItem(Graphics* g)
     switch (mGridItemType)
     {
     case GridItemType::GRIDITEM_GRAVESTONE:         DrawGraveStone(g);                              break;
+    case GridItemType::GRIDITEM_PVZ2_GRAVE:         DrawPVZ2GraveStone(g);                              break;
     case GridItemType::GRIDITEM_CRATER:             DrawCrater(g);                                  break;
     case GridItemType::GRIDITEM_LADDER:             DrawLadder(g);                                  break;
     case GridItemType::GRIDITEM_BRAIN:              g->DrawImageF(IMAGE_BRAIN, mPosX, mPosY);       break;
@@ -126,6 +150,70 @@ void GridItem::DrawIZombieBrain(Graphics* g)
 
     g->SetColorizeImages(false);
 }
+
+void GridItem::DrawPVZ2GraveStone(Graphics* g)
+{
+    if (mGridItemCounter <= 0)
+        return;
+
+    int aHeightPosition = TodAnimateCurve(0, 100, mGridItemCounter, 1000, 0, TodCurves::CURVE_EASE_IN_OUT);
+    int aGridCelLook = mBoard->mGridCelLook[mGridX][mGridY];
+    int aGridCelOffsetX = mBoard->mGridCelOffset[mGridX][mGridY][0];
+    int aGridCelOffsetY = mBoard->mGridCelOffset[mGridX][mGridY][1];
+    int aCelWidth = IMAGE_PVZ2_TOMBSTONES->GetCelWidth();
+    int aCelHeight = IMAGE_PVZ2_TOMBSTONES->GetCelHeight();
+    int aGraveCol = 0;
+    int aGraveRow = 0;
+
+    if (mPVZ2GraveHealth < 466 && mPVZ2GraveHealth >= 233)
+    {
+        aGraveCol = 1;
+    }
+    else if (mPVZ2GraveHealth < 233)
+    {
+        aGraveCol = 2;
+    }
+
+    int aVisibleHeight = TodAnimateCurve(0, 1000, aHeightPosition, aCelHeight, 0, TodCurves::CURVE_EASE_IN_OUT);
+    int aExtraBottomClip = TodAnimateCurve(0, 50, aHeightPosition, 0, 6, TodCurves::CURVE_EASE_IN_OUT);
+    int aVisibleHeightDirt = TodAnimateCurve(500, 1000, aHeightPosition, aCelHeight, 0, TodCurves::CURVE_EASE_IN_OUT);
+    int aExtraTopClip = 0;
+    Plant* aPlant = mBoard->GetTopPlantAt(mGridX, mGridY, PlantPriority::TOPPLANT_ONLY_NORMAL_POSITION);
+    if (aPlant && aPlant->mState == PlantState::STATE_GRAVEBUSTER_EATING)
+    {
+        aExtraTopClip = TodAnimateCurveFloat(400, 0, aPlant->mStateCountdown, 10.0f, 40.0f, TodCurves::CURVE_LINEAR);
+    }
+
+    Rect aSrcRect(aCelWidth * aGraveCol, aCelHeight * aGraveRow + aExtraTopClip, aCelWidth, aVisibleHeight - aExtraBottomClip - aExtraTopClip);
+    Rect aSrcRectDirt(aCelWidth * 0, aCelHeight * 0, aCelWidth, aVisibleHeightDirt);
+    int x = mBoard->GridToPixelX(mGridX, mGridY) + aGridCelOffsetX - 4;
+    int y = mBoard->GridToPixelY(mGridX, mGridY) + aCelHeight + aGridCelOffsetY - 9;
+    g->DrawImage(IMAGE_PVZ2_TOMBSTONES, x + 7, y - 3 - aVisibleHeight + aExtraTopClip, aSrcRect);
+    g->DrawImage(IMAGE_TOMBSTONE_MOUNDS, x, y - aVisibleHeightDirt, aSrcRectDirt);
+    //TodDrawImageScaledF(g, IMAGE_PVZ2_TOMBSTONES, x, y, 0.8f, 0.8f);
+    //int aXPos = mBoard->GridToPixelX(mGridX, mGridY);
+    //int aYPos = mBoard->GridToPixelY(mGridX, mGridY);
+    //TodDrawImageScaledF(g, IMAGE_REANIM_ZOMBIE_LADDER_5, aXPos + 25.0f, aYPos - 4.0f, 0.8f, 0.8f);
+
+    if (mJustGotShotCounter > 0)
+    {
+        g->SetDrawMode(Graphics::DRAWMODE_ADDITIVE);
+        g->SetColorizeImages(true);
+        int aGrayness = mJustGotShotCounter * 10;
+        g->SetColor(Color(aGrayness, aGrayness, aGrayness, 255));
+        g->DrawImage(IMAGE_PVZ2_TOMBSTONES, x + 7, y - 3 - aVisibleHeight + aExtraTopClip, aSrcRect);
+        g->SetDrawMode(Graphics::DRAWMODE_NORMAL);
+    }
+
+    g->SetColorizeImages(false);
+}
+
+Rect GridItem::GetPVZ2GraveRect() {
+    Rect aRect;
+    aRect = Rect(mBoard->GridToPixelX(mGridX, mGridY) + 25, mBoard->GridToPixelY(mGridX, mGridY) + 20, 80 - 50, 60);
+    return aRect;
+}
+
 
 void GridItem::DrawGraveStone(Graphics* g)
 {
@@ -565,6 +653,7 @@ void GridItem::Update()
     {
         aGridItemParticle->Update();
     }
+    mJustGotShotCounter--;
 
     if (mGridItemType == GridItemType::GRIDITEM_PORTAL_CIRCLE || mGridItemType == GridItemType::GRIDITEM_PORTAL_SQUARE)
     {

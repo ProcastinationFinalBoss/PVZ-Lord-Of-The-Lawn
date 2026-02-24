@@ -447,7 +447,7 @@ void CutScene::PreloadResources()
 		Plant::PreloadPlantResources(SeedType::SEED_FUMESHROOM);
 		Plant::PreloadPlantResources(SeedType::SEED_CACTUS);
 		Plant::PreloadPlantResources(SeedType::SEED_PUFFSHROOM);
-		Plant::PreloadPlantResources(SeedType::SEED_SEASHROOM);
+		//Plant::PreloadPlantResources(SeedType::SEED_SEASHROOM);
 		Plant::PreloadPlantResources(SeedType::SEED_CABBAGEPULT);
 		Plant::PreloadPlantResources(SeedType::SEED_WALLNUT);
 		Plant::PreloadPlantResources(SeedType::SEED_CHOMPER);
@@ -1022,7 +1022,7 @@ void CutScene::AddGraveStoneParticles()
 	GridItem* aGridItem = nullptr;
 	while (mBoard->IterateGridItems(aGridItem))
 	{
-		if (aGridItem->mGridItemType == GridItemType::GRIDITEM_GRAVESTONE)
+		if (aGridItem->mGridItemType == GridItemType::GRIDITEM_GRAVESTONE || aGridItem->mGridItemType == GridItemType::GRIDITEM_PVZ2_GRAVE)
 		{
 			aGridItem->AddGraveStoneParticles();
 		}
@@ -1895,14 +1895,14 @@ void CutScene::LoadUpsellBoardFog()
 	mBoard->NewPlant(3, 5, SeedType::SEED_PUFFSHROOM, SeedType::SEED_NONE);
 	mBoard->NewPlant(4, 0, SeedType::SEED_PUFFSHROOM, SeedType::SEED_NONE);
 	mBoard->NewPlant(4, 1, SeedType::SEED_MAGNETSHROOM, SeedType::SEED_NONE);
-	mBoard->NewPlant(4, 2, SeedType::SEED_SEASHROOM, SeedType::SEED_NONE);
+	//mBoard->NewPlant(4, 2, SeedType::SEED_SEASHROOM, SeedType::SEED_NONE);
 	mBoard->NewPlant(4, 5, SeedType::SEED_PUFFSHROOM, SeedType::SEED_NONE);
 	mBoard->NewPlant(5, 1, SeedType::SEED_PUFFSHROOM, SeedType::SEED_NONE);
 	mBoard->NewPlant(5, 2, SeedType::SEED_LILYPAD, SeedType::SEED_NONE);
 	mBoard->NewPlant(5, 2, SeedType::SEED_PLANTERN, SeedType::SEED_NONE);
-	mBoard->NewPlant(5, 3, SeedType::SEED_SEASHROOM, SeedType::SEED_NONE);
-	mBoard->NewPlant(6, 2, SeedType::SEED_SEASHROOM, SeedType::SEED_NONE);
-	mBoard->NewPlant(6, 3, SeedType::SEED_SEASHROOM, SeedType::SEED_NONE);
+	//mBoard->NewPlant(5, 3, SeedType::SEED_SEASHROOM, SeedType::SEED_NONE);
+	//mBoard->NewPlant(6, 2, SeedType::SEED_SEASHROOM, SeedType::SEED_NONE);
+	//mBoard->NewPlant(6, 3, SeedType::SEED_SEASHROOM, SeedType::SEED_NONE);
 	AddUpsellZombie(ZombieType::ZOMBIE_NORMAL, 460 + BOARD_ADDITIONAL_WIDTH, 0);
 	AddUpsellZombie(ZombieType::ZOMBIE_NORMAL, 680 + BOARD_ADDITIONAL_WIDTH, 0);
 	AddUpsellZombie(ZombieType::ZOMBIE_BALLOON, 780 + BOARD_ADDITIONAL_WIDTH, 0);

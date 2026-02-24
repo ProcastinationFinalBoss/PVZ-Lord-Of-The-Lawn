@@ -6,6 +6,7 @@
 
 class Plant;
 class Zombie;
+class GridItem;
 namespace Sexy
 {
     class Graphics;
@@ -74,6 +75,7 @@ public:
     void                    CheckForHighGround();
     bool                    CantHitHighGround();
     void                    DoSplashDamage(Zombie* theZombie);
+    void                    DoSplashDamageToGraves(GridItem* theGridItem);
     ProjectileDefinition&   GetProjectileDef();
     unsigned int            GetDamageFlags(Zombie* theZombie/* = nullptr*/);
     Rect                    GetProjectileRect();
@@ -84,8 +86,11 @@ public:
     bool                    IsSplashDamage(Zombie* theZombie/* = nullptr*/);
     void                    PlayImpactSound(Zombie* theZombie);
     bool                    IsZombieHitBySplash(Zombie* theZombie);
+    bool                    IsGridItemHitBySplash(GridItem* theGridItem);
     bool                    PeaAboutToHitTorchwood();
     bool                    GetGargantuars(int theRow, int theX, int theY, int theRadius, int theRowRange);
+    GridItem*               FindCollisionTargetPVZ2Grave();
+    void                    DoImpactToGrave(GridItem* theGridItem);
 
 };
 

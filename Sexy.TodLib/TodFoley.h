@@ -3,6 +3,7 @@
 
 #include "../Resources.h"
 #include "../SexyAppFramework/DSoundInstance.h"
+#include "../Lawn/GameObject.h"
 using namespace Sexy;
 
 #define MAX_FOLEY_TYPES 110
@@ -13,11 +14,11 @@ using namespace Sexy;
 
 enum FoleyFlags
 {
-    FOLEYFLAGS_LOOP,                
-    FOLEYFLAGS_ONE_AT_A_TIME,       
-    FOLEYFLAGS_MUTE_ON_PAUSE,       
-    FOLEYFLAGS_USES_MUSIC_VOLUME,   
-    FOLEYFLAGS_DONT_REPEAT          
+    FOLEYFLAGS_LOOP,
+    FOLEYFLAGS_ONE_AT_A_TIME,
+    FOLEYFLAGS_MUTE_ON_PAUSE,
+    FOLEYFLAGS_USES_MUSIC_VOLUME,
+    FOLEYFLAGS_DONT_REPEAT
 };
 
 enum FoleyType
@@ -127,6 +128,7 @@ enum FoleyType
     FOLEY_CRAZY_DAVE_SCREAM,
     FOLEY_CRAZY_DAVE_SCREAM_2,
     FOLEY_LASER,
+    FOLEY_TANK,
     NUM_FOLEY
 };
 
@@ -135,18 +137,18 @@ class FoleyParams
 public:
     FoleyType           mFoleyType;
     float               mPitchRange;
-    int*                mSfxID[10];
+    int* mSfxID[10];
     unsigned int        mFoleyFlags;
 };
 
 /*inline*/ void         TodFoleyInitialize(FoleyParams* theFoleyParamArray, int theFoleyParamArraySize);
 /*inline*/ void         TodFoleyDispose();
-FoleyParams*            LookupFoley(FoleyType theFoleyType);
+FoleyParams* LookupFoley(FoleyType theFoleyType);
 
-extern int gFoleyParamArraySize;        
-extern FoleyParams* gFoleyParamArray;   
+extern int gFoleyParamArraySize;
+extern FoleyParams* gFoleyParamArray;
 
-extern FoleyParams gLawnFoleyParamArray[(int)FoleyType::NUM_FOLEY];  
+extern FoleyParams gLawnFoleyParamArray[(int)FoleyType::NUM_FOLEY];
 
 // ######################################################################################################################################################
 // ######################################################################################################################################################
@@ -156,7 +158,7 @@ class TodDSoundInstance : public DSoundInstance
     friend class TodFoley;
 
 public:
-    TodDSoundInstance(DSoundManager* theSoundManager, LPDIRECTSOUNDBUFFER theSourceSound) : DSoundInstance(theSoundManager, theSourceSound) { }
+    TodDSoundInstance(DSoundManager* theSoundManager, LPDIRECTSOUNDBUFFER theSourceSound) : DSoundInstance(theSoundManager, theSourceSound) {}
 
     /*inline*/ int      GetSoundPosition();
     /*inline*/ void     SetSoundPosition(int thePosition);
@@ -165,7 +167,7 @@ public:
 class FoleyInstance
 {
 public:
-    SoundInstance*      mInstance;
+    SoundInstance* mInstance;
     int                 mRefCount;
     bool                mPaused;
     int                 mStartTime;
@@ -203,7 +205,7 @@ public:
 
 void                    SoundSystemReleaseFinishedInstances(TodFoley* theSoundSystem);
 bool                    SoundSystemHasFoleyPlayedTooRecently(TodFoley* theSoundSystem, FoleyType theFoleyType);
-FoleyInstance*          SoundSystemFindInstance(TodFoley* theSoundSystem, FoleyType theFoleyType);
-FoleyInstance*          SoundSystemGetFreeInstanceIndex(TodFoley* theSoundSystem, FoleyType theFoleyType);
+FoleyInstance* SoundSystemFindInstance(TodFoley* theSoundSystem, FoleyType theFoleyType);
+FoleyInstance* SoundSystemGetFreeInstanceIndex(TodFoley* theSoundSystem, FoleyType theFoleyType);
 
 #endif

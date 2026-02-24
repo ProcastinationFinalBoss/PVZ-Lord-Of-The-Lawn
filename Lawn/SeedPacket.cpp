@@ -249,6 +249,10 @@ void SeedPacketDrawSeed(Graphics* g, float x, float y, SeedType theSeedType, See
 	{
 		TodDrawImageCelScaledF(g, aImage, x, y, 12, 0, g->mScaleX, g->mScaleY);
 	}
+	else if (aSeedType == SeedType::SEED_SEASHROOM && g->mScaleX <= 1.0f)
+	{
+		TodDrawImageCelScaledF(g, aImage, x, y, 13, 0, g->mScaleX, g->mScaleY);
+	}
 	else
 	{
 		Graphics aSeedG(*g);
@@ -536,7 +540,7 @@ void DrawSeedPacket(Graphics* g, float x, float y, SeedType theSeedType, SeedTyp
 		aPlantG.SetColor(Color(64, 64, 64, 255));
 		aPlantG.SetColorizeImages(true);
 		aPlantG.ClipRect(x, y, SEED_PACKET_WIDTH, aDarknessHeight);
-		TodDrawImageCelScaledF(&aPlantG, Sexy::IMAGE_SEEDS, x, y, aPacketBackground, 0, aPlantG.mScaleX, aPlantG.mScaleY);
+		TodDrawImageCelScaledF(&aPlantG, USE_CONSOLE_SEED_VARIANTS ? Sexy::IMAGE_CONSOLE_SEEDS : Sexy::IMAGE_SEEDS, x, y, aPacketBackground, 0, aPlantG.mScaleX, aPlantG.mScaleY);
 		if (aDrawSeedInMiddle)
 		{
 			SeedPacketDrawSeed(&aPlantG, x, y, theSeedType, theImitaterType, aOffsetX, aOffsetY, aScale);

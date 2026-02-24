@@ -745,8 +745,11 @@ void Music::GameMusicPause(bool thePause)
 	}
 	else if (mPaused)
 	{
-		if (mCurMusicTune != MusicTune::MUSIC_TUNE_NONE)
+		//bool aGetTanks = mApp->mBoard->GetTanks();
+		if (mCurMusicTune != MusicTune::MUSIC_TUNE_NONE && (!mApp->mBoard->GetTanks()))
+		{
 			PlayMusic(mCurMusicTune, mPauseOffset, mPauseOffsetDrums);
+		}
 		mPaused = false;
 	}
 }

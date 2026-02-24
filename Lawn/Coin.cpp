@@ -235,7 +235,7 @@ void Coin::CoinInitialize(int theX, int theY, CoinType theCoinType, CoinMotion t
         else if (mBoard->mBackground == BackgroundType::BACKGROUND_4_FOG)
         {
             SeedType aSeedList[] = {
-                SeedType::SEED_SEASHROOM,
+                SeedType::SEED_STARFRUIT,
                 SeedType::SEED_PLANTERN,
                 SeedType::SEED_CACTUS,
                 SeedType::SEED_BLOVER,

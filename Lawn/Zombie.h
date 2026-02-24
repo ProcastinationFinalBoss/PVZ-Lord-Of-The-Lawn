@@ -171,6 +171,7 @@ public:
     int                             mFreeInt;
     int                             mSlowCounter;
     int                             mBlowCounter;
+    bool                            mItsGargover;
 public:
     Zombie();
     ~Zombie();

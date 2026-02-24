@@ -181,9 +181,10 @@
 <Image id="PLANTSPEECHBUBBLE" path="plantspeechbubble" />
 <Image id="WATERDROP" path="waterdrop" />
 <Image id="TREEFOOD" path="TreeFood" />
-<Image id="PACKET_PLANTS" path="packet_plants" cols="13" />
+<Image id="PACKET_PLANTS" path="packet_plants" cols="14" />
 <Image id="ZEN_NEED_ICONS" path="zen_need_icons" cols="3" />
 <Image id="SQUIRREL" path="squirrel" />
+<Image id="PVZ2_TOMBSTONES" path="pvz2graves" cols="3" />
 
 <!-- Various strips -->
 <Image id="PROJECTILEPEA" path="projectilepea" />
@@ -602,6 +603,7 @@
 <Sound id="CRAZYDAVESCREAM" path="crazydavescream" />
 <Sound id="CRAZYDAVESCREAM2" path="crazydavescream2" />
 <Sound id="LASER" path="laser" />
+<Sound id="TANK" path="tank" />
 
 </Resources>
 

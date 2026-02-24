@@ -515,7 +515,8 @@ enum GridItemType
     GRIDITEM_ZEN_TOOL = 9,
     GRIDITEM_STINKY = 10,
     GRIDITEM_RAKE = 11,
-    GRIDITEM_IZOMBIE_BRAIN = 12
+    GRIDITEM_IZOMBIE_BRAIN = 12,
+    GRIDITEM_PVZ2_GRAVE = 13
 };
 enum GridItemState
 {
@@ -978,6 +979,7 @@ enum ReanimationType
     REANIM_LASERBEAN,
     REANIM_BONKCHOY,
     REANIM_CHILLPEAR,
+    REANIM_GOLDBLOOM,
     NUM_REANIMS
 };
 enum ReanimLoopType

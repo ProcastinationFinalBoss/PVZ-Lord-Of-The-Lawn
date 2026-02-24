@@ -2,11 +2,12 @@
 #include "TodDebug.h"
 #include "TodCommon.h"
 #include "../SexyAppFramework/SoundManager.h"
+#include "../LawnApp.h"
+#include "../Lawn/System/Music.h"
+int gFoleyParamArraySize;
+FoleyParams* gFoleyParamArray;
 
-int gFoleyParamArraySize;        
-FoleyParams* gFoleyParamArray;   
-
-FoleyParams gLawnFoleyParamArray[(int)FoleyType::NUM_FOLEY] = {  
+FoleyParams gLawnFoleyParamArray[(int)FoleyType::NUM_FOLEY] = {
 	{ FoleyType::FOLEY_SUN,                     10.0f,  { &Sexy::SOUND_POINTS}, 0U },
 	{ FoleyType::FOLEY_SPLAT,                   10.0f,  { &Sexy::SOUND_SPLAT, &Sexy::SOUND_SPLAT2, &Sexy::SOUND_SPLAT3}, 0U },
 	{ FoleyType::FOLEY_LAWNMOWER,               10.0f,  { &Sexy::SOUND_LAWNMOWER}, 0U },
@@ -111,7 +112,8 @@ FoleyParams gLawnFoleyParamArray[(int)FoleyType::NUM_FOLEY] = {
 	{ FoleyType::FOLEY_FINAL_FANFARE,           0.0f,   { &Sexy::SOUND_FINALFANFARE}, 0U },
 	{ FoleyType::FOLEY_CRAZY_DAVE_SCREAM,       0.0f,   { &Sexy::SOUND_CRAZYDAVESCREAM}, 0U },
 	{ FoleyType::FOLEY_CRAZY_DAVE_SCREAM_2,     0.0f,   { &Sexy::SOUND_CRAZYDAVESCREAM2}, 0U },
-	{ FoleyType::FOLEY_LASER,     10.0f,   { &Sexy::SOUND_LASER}, 0U }
+	{ FoleyType::FOLEY_LASER,     10.0f,   { &Sexy::SOUND_LASER}, 0U },
+	{ FoleyType::FOLEY_TANK,     0.0f,   { &Sexy::SOUND_TANK}, 15U }
 };
 
 FoleyInstance::FoleyInstance()
@@ -182,7 +184,7 @@ bool SoundSystemHasFoleyPlayedTooRecently(TodFoley* theSoundSystem, FoleyType th
 	for (int i = 0; i < MAX_FOLEY_INSTANCES; i++)
 	{
 		FoleyInstance* aFoleyInstance = &aFoleyData->mFoleyInstances[i];
-		if (aFoleyInstance->mRefCount != 0 && gSexyAppBase->mUpdateCount - aFoleyInstance->mStartTime < 10)  
+		if (aFoleyInstance->mRefCount != 0 && gSexyAppBase->mUpdateCount - aFoleyInstance->mStartTime < 10)
 			return true;
 	}
 	return false;
@@ -230,22 +232,22 @@ FoleyInstance* SoundSystemGetFreeInstanceIndex(TodFoley* theSoundSystem, FoleyTy
 void TodFoley::PlayFoleyPitch(FoleyType theFoleyType, float thePitch)
 {
 	FoleyParams* aFoleyParams = LookupFoley(theFoleyType);
-	SoundSystemReleaseFinishedInstances(this);  
+	SoundSystemReleaseFinishedInstances(this);
 	if (SoundSystemHasFoleyPlayedTooRecently(this, theFoleyType) && !TestBit(aFoleyParams->mFoleyFlags, FoleyFlags::FOLEYFLAGS_LOOP))
-		return;  
+		return;
 
-	if (TestBit(aFoleyParams->mFoleyFlags, FoleyFlags::FOLEYFLAGS_ONE_AT_A_TIME))  
+	if (TestBit(aFoleyParams->mFoleyFlags, FoleyFlags::FOLEYFLAGS_ONE_AT_A_TIME))
 	{
 		FoleyInstance* aFoleyInstance = SoundSystemFindInstance(this, theFoleyType);
 		if (aFoleyInstance != nullptr)
 		{
-			aFoleyInstance->mRefCount++;  
-			aFoleyInstance->mStartTime = gSexyAppBase->mUpdateCount;  
+			aFoleyInstance->mRefCount++;
+			aFoleyInstance->mStartTime = gSexyAppBase->mUpdateCount;
 			return;
 		}
 	}
 	FoleyInstance* aFoleyInstance = SoundSystemGetFreeInstanceIndex(this, theFoleyType);
-	if (aFoleyInstance == nullptr)  
+	if (aFoleyInstance == nullptr)
 		return;
 
 	int aVariations = 0;
@@ -253,7 +255,7 @@ void TodFoley::PlayFoleyPitch(FoleyType theFoleyType, float thePitch)
 	FoleyTypeData* aFoleyData = &mFoleyTypeData[(int)theFoleyType];
 	for (int i = 0; i < 10; i++)
 	{
-		if (!TestBit(aFoleyParams->mFoleyFlags, FoleyFlags::FOLEYFLAGS_DONT_REPEAT) || aFoleyData->mLastVariationPlayed != i)  
+		if (!TestBit(aFoleyParams->mFoleyFlags, FoleyFlags::FOLEYFLAGS_DONT_REPEAT) || aFoleyData->mLastVariationPlayed != i)
 		{
 			if (aFoleyParams->mSfxID[i] == nullptr)
 				break;
@@ -272,20 +274,28 @@ void TodFoley::PlayFoleyPitch(FoleyType theFoleyType, float thePitch)
 	aFoleyInstance->mRefCount = 1;
 	aFoleyInstance->mStartTime = gSexyAppBase->mUpdateCount;
 	aFoleyData->mLastVariationPlayed = aVariation;
-	if (thePitch != 0.0f)  
-		aSoundInstance->AdjustPitch(thePitch);  
-	if (TestBit(aFoleyParams->mFoleyFlags, FoleyFlags::FOLEYFLAGS_USES_MUSIC_VOLUME))  
-		ApplyMusicVolume(aFoleyInstance);  
+	if (thePitch != 0.0f)
+		aSoundInstance->AdjustPitch(thePitch);
+	if (TestBit(aFoleyParams->mFoleyFlags, FoleyFlags::FOLEYFLAGS_USES_MUSIC_VOLUME))
+		ApplyMusicVolume(aFoleyInstance);
 	bool aIsLooping = TestBit(aFoleyParams->mFoleyFlags, FoleyFlags::FOLEYFLAGS_LOOP);
-	aSoundInstance->Play(aIsLooping, false);  
+	if (theFoleyType == FoleyType::FOLEY_TANK)
+	{
+		LawnApp* theApp = (LawnApp*)gSexyAppBase;
+		if (theApp != nullptr && theApp->mMusic != nullptr)
+		{
+			theApp->mMusic->GameMusicPause(true);
+		}
+	}
+	aSoundInstance->Play(aIsLooping, false);
 }
 
 void TodFoley::PlayFoley(FoleyType theFoleyType)
 {
 	FoleyParams* aFoleyParams = LookupFoley(theFoleyType);
 	float aPitch = 0.0f;
-	if (aFoleyParams->mPitchRange != 0.0f)  
-		aPitch = Sexy::Rand(aFoleyParams->mPitchRange);  
+	if (aFoleyParams->mPitchRange != 0.0f)
+		aPitch = Sexy::Rand(aFoleyParams->mPitchRange);
 	PlayFoleyPitch(theFoleyType, aPitch);
 }
 
@@ -298,8 +308,16 @@ void TodFoley::StopFoley(FoleyType theFoleyType)
 
 	TOD_ASSERT(aFoleyInstance->mRefCount > 0);
 	TOD_ASSERT(aFoleyInstance->mInstance);
-	aFoleyInstance->mRefCount--;  
-	if (aFoleyInstance->mRefCount == 0)  
+	aFoleyInstance->mRefCount--;
+	if (theFoleyType == FoleyType::FOLEY_TANK)
+	{
+		LawnApp* theApp = (LawnApp*)gSexyAppBase;
+		if (theApp != nullptr && theApp->mMusic != nullptr)
+		{
+			theApp->mMusic->GameMusicPause(false);
+		}
+	}
+	if (aFoleyInstance->mRefCount == 0)
 	{
 		aFoleyInstance->mInstance->Release();
 		aFoleyInstance->mInstance = nullptr;
@@ -312,13 +330,13 @@ void TodFoley::GamePause(bool theEnteringPause)
 	for (int aFoleyType = 0; aFoleyType < gFoleyParamArraySize; aFoleyType++)
 	{
 		FoleyParams* aFoleyParams = LookupFoley((FoleyType)aFoleyType);
-		if (TestBit(aFoleyParams->mFoleyFlags, FoleyFlags::FOLEYFLAGS_MUTE_ON_PAUSE))  
+		if (TestBit(aFoleyParams->mFoleyFlags, FoleyFlags::FOLEYFLAGS_MUTE_ON_PAUSE))
 		{
 			FoleyTypeData* aFoleyData = &mFoleyTypeData[aFoleyType];
-			for (int i = 0; i < MAX_FOLEY_INSTANCES; i++)  
+			for (int i = 0; i < MAX_FOLEY_INSTANCES; i++)
 			{
 				FoleyInstance* aFoleyInstance = &aFoleyData->mFoleyInstances[i];
-				if (aFoleyInstance->mRefCount != 0)  
+				if (aFoleyInstance->mRefCount != 0)
 				{
 					TodDSoundInstance* aSoundInstance = (TodDSoundInstance*)aFoleyInstance->mInstance;
 					if (theEnteringPause)
@@ -331,7 +349,7 @@ void TodFoley::GamePause(bool theEnteringPause)
 						}
 						else
 						{
-							aFoleyInstance->mPauseOffset = aSoundInstance->GetSoundPosition();  
+							aFoleyInstance->mPauseOffset = aSoundInstance->GetSoundPosition();
 							aSoundInstance->Stop();
 						}
 					}
@@ -341,7 +359,7 @@ void TodFoley::GamePause(bool theEnteringPause)
 						bool aIsLooping = TestBit(aFoleyParams->mFoleyFlags, FoleyFlags::FOLEYFLAGS_LOOP);
 						aSoundInstance->Play(aIsLooping, false);
 						if (aSoundInstance->mSoundBuffer != nullptr)
-							aSoundInstance->SetSoundPosition(aFoleyInstance->mPauseOffset);  
+							aSoundInstance->SetSoundPosition(aFoleyInstance->mPauseOffset);
 					}
 				}
 			}
@@ -355,10 +373,10 @@ void TodFoley::CancelPausedFoley()
 	for (int aFoleyType = 0; aFoleyType < gFoleyParamArraySize; aFoleyType++)
 	{
 		FoleyTypeData* aFoleyData = &mFoleyTypeData[aFoleyType];
-		for (int i = 0; i < MAX_FOLEY_INSTANCES; i++)  
+		for (int i = 0; i < MAX_FOLEY_INSTANCES; i++)
 		{
 			FoleyInstance* aFoleyInstance = &aFoleyData->mFoleyInstances[i];
-			if (aFoleyInstance->mRefCount != 0 && aFoleyInstance->mPaused)  
+			if (aFoleyInstance->mRefCount != 0 && aFoleyInstance->mPaused)
 			{
 				aFoleyInstance->mRefCount = 0;
 				aFoleyInstance->mInstance->Release();
@@ -370,10 +388,12 @@ void TodFoley::CancelPausedFoley()
 
 void TodFoley::ApplyMusicVolume(FoleyInstance* theFoleyInstance)
 {
+	//double aMusicVol = gSexyAppBase->mMusicVolume;
+	//double aSFXVol = gSexyAppBase->mSfxVolume;
 	if (gSexyAppBase->mSfxVolume < 1e-6)
 		theFoleyInstance->mInstance->SetVolume(0.0);
 	else
-		theFoleyInstance->mInstance->SetVolume(gSexyAppBase->mMusicVolume / gSexyAppBase->mSfxVolume);  
+		theFoleyInstance->mInstance->SetVolume(gSexyAppBase->mMusicVolume / gSexyAppBase->mSfxVolume);
 }
 
 void TodFoley::RehookupSoundWithMusicVolume()
@@ -382,13 +402,13 @@ void TodFoley::RehookupSoundWithMusicVolume()
 	for (int aFoleyType = 0; aFoleyType < gFoleyParamArraySize; aFoleyType++)
 	{
 		FoleyParams* aFoleyParams = LookupFoley((FoleyType)aFoleyType);
-		if (TestBit(aFoleyParams->mFoleyFlags, FoleyFlags::FOLEYFLAGS_USES_MUSIC_VOLUME))  
+		if (TestBit(aFoleyParams->mFoleyFlags, FoleyFlags::FOLEYFLAGS_USES_MUSIC_VOLUME))
 		{
 			FoleyTypeData* aFoleyData = &mFoleyTypeData[aFoleyType];
-			for (int i = 0; i < MAX_FOLEY_INSTANCES; i++)  
+			for (int i = 0; i < MAX_FOLEY_INSTANCES; i++)
 			{
 				FoleyInstance* aFoleyInstance = &aFoleyData->mFoleyInstances[i];
-				if (aFoleyInstance->mRefCount != 0)  
+				if (aFoleyInstance->mRefCount != 0)
 					ApplyMusicVolume(aFoleyInstance);
 			}
 		}

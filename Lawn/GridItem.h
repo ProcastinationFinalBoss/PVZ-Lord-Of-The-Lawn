@@ -46,7 +46,10 @@ public:
 	int						mTransparentCounter;							
 	int						mSunCount;										
 	MotionTrailFrame		mMotionTrailFrames[NUM_MOTION_TRAIL_FRAMES];	
-	int						mMotionTrailCount;								
+	int						mMotionTrailCount;						
+	int						mPVZ2GraveHealth;						
+	int						mJustGotShotCounter;
+
 
 public:
 	GridItem();
@@ -54,6 +57,7 @@ public:
 	void					DrawLadder(Sexy::Graphics* g);
 	void					DrawCrater(Sexy::Graphics* g);
 	void					DrawGraveStone(Sexy::Graphics* g);
+	void					DrawPVZ2GraveStone(Sexy::Graphics* g);
 	void					GridItemDie();
 	void					AddGraveStoneParticles();
 	void					DrawGridItem(Sexy::Graphics* g);
@@ -71,6 +75,10 @@ public:
 	void					UpdateBrain();
 	void					DrawStinky(Sexy::Graphics* g);
 	/*inline*/ bool			IsOpenPortal();
+	Rect					GetPVZ2GraveRect();
+	void		            TakeDamage(int theDamage, unsigned int theDamageFlags);
+
+
 };
 
 #endif

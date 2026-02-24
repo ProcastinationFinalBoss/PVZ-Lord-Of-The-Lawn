@@ -245,7 +245,7 @@ Tall-nut
 Heavy-duty wall that can't be vaulted over
 
 [SEA_SHROOM]
-Sea-shroom
+Gold Bloom
 
 [SEA_SHROOM_TOOLTIP]
 Aquatic plant that shoots short-ranged spores
@@ -266,7 +266,7 @@ Shoots spikes that can pop balloons
 Blover
 
 [BLOVER_TOOLTIP]
-Blows away all balloon zombies and fog
+Applies short but stackable slow to all zombies on the lawn, also slightly blows away Balloon Zombies
 
 [SPLIT_PEA]
 Split Pea
@@ -818,7 +818,7 @@ She just wants to hug and be hugged. Most folks can't hang with that, but Cactus
 been seeing an armadillo for a while and it really seems to be working out.
 
 [BLOVER_DESCRIPTION_HEADER]
-Blovers blow away all balloon zombies and fog.
+Blovers slow down all zombies on the lawn by a little.
 
 [BLOVER_DESCRIPTION]
 {SHORTLINE}

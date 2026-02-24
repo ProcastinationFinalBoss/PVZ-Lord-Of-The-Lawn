@@ -141,6 +141,7 @@ class Coin;
 class Zombie;
 class Reanimation;
 class TodParticleSystem;
+class GridItem;
 
 class Plant : public GameObject
 {
@@ -211,6 +212,7 @@ public:
     void                    DoSpecial();
     void                    Fire(Zombie* theTargetZombie, int theRow, PlantWeapon thePlantWeapon = PlantWeapon::WEAPON_PRIMARY);
     Zombie*                 FindTargetZombie(int theRow, PlantWeapon thePlantWeapon = PlantWeapon::WEAPON_PRIMARY);
+    GridItem*               FindTargetGridItem(int theRow, PlantWeapon thePlantWeapon = PlantWeapon::WEAPON_PRIMARY);
     void                    Die();
     void                    UpdateProductionPlant();
     void                    UpdateShooter();

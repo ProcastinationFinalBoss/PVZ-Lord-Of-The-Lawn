@@ -176,6 +176,7 @@ void AlmanacDialog::SetupPlant()
 	else if (mSelectedSeed == SEED_FLOWERPOT)		aPosY -= 20;
 	else if (mSelectedSeed == SEED_INSTANT_COFFEE)	aPosY += 20;
 	else if (mSelectedSeed == SEED_GRAVEBUSTER)		aPosY += 55;
+	else if (mSelectedSeed == SEED_SEASHROOM)		aPosY += 25;
 
 	mPlant = new Plant();
 	mPlant->mBoard = nullptr;
@@ -371,9 +372,9 @@ void AlmanacDialog::DrawPlants(Graphics* g)
 	}
 	g->ClearClipRect();
 	if (mSelectedSeed == SeedType::SEED_LILYPAD || mSelectedSeed == SeedType::SEED_TANGLEKELP || 
-		mSelectedSeed == SeedType::SEED_CATTAIL || mSelectedSeed == SeedType::SEED_SEASHROOM)
+		mSelectedSeed == SeedType::SEED_CATTAIL/* || mSelectedSeed == SeedType::SEED_SEASHROOM*/)
 	{
-		bool aNight = mSelectedSeed == SeedType::SEED_SEASHROOM;
+		bool aNight /*== mSelectedSeed == SeedType::SEED_SEASHROOM*/;
 		g->DrawImage(aNight ? Sexy::IMAGE_ALMANAC_GROUNDNIGHTPOOL : Sexy::IMAGE_ALMANAC_GROUNDPOOL, 521 + BOARD_ADDITIONAL_WIDTH, 107 + BOARD_OFFSET_Y);
 
 		if (mApp->Is3dAccel())
