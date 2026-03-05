@@ -593,6 +593,7 @@ void SexyApp::InitPropertiesHook()
 #endif
 }
 
+
 void SexyApp::Init()
 {
 	SEHCatcher::mCrashMessage = 

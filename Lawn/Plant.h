@@ -78,6 +78,12 @@ enum PlantState
     STATE_BONKCHOY_PUNCHING,
     STATE_BONKCHOY_UPPERCUT,
     STATE_BONKCHOY_PUNCH_LANDED,
+    STATE_GARLIC_AURA,
+    STATE_SAKURA_PREPARE,
+    STATE_SAKURA_FIRE,
+    STATE_SAKURA_LAUNCH,
+    STATE_SAKURA_NOTREADY,
+    STATE_SAKURA_READY,
 };
 
 enum PLANT_LAYER
@@ -260,6 +266,7 @@ public:
     void                    UpdateDoomShroom();
     void                    UpdateIceShroom();
     void                    UpdatePotato();
+    void                    UpdateGarlic();
     int                     CalcRenderOrder();
     void                    AnimateNuts();
     void                    SetSleeping(bool theIsAsleep);
@@ -275,12 +282,14 @@ public:
     void                    UpdateBlover();
     void                    UpdateCactus();
     void                    StarFruitFire();
+    void                    SakuraFire();
     void                    UpdateTanglekelp();
     Reanimation*            AttachBlinkAnim(Reanimation* theReanimBody);
     void                    UpdateReanimColor();
     bool                    IsUpgradableTo(SeedType theUpgradedType);
     bool                    IsPartOfUpgradableTo(SeedType theUpgradedType);
     void                    UpdateCobCannon();
+    void                    UpdateSakura();
     void                    CobCannonFire(int theTargetX, int theTargetY);
     void                    UpdateGoldMagnetShroom();
     /*inline*/ bool         IsOnBoard();

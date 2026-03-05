@@ -75,6 +75,7 @@ public:
 class Plant;
 class Reanimation;
 class TodParticleSystem;
+class GridItem;
 class Zombie : public GameObject
 {
 public:
@@ -407,6 +408,9 @@ public:
     void                            KnockBackZombie(int theDirection, float theForce, int theTime);
     void                            ColdExplode();
     void                            PlantsStackIceTrap();
+    void                            EatGridItem(GridItem* theGridItem);
+    GridItem* FindGridItemTarget();
+
 };
 
 class ZombieDefinition

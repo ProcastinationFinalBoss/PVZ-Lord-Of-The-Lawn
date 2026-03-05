@@ -2331,6 +2331,35 @@ void Zombie::UpdateZombiePeaHead()
     }
 }
 
+void Zombie::EatGridItem(GridItem* theGridItem)
+{
+    theGridItem->TakeDamage(DAMAGE_PER_EAT, 8U);
+    StartEating();
+}
+
+
+GridItem* Zombie::FindGridItemTarget()
+{
+    Rect aAttackRect = GetZombieAttackRect();
+
+    GridItem* aGridItem = nullptr;
+    while (mBoard->IterateGridItems(aGridItem))
+    {
+        if (mMindControlled &&
+            aGridItem->mGridY == mRow)
+        {
+            Rect aGridItemRect = aGridItem->GetPVZ2GraveRect();
+            if (GetRectOverlap(aAttackRect, aGridItemRect) > 0)
+            {
+                return aGridItem;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
+
 void Zombie::BurnRow(int theRow)  
 {
     Zombie* aZombie = nullptr;
@@ -4575,8 +4604,6 @@ void Zombie::UpdatePlaying()
         mBlowCounter--;
 
     }
-    mFreeInt = mBlowCounter;
-
     if (mZombiePhase == ZombiePhase::PHASE_RISING_FROM_GRAVE)
     {
         UpdateZombieRiseFromGrave();
@@ -6588,6 +6615,8 @@ void Zombie::ApplyAnimRate(float theAnimRate)
         theAnimRate * (0.4f + (0.006f * aChillScaleFactor)) * aSlowFactor :
         theAnimRate;
     }
+    mFreeInt = mSlowCounter;
+
 }
 
 void Zombie::UpdateAnimSpeed()
@@ -6825,6 +6854,12 @@ void Zombie::CheckIfPreyCaught()
     if (aZombie)
     {
         EatZombie(aZombie);
+        return;
+    }
+    GridItem* aGridItem = FindGridItemTarget();
+    if (aGridItem)
+    {
+        EatGridItem(aGridItem);
         return;
     }
 
@@ -8054,7 +8089,7 @@ void Zombie::TakeDamage(int theDamage, unsigned int theDamageFlags)
             aDamageRemaining = theDamage;
         }
     }
-    if (aDamageRemaining > 0 && mHelmType != HelmType::HELMTYPE_NONE)
+    if (aDamageRemaining > 0 && mHelmType != HelmType::HELMTYPE_NONE && !TestBit(theDamageFlags, (int)DamageFlags::DAMAGE_IGNORES_HELM))
     {
         aDamageRemaining = TakeHelmDamage(aDamageRemaining, theDamageFlags);
     }
@@ -9179,6 +9214,7 @@ void Zombie::PlayDeathAnim(unsigned int theDamageFlags)
     {
         DropShield(1U);
     }
+
     if (mZombieType == ZombieType::ZOMBIE_SQUASH_HEAD && !mHasHead)
     {
         mApp->RemoveReanimation(mSpecialHeadReanimID);

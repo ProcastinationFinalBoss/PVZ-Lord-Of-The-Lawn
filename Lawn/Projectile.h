@@ -50,13 +50,17 @@ public:
     AttachmentID            mAttachmentID;          
     float                   mCobTargetX;            
     int                     mCobTargetRow;          
-    ZombieID                mTargetZombieID;        
+    ZombieID                mTargetZombieID;      
+    PlantID                 mPlantOwnerID;
     int                     mLastPortalX;       
     bool                    mSplitPeaBounce;
     unsigned int            mPiercedZombies[40];
     unsigned int            mPiercedZombiesSNOW[3];
     int                     mNumPierced;
-    SeedType                mSeedTypeOwner;
+    float                   mMagnetDegree;
+    int                     mOriginalX;
+    int                     mOriginalY;
+    int                     mOriginalRow;
 
 public:
     Projectile();

@@ -1279,6 +1279,7 @@ void BetaSubmitFunc()
 	}
 }
 
+
 void LawnApp::Init()
 {
 	DoParseCmdLine();
@@ -2531,13 +2532,25 @@ bool LawnApp::HasSeedType(SeedType theSeedType)
 	{
 		return mPlayerInfo->mPurchases[(int)StoreItem::STORE_ITEM_PLANT_TWINSUNFLOWER] > 0;
 	}
+	if (theSeedType == SeedType::SEED_LASERBEAN)
+	{
+		return mPlayerInfo->mPurchases[(int)StoreItem::STORE_ITEM_PLANT_LASERBEAN] > 0;
+	}
 	if (theSeedType == SeedType::SEED_BONKCHOY)
 	{
 		return mPlayerInfo->mPurchases[(int)StoreItem::STORE_ITEM_PLANT_BONKCHOY] > 0;
 	}
+	if (theSeedType == SeedType::SEED_SAKURA)
+	{
+		return mPlayerInfo->mPurchases[(int)StoreItem::STORE_ITEM_PLANT_SAKURA] > 0;
+	}
 	if (theSeedType == SeedType::SEED_CHILLPEAR)
 	{
 		return mPlayerInfo->mPurchases[(int)StoreItem::STORE_ITEM_PLANT_CHILLPEAR] > 0;
+	}
+	if (theSeedType == SeedType::SEED_SUNBEAN)
+	{
+		return mPlayerInfo->mPurchases[(int)StoreItem::STORE_ITEM_PLANT_SUNBEAN] > 0;
 	}
 	if (theSeedType == SeedType::SEED_GLOOMSHROOM)
 	{

@@ -62,6 +62,12 @@ void GridItem::GridItemDie()
 {
     mDead = true;
     
+    Plant* aPlant = mBoard->GetTopPlantAt(mGridX, mGridY, PlantPriority::TOPPLANT_ONLY_NORMAL_POSITION);
+    if (aPlant && aPlant->mState == PlantState::STATE_GRAVEBUSTER_EATING && aPlant->mStateCountdown > 0 && mGridItemType == GridItemType::GRIDITEM_PVZ2_GRAVE)
+    {
+        aPlant->Die();
+    }
+
     if (mGridItemType == GridItemType::GRIDITEM_PVZ2_GRAVE)
     {
         mApp->AddTodParticle(mBoard->GridToPixelX(mGridX, mGridY) + 40, mBoard->GridToPixelY(mGridX, mGridY) + 90, mRenderOrder + 4, ParticleEffect::PARTICLE_GRAVE_BUSTER_DIE);
@@ -98,7 +104,7 @@ void GridItem::DrawGridItem(Graphics* g)
     switch (mGridItemType)
     {
     case GridItemType::GRIDITEM_GRAVESTONE:         DrawGraveStone(g);                              break;
-    case GridItemType::GRIDITEM_PVZ2_GRAVE:         DrawPVZ2GraveStone(g);                              break;
+    case GridItemType::GRIDITEM_PVZ2_GRAVE:         DrawPVZ2GraveStone(g);                          break;
     case GridItemType::GRIDITEM_CRATER:             DrawCrater(g);                                  break;
     case GridItemType::GRIDITEM_LADDER:             DrawLadder(g);                                  break;
     case GridItemType::GRIDITEM_BRAIN:              g->DrawImageF(IMAGE_BRAIN, mPosX, mPosY);       break;
@@ -189,12 +195,6 @@ void GridItem::DrawPVZ2GraveStone(Graphics* g)
     int x = mBoard->GridToPixelX(mGridX, mGridY) + aGridCelOffsetX - 4;
     int y = mBoard->GridToPixelY(mGridX, mGridY) + aCelHeight + aGridCelOffsetY - 9;
     g->DrawImage(IMAGE_PVZ2_TOMBSTONES, x + 7, y - 3 - aVisibleHeight + aExtraTopClip, aSrcRect);
-    g->DrawImage(IMAGE_TOMBSTONE_MOUNDS, x, y - aVisibleHeightDirt, aSrcRectDirt);
-    //TodDrawImageScaledF(g, IMAGE_PVZ2_TOMBSTONES, x, y, 0.8f, 0.8f);
-    //int aXPos = mBoard->GridToPixelX(mGridX, mGridY);
-    //int aYPos = mBoard->GridToPixelY(mGridX, mGridY);
-    //TodDrawImageScaledF(g, IMAGE_REANIM_ZOMBIE_LADDER_5, aXPos + 25.0f, aYPos - 4.0f, 0.8f, 0.8f);
-
     if (mJustGotShotCounter > 0)
     {
         g->SetDrawMode(Graphics::DRAWMODE_ADDITIVE);
@@ -206,6 +206,7 @@ void GridItem::DrawPVZ2GraveStone(Graphics* g)
     }
 
     g->SetColorizeImages(false);
+    g->DrawImage(IMAGE_TOMBSTONE_MOUNDS, x, y - aVisibleHeightDirt, aSrcRectDirt);
 }
 
 Rect GridItem::GetPVZ2GraveRect() {
@@ -653,7 +654,10 @@ void GridItem::Update()
     {
         aGridItemParticle->Update();
     }
-    mJustGotShotCounter--;
+    if (mJustGotShotCounter > 0)
+    {
+        mJustGotShotCounter--;
+    }
 
     if (mGridItemType == GridItemType::GRIDITEM_PORTAL_CIRCLE || mGridItemType == GridItemType::GRIDITEM_PORTAL_SQUARE)
     {

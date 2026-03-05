@@ -507,7 +507,6 @@ GridItem* Board::AddAPVZ2Grave(int theGridX, int theGridY)
 	aGraveStone->mGridItemType = GridItemType::GRIDITEM_PVZ2_GRAVE;
 	aGraveStone->mGridItemCounter = -Rand(50);
 	aGraveStone->mRenderOrder = MakeRenderOrder(RenderLayer::RENDER_LAYER_GRAVE_STONE, theGridY, 3);
-	//aGraveStone->mRenderOrder = MakeRenderOrder(RenderLayer::RENDER_LAYER_PLANT, theGridY, 800);
 	aGraveStone->mGridX = theGridX;
 	aGraveStone->mGridY = theGridY;
 	aGraveStone->mPVZ2GraveHealth = 700;
@@ -3024,6 +3023,18 @@ void Board::UpdateCursor()
 		{
 			aShowFinger = true;
 		}
+		if (((Plant*)aHitResult.mObject)->mState == PlantState::STATE_SAKURA_READY || ((Plant*)aHitResult.mObject)->mState == PlantState::STATE_SAKURA_NOTREADY)
+		{
+			Projectile* aProjectile = nullptr;
+			while (IterateProjectiles(aProjectile))
+			{
+				if (aProjectile->mPlantOwnerID == mPlants.DataArrayGetID(((Plant*)aHitResult.mObject)))
+				{
+					aShowFinger = true;
+					break;
+				}
+			}
+		}
 		break;
 
 	default:
@@ -3542,7 +3553,32 @@ void Board::MouseDownCobcannonFire(int x, int y, int theClickCount)
 			Plant* aCobcannon = mPlants.DataArrayTryToGet(mCursorObject->mCobCannonPlantID);
 			if (aCobcannon)
 			{
-				aCobcannon->CobCannonFire(x, y);
+				if (aCobcannon->mSeedType == SeedType::SEED_COBCANNON)
+				{
+					aCobcannon->CobCannonFire(x, y);
+				}
+				else if (aCobcannon->mSeedType == SeedType::SEED_SAKURA && (aCobcannon->mState == PlantState::STATE_SAKURA_READY || aCobcannon->mState == PlantState::STATE_SAKURA_NOTREADY))
+				{
+					aCobcannon->PlayBodyReanim("anim_shooting", ReanimLoopType::REANIM_LOOP, 20, 16.0f);
+					aCobcannon->mState = PlantState::STATE_SAKURA_LAUNCH;
+					Projectile* aProjectile = nullptr;
+					while (IterateProjectiles(aProjectile))
+					{
+						if (aProjectile->mPlantOwnerID == mCursorObject->mCobCannonPlantID)
+						{
+							//aProjectile->mMotionType = ProjectileMotion::MOTION_MANUAL;
+							//aProjectile->mOriginalX = x;
+							//aProjectile->mOriginalY = y;
+							SexyVector2 aCurrentPos(aProjectile->mPosX, aProjectile->mPosY);
+							SexyVector2 aTargetPos(x, y);
+							SexyVector2 aToTarget = (aTargetPos - aCurrentPos).Normalize();
+							aProjectile->mVelX = aToTarget.x * 6.66f;
+							aProjectile->mVelY = aToTarget.y * 6.66f;
+							aProjectile->mPlantOwnerID = PlantID::PLANTID_NULL;
+
+						}
+					}
+				}
 			}
 		}
 	}
@@ -4825,7 +4861,7 @@ void Board::SpawnZombiesFromGraves()
 	GridItem* aGridItem = nullptr;
 	while (IterateGridItems(aGridItem))
 	{
-		if (aGridItem->mGridItemType != GridItemType::GRIDITEM_GRAVESTONE || aGridItem->mGridItemCounter < 100)
+		if ((aGridItem->mGridItemType != GridItemType::GRIDITEM_GRAVESTONE && aGridItem->mGridItemType != GridItemType::GRIDITEM_PVZ2_GRAVE)|| aGridItem->mGridItemCounter < 100)
 		{
 			continue;
 		}
