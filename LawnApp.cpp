@@ -1178,6 +1178,7 @@ bool LawnApp::KillNewOptionsDialog()
 		mAutoCollectCoins = aNewOptionsDialog->mAutoCollectCoinsCheckbox->IsChecked();
 		mZombieHealthbars = aNewOptionsDialog->mZombieHealthbarsCheckbox->IsChecked();
 		mPlantHealthbars = aNewOptionsDialog->mPlantHealthbarsCheckbox->IsChecked();
+		mJumpscareOn = aNewOptionsDialog->mJumpscareCheckbox->IsChecked();
 		ToggleDebugMode();
 		SwitchScreenMode(wantWindowed, want3D, false);
 		bool aCustomCursor = aNewOptionsDialog->mCustomCursorCheckbox->IsChecked();
@@ -2543,6 +2544,10 @@ bool LawnApp::HasSeedType(SeedType theSeedType)
 	if (theSeedType == SeedType::SEED_SAKURA)
 	{
 		return mPlayerInfo->mPurchases[(int)StoreItem::STORE_ITEM_PLANT_SAKURA] > 0;
+	}
+	if (theSeedType == SeedType::SEED_SPORESHROOM)
+	{
+		return mPlayerInfo->mPurchases[(int)StoreItem::STORE_ITEM_PLANT_SPORESHROOM] > 0;
 	}
 	if (theSeedType == SeedType::SEED_CHILLPEAR)
 	{

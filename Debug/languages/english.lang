@@ -511,12 +511,26 @@ Propeller Zombie
 Peashooters are your first line of defense. They shoot peas at attacking zombies.
 
 [PEASHOOTER_DESCRIPTION]
-{SHORTLINE}
-{KEYWORD}Damage:{STAT} normal
-{SHORTLINE}
 {FLAVOR}How can a single plant grow and shoot so many peas so quickly? Peashooter says, 
 "Hard work, commitment, and a healthy, well-balanced breakfast of sunlight and high-fiber
 carbon dioxide make it all possible."
+
+[PEASHOOTER_SIDEA]
+{STAT}SIDE A SPECIAL:
+{KEYWORD}- Vanilla stats
+{KEYWORD}- Legitmately no other changes
+
+[PEASHOOTER_SIDEB]
+{STAT}SIDE B SPECIAL:
+{KEYWORD}- Slightly more expensive
+{KEYWORD}- Aim towards cursor
+{KEYWORD}- Stackable up to three times
+
+[PEASHOOTER_SIDEC]
+{STAT}SIDE C SPECIAL:
+{KEYWORD}- More expensive and shoots stunning primal peas
+{KEYWORD}- Stackable up to five times
+
 
 [SUNFLOWER_DESCRIPTION_HEADER]
 Sunflowers are essential for you to produce extra sun. Try planting as many as you can!
@@ -584,29 +598,53 @@ Snow Peas shoot frozen peas that damage and slow the enemy.
 tell him to "stay frosty." Snow Pea just rolls his eyes. He's heard 'em all.
 
 [CHOMPER_DESCRIPTION_HEADER]
-Chompers can devour a zombie whole, but they are vulnerable while chewing.
+Chompers can devour a nearby zombie whole, but take 45 seconds to digest.
+Bite stronger foes for medium damage instead.
 
 [CHOMPER_DESCRIPTION]
-{SHORTLINE}
-{KEYWORD}Damage:{STAT} massive
-{KEYWORD}Range:{STAT} very short
-{KEYWORD}Special:{STAT} long delay between chomps
-{SHORTLINE}
 {FLAVOR}Chomper almost got a gig doing stunts for The Little Shop of Horrors but it fell 
 through when his agent demanded too much on the front end. Chomper's not resentful, 
 though. He says it's just part of the business.
+
+[CHOMPER_SIDEA]
+{STAT}SIDE A SPECIAL:
+{KEYWORD}- Vanilla stats
+
+[CHOMPER_SIDEB]
+{STAT}SIDE B SPECIAL:
+{KEYWORD}- More costly
+{KEYWORD}- 3 tile range
+{KEYWORD}- Always deal high bite damage to targets in range
+{KEYWORD}- Take a break after dealing 900 damage in total
+
+
+[CHOMPER_SIDEC]
+{STAT}SIDE C SPECIAL:
+{KEYWORD}- Slightly more costly
+{KEYWORD}- Dynamic chewing time (15s vs. weak, 30s vs. average, 60s vs. strong) and windup speed
+{KEYWORD}- Gain health up to 3 times the original after every devour
 
 [PUFF_SHROOM_DESCRIPTION_HEADER]
 Puff-shrooms are cheap, but can only fire a short distance.
 
 [PUFF_SHROOM_DESCRIPTION]
-{SHORTLINE}
-{KEYWORD}Damage:{STAT} normal
-{KEYWORD}Range:{STAT} short
-{NOCTURNAL}Sleeps during the day
-{SHORTLINE}
 {FLAVOR}"I only recently became aware of the existence of zombies," says Puff-shroom. "Like many fungi, 
 I'd just assumed they were fairy tales or movie monsters. This whole experience has been a huge eye-opener for me."
+
+[PUFF_SHROOM_SIDEA]
+{STAT}SIDE A SPECIAL:
+{KEYWORD}- Vanilla stats
+{KEYWORD}- {NOCTURNAL}Sleeps during the day
+
+[PUFF_SHROOM_SIDEB]
+{STAT}SIDE B SPECIAL:
+{KEYWORD}- Reflourished stats
+{KEYWORD}- No longer {NOCTURNAL}sleeps during the day
+{KEYWORD}- {STATS}Lasts 60 seconds before disappearing
+
+[PUFF_SHROOM_SIDEC]
+{STAT}SIDE C SPECIAL:
+{KEYWORD}- 
 
 [SUN_SHROOM_DESCRIPTION_HEADER]
 Sun-shrooms give small sun at first and normal sun later.
@@ -2451,6 +2489,9 @@ Page {PAGE}
 
 [OPTIONS_MUSIC]
 Music
+
+[OPTIONS_JUMPSCARE]
+Foxy Jumpscare
 
 [OPTIONS_SOUND]
 Sound FX

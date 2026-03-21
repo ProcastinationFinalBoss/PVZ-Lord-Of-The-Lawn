@@ -18,6 +18,7 @@ bool Sexy::ExtractResourcesByName(ResourceManager *theManager, const char *theNa
 	if (strcmp(theName,"DelayLoad_Background4")==0) return ExtractDelayLoad_Background4Resources(theManager);
 	if (strcmp(theName,"DelayLoad_Background5")==0) return ExtractDelayLoad_Background5Resources(theManager);
 	if (strcmp(theName,"DelayLoad_Background6")==0) return ExtractDelayLoad_Background6Resources(theManager);
+	if (strcmp(theName,"DelayLoad_Background1Evening")==0) return ExtractDelayLoad_Background1EveningResources(theManager);
 	if (strcmp(theName,"DelayLoad_BackgroundUnsodded")==0) return ExtractDelayLoad_BackgroundUnsoddedResources(theManager);
 	if (strcmp(theName,"DelayLoad_ChallengeScreen")==0) return ExtractDelayLoad_ChallengeScreenResources(theManager);
 	if (strcmp(theName,"DelayLoad_Credits")==0) return ExtractDelayLoad_CreditsResources(theManager);
@@ -322,6 +323,25 @@ Image* Sexy::IMAGE_BACKGROUND6_GAMEOVER_MASK;
 Image* Sexy::IMAGE_BACKGROUND6_POLE;
 Image* Sexy::IMAGE_BACKGROUND6_TREES;
 
+bool Sexy::ExtractDelayLoad_Background1EveningResources(ResourceManager *theManager)
+{
+	gNeedRecalcVariableToIdMap = true;
+
+	ResourceManager &aMgr = *theManager;
+	try
+	{
+		IMAGE_BACKGROUND1EVENING = aMgr.GetImageThrow("IMAGE_BACKGROUND1EVENING");
+	}
+	catch(ResourceManagerException&)
+	{
+		return false;
+	}
+	return true;
+}
+
+// DelayLoad_Background1Evening Resources
+Image* Sexy::IMAGE_BACKGROUND1EVENING;
+
 bool Sexy::ExtractDelayLoad_Background6Resources(ResourceManager *theManager)
 {
 	gNeedRecalcVariableToIdMap = true;
@@ -373,6 +393,7 @@ Image* Sexy::IMAGE_CHALLENGE_WINDOW_HIGHLIGHT;
 Image* Sexy::IMAGE_LOCK;
 Image* Sexy::IMAGE_LOCK_OPEN;
 Image* Sexy::IMAGE_SURVIVAL_THUMBNAILS;
+Image* Sexy::IMAGE_CHALLENGE_ALMANAC_PLANTCARD;
 
 bool Sexy::ExtractDelayLoad_ChallengeScreenResources(ResourceManager *theManager)
 {
@@ -389,6 +410,7 @@ bool Sexy::ExtractDelayLoad_ChallengeScreenResources(ResourceManager *theManager
 		IMAGE_LOCK = aMgr.GetImageThrow("IMAGE_LOCK");
 		IMAGE_LOCK_OPEN = aMgr.GetImageThrow("IMAGE_LOCK_OPEN");
 		IMAGE_SURVIVAL_THUMBNAILS = aMgr.GetImageThrow("IMAGE_SURVIVAL_THUMBNAILS");
+		IMAGE_CHALLENGE_ALMANAC_PLANTCARD = aMgr.GetImageThrow("IMAGE_CHALLENGE_ALMANAC_PLANTCARD");
 	}
 	catch(ResourceManagerException&)
 	{
@@ -1232,6 +1254,7 @@ Image* Sexy::IMAGE_ZOMBOSS_PARTICLES;
 Image* Sexy::IMAGE_PROJECTILEPRIMALSNOWPEA;
 Image* Sexy::IMAGE_PROJECTILE_SAKURA;
 Image* Sexy::IMAGE_PVZ2_TOMBSTONES;
+Image* Sexy::IMAGE_FOXY_JUMPSCARE;
 
 bool Sexy::ExtractLoadingImagesResources(ResourceManager *theManager)
 {
@@ -1594,6 +1617,7 @@ bool Sexy::ExtractLoadingImagesResources(ResourceManager *theManager)
 		IMAGE_PROJECTILEPRIMALSNOWPEA = aMgr.GetImageThrow("IMAGE_PROJECTILEPRIMALSNOWPEA");
 		IMAGE_PROJECTILE_SAKURA = aMgr.GetImageThrow("IMAGE_PROJECTILE_SAKURA");
 		IMAGE_PVZ2_TOMBSTONES = aMgr.GetImageThrow("IMAGE_PVZ2_TOMBSTONES");
+		IMAGE_FOXY_JUMPSCARE = aMgr.GetImageThrow("IMAGE_FOXY_JUMPSCARE");
 	}
 	catch(ResourceManagerException&)
 	{
@@ -1770,6 +1794,7 @@ int Sexy::SOUND_ZOMBIE_FALLING_1;
 int Sexy::SOUND_ZOMBIE_FALLING_2;
 int Sexy::SOUND_LASER;
 int Sexy::SOUND_TANK;
+int Sexy::SOUND_JUMPSCARE;
 
 bool Sexy::ExtractLoadingSoundsResources(ResourceManager *theManager)
 {
@@ -1945,6 +1970,7 @@ bool Sexy::ExtractLoadingSoundsResources(ResourceManager *theManager)
 		SOUND_ZOMBIE_FALLING_2 = aMgr.GetSoundThrow("SOUND_ZOMBIE_FALLING_2");
 		SOUND_LASER = aMgr.GetSoundThrow("SOUND_LASER");
 		SOUND_TANK = aMgr.GetSoundThrow("SOUND_TANK");
+		SOUND_JUMPSCARE = aMgr.GetSoundThrow("SOUND_JUMPSCARE");
 	}
 	catch(ResourceManagerException&)
 	{
@@ -2339,6 +2365,7 @@ static void* gResources[ResourceId::RESOURCE_ID_MAX] =
 	&IMAGE_PROJECTILEPRIMALSNOWPEA,
 	&IMAGE_PROJECTILE_SAKURA,
 	&IMAGE_PVZ2_TOMBSTONES,
+	&IMAGE_FOXY_JUMPSCARE,
 	&SOUND_ACHIEVEMENT,
 	&SOUND_AWOOGA,
 	&SOUND_BLEEP,
@@ -2506,6 +2533,7 @@ static void* gResources[ResourceId::RESOURCE_ID_MAX] =
 	&SOUND_CRAZYDAVESCREAM2,
 	&SOUND_LASER,
 	&SOUND_TANK,
+	&SOUND_JUMPSCARE,
 	&IMAGE_BACKGROUND1,
 	&IMAGE_BACKGROUND1_GAMEOVER_INTERIOR_OVERLAY,
 	&IMAGE_BACKGROUND1_GAMEOVER_MASK,
@@ -2549,6 +2577,7 @@ static void* gResources[ResourceId::RESOURCE_ID_MAX] =
 	&IMAGE_CHALLENGE_BLANK,
 	&IMAGE_CHALLENGE_THUMBNAILS,
 	&IMAGE_SURVIVAL_THUMBNAILS,
+	&IMAGE_CHALLENGE_ALMANAC_PLANTCARD,
 	&IMAGE_LOCK,
 	&IMAGE_LOCK_OPEN,
 	&IMAGE_ACHIEVEMENT_TILE,
@@ -3103,6 +3132,7 @@ const char* Sexy::GetStringIdById(int theId)
 		case IMAGE_PROJECTILEPRIMALSNOWPEA_ID: return "IMAGE_PROJECTILEPRIMALSNOWPEA";
 		case IMAGE_PROJECTILE_SAKURA_ID: return "IMAGE_PROJECTILE_SAKURA";
 		case IMAGE_PVZ2_TOMBSTONES_ID: return "IMAGE_PVZ2_TOMBSTONES";
+		case IMAGE_FOXY_JUMPSCARE_ID: return "IMAGE_FOXY_JUMPSCARE";
 		case SOUND_ACHIEVEMENT_ID: return "SOUND_ACHIEVEMENT";
 		case SOUND_AWOOGA_ID: return "SOUND_AWOOGA";
 		case SOUND_BLEEP_ID: return "SOUND_BLEEP";
@@ -3270,6 +3300,7 @@ const char* Sexy::GetStringIdById(int theId)
 		case SOUND_CRAZYDAVESCREAM2_ID: return "SOUND_CRAZYDAVESCREAM2";
 		case SOUND_LASER_ID: return "SOUND_LASER";
 		case SOUND_TANK_ID: return "SOUND_TANK";
+		case SOUND_JUMPSCARE_ID: return "SOUND_JUMPSCARE";
 		case IMAGE_BACKGROUND1_ID: return "IMAGE_BACKGROUND1";
 		case IMAGE_BACKGROUND1_GAMEOVER_INTERIOR_OVERLAY_ID: return "IMAGE_BACKGROUND1_GAMEOVER_INTERIOR_OVERLAY";
 		case IMAGE_BACKGROUND1_GAMEOVER_MASK_ID: return "IMAGE_BACKGROUND1_GAMEOVER_MASK";
@@ -3313,6 +3344,7 @@ const char* Sexy::GetStringIdById(int theId)
 		case IMAGE_CHALLENGE_BLANK_ID: return "IMAGE_CHALLENGE_BLANK";
 		case IMAGE_CHALLENGE_THUMBNAILS_ID: return "IMAGE_CHALLENGE_THUMBNAILS";
 		case IMAGE_SURVIVAL_THUMBNAILS_ID: return "IMAGE_SURVIVAL_THUMBNAILS";
+		case IMAGE_CHALLENGE_ALMANAC_PLANTCARD_ID: return "IMAGE_CHALLENGE_ALMANAC_PLANTCARD";
 		case IMAGE_LOCK_ID: return "IMAGE_LOCK";
 		case IMAGE_LOCK_OPEN_ID: return "IMAGE_LOCK_OPEN";
 		case IMAGE_ACHIEVEMENT_TILE_ID: return "IMAGE_ACHIEVEMENT_TILE";

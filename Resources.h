@@ -102,6 +102,10 @@ namespace Sexy
 	extern Image* IMAGE_BACKGROUND6_POLE;
 	extern Image* IMAGE_BACKGROUND6_TREES;
 
+	// DelayLoad_Background6 Resources
+	bool ExtractDelayLoad_Background1EveningResources(ResourceManager *theMgr);
+	extern Image* IMAGE_BACKGROUND1EVENING;
+
 	// DelayLoad_BackgroundUnsodded Resources
 	bool ExtractDelayLoad_BackgroundUnsoddedResources(ResourceManager *theMgr);
 	extern Image* IMAGE_BACKGROUND1UNSODDED;
@@ -118,6 +122,8 @@ namespace Sexy
 	extern Image* IMAGE_LOCK;
 	extern Image* IMAGE_LOCK_OPEN;
 	extern Image* IMAGE_SURVIVAL_THUMBNAILS;
+	extern Image* IMAGE_CHALLENGE_ALMANAC_PLANTCARD;
+
 
 	// DelayLoad_Credits Resources
 	bool ExtractDelayLoad_CreditsResources(ResourceManager *theMgr);
@@ -616,6 +622,7 @@ namespace Sexy
 	extern Image* IMAGE_PROJECTILEPRIMALSNOWPEA;
 	extern Image* IMAGE_PROJECTILE_SAKURA;
 	extern Image* IMAGE_PVZ2_TOMBSTONES;
+	extern Image* IMAGE_FOXY_JUMPSCARE;
 
 	// LoadingSounds Resources
 	bool ExtractLoadingSoundsResources(ResourceManager *theMgr);
@@ -786,6 +793,7 @@ namespace Sexy
 	extern int SOUND_ZOMBIE_FALLING_2;
 	extern int SOUND_LASER;
 	extern int SOUND_TANK;
+	extern int SOUND_JUMPSCARE;
 
 	enum ResourceId
 	{
@@ -1173,6 +1181,7 @@ namespace Sexy
 		IMAGE_PROJECTILEPRIMALSNOWPEA_ID,
 		IMAGE_PROJECTILE_SAKURA_ID,
 		IMAGE_PVZ2_TOMBSTONES_ID,
+		IMAGE_FOXY_JUMPSCARE_ID,
 		SOUND_ACHIEVEMENT_ID,
 		SOUND_AWOOGA_ID,
 		SOUND_BLEEP_ID,
@@ -1340,6 +1349,7 @@ namespace Sexy
 		SOUND_CRAZYDAVESCREAM2_ID,
 		SOUND_LASER_ID,
 		SOUND_TANK_ID,
+		SOUND_JUMPSCARE_ID,
 		IMAGE_BACKGROUND1_ID,
 		IMAGE_BACKGROUND1_GAMEOVER_INTERIOR_OVERLAY_ID,
 		IMAGE_BACKGROUND1_GAMEOVER_MASK_ID,
@@ -1383,6 +1393,7 @@ namespace Sexy
 		IMAGE_CHALLENGE_BLANK_ID,
 		IMAGE_CHALLENGE_THUMBNAILS_ID,
 		IMAGE_SURVIVAL_THUMBNAILS_ID,
+		IMAGE_CHALLENGE_ALMANAC_PLANTCARD_ID,
 		IMAGE_LOCK_ID,
 		IMAGE_LOCK_OPEN_ID,
 		IMAGE_ACHIEVEMENT_TILE_ID,

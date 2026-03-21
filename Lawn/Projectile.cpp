@@ -857,7 +857,7 @@ void Projectile::UpdateNormalMotion()
 {
 	if (mMotionType == ProjectileMotion::MOTION_BACKWARDS)
 	{
-		if ((mPosX + mWidth < 9.99f + BOARD_ADDITIONAL_WIDTH) && !mSplitPeaBounce && mBoard->mPlants.DataArrayTryToGet(mPlantOwnerID)->mSeedType == SeedType::SEED_SPLITPEA)
+		if ((mPosX + mWidth < 9.99f + BOARD_ADDITIONAL_WIDTH) && !mSplitPeaBounce && (mBoard->mPlants.DataArrayTryToGet(mPlantOwnerID) && mBoard->mPlants.DataArrayTryToGet(mPlantOwnerID)->mSeedType == SeedType::SEED_SPLITPEA))
 		{
 			mSplitPeaBounce = true;
 		}
@@ -986,7 +986,7 @@ void Projectile::UpdateNormalMotion()
 		//}
 		if (mProjectileAge < 60)
 		{
-			mPosY -= 0.5f;
+			mPosY -= 0.50f;
 		}
 		//if (!mSplitPeaBounce)
 		//{
@@ -1035,7 +1035,7 @@ void Projectile::UpdateNormalMotion()
 	{
 		mPosX += 6.66f;
 	}
-	else if (mBoard->mPlants.DataArrayTryToGet(mPlantOwnerID)->mSeedType == SeedType::SEED_SPLITPEA)
+	else if (mBoard->mPlants.DataArrayTryToGet(mPlantOwnerID) && mBoard->mPlants.DataArrayTryToGet(mPlantOwnerID)->mSeedType == SeedType::SEED_SPLITPEA)
 	{
 		if (mPosX + 9.99f > WIDE_BOARD_WIDTH && !mSplitPeaBounce)
 		{

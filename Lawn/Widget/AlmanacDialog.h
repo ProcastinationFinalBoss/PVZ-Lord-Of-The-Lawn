@@ -41,6 +41,8 @@ public:
 	GameButton*					mIndexButton;			
 	GameButton*					mPlantButton;			
 	GameButton*					mZombieButton;			
+	GameButton*					mSideLeftButton;			
+	GameButton*					mSideRightButton;			
 	Sexy::Slider*				mPlantSlider;
 	Sexy::Slider*				mZombieSlider;
 	AlmanacPage					mOpenPage;				
@@ -103,6 +105,8 @@ public:
 	virtual void				MouseWheel(int theDelta);
 
 	SexyString					TranslateAndSanitize(SexyString str);
+	static SexyString					ConvertNumberCharactersToUppercaseLetters(const SexyString& theString);
+	SexyString					GetPlantSideDescriptionPrefix(SeedType theSeedType);
 };
 extern int gZombieDefeated[NUM_ZOMBIE_TYPES];
 

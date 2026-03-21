@@ -8,6 +8,7 @@
 #define NUM_BOBSLED_FOLLOWERS 3
 #define NUM_BACKUP_DANCERS 4
 #define NUM_BOSS_BUNGEES 3
+#define MAX_PARTICLES_STORED 16
 
 constexpr const int ZOMBIE_START_RANDOM_OFFSET = 40;
 constexpr const int BUNGEE_ZOMBIE_HEIGHT = 3000;
@@ -122,6 +123,7 @@ public:
     int                             mButteredCounter;                           
     int                             mIceTrapCounter;  
     int                             mStunCounter;
+    int                             mSporedCounter;
     bool                            mMindControlled;                            
     bool                            mBlowingAway;                               
     bool                            mHasHead;                                   
@@ -173,6 +175,11 @@ public:
     int                             mSlowCounter;
     int                             mBlowCounter;
     bool                            mItsGargover;
+    float                             mSunBeanSun;
+    float                           mSunBeanDamageTaken;
+    ParticleSystemID                mParticleIDs[MAX_PARTICLES_STORED];
+    int                             mParticlesAttached;
+
 public:
     Zombie();
     ~Zombie();
@@ -408,7 +415,10 @@ public:
     void                            KnockBackZombie(int theDirection, float theForce, int theTime);
     void                            ColdExplode();
     void                            PlantsStackIceTrap();
+    void                            DropAllSunBeanSun();
     void                            EatGridItem(GridItem* theGridItem);
+    TodParticleSystem*                            DoesAttachedParticleExist(ParticleEffect theParticleEffect);
+    void                            DetachParticleAndRemoveFromStorage(ParticleEffect theParticleEffect);
     GridItem* FindGridItemTarget();
 
 };

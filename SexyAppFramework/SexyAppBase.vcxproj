@@ -58,11 +58,13 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader />
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <UseFullPaths>true</UseFullPaths>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_USE_WIDE_STRING;WIN_32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>

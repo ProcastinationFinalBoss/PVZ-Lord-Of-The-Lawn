@@ -200,12 +200,13 @@ public:
     bool                    mIsOnBoard;                     
     bool                    mHighlighted;     
     float                   mBonkChoyPunchCD;
-    int						mBonkchoyUppercut;
+    bool						mBonkchoyUppercut;
     int                     mBonkchoyFlipped;
     int                     mFreeInt;
     int                     mThreePeaTargets;
     int                     mThreePeaRowOffset;
     int                     mThreePeaRowLesserOffset;
+    int                     mSide;
 
 public:
     Plant();
@@ -339,5 +340,16 @@ public:
     const SexyChar*         mPlantName;         
 };
 extern PlantDefinition gPlantDefs[SeedType::NUM_SEED_TYPES];
+extern int gPlantSides[SeedType::NUM_SEED_TYPES];
+
+void ResetPlantSides();
+void SetPlantSide(SeedType theSeedType, int theValue);
+int GetPlantSide(SeedType theSeedType);
+
+extern int gPlantMaxSides[SeedType::NUM_SEED_TYPES];
+
+void ResetPlantMaxSides();
+int GetPlantMaxSides(SeedType theSeedType);
+void SetPlantMaxSides(SeedType theSeedType, int theValue);
 
 /*inline*/ PlantDefinition& GetPlantDefinition(SeedType theSeedType);

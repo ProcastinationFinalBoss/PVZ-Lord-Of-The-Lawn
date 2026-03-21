@@ -165,6 +165,7 @@ namespace Sexy
 		bool					mShutdown;
 		bool					mExitToTop;
 		bool					mIsWindowed;
+		bool					mJumpscareOn;
 		bool					mIsPhysWindowed;
 		bool					mFullScreenWindow; // uses ChangeDisplaySettings to run fullscreen with mIsWindowed true
 		bool					mForceFullscreen;

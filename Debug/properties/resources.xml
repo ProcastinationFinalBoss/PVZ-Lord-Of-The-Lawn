@@ -112,6 +112,7 @@
 <Image id="MONEYBAG" path="moneybag" />
 <Image id="MONEYBAG_HI_RES" path="moneybag_hi_res" />
 <Image id="CHOCOLATE" path="Chocolate" />
+<Image id="FOXY_JUMPSCARE" path="foxyjumpscarespritesheet" rows="23"/>
 
 <!-- Buttons and other UI -->
 <Image id="OPTIONS_BACKTOGAMEBUTTON0" path="options_backtogamebutton0" />
@@ -605,6 +606,7 @@
 <Sound id="CRAZYDAVESCREAM2" path="crazydavescream2" />
 <Sound id="LASER" path="laser" />
 <Sound id="TANK" path="tank" />
+<Sound id="JUMPSCARE" path="jumpscare" />
 
 </Resources>
 
@@ -665,6 +667,13 @@
 <Image id="BACKGROUND6_TREES" path="background6_trees" ddsurface="" a8r8g8b8="" />
 </Resources>
   
+<Resources id="DelayLoad_Background1Evening">
+<SetDefaults path="images" idprefix="IMAGE_" />
+<Image id="BACKGROUND1EVENING" path="backgroundevening" ddsurface="" a8r8g8b8="" />
+
+</Resources>
+  
+
 <Resources id="DelayLoad_MushroomGarden">
 <SetDefaults path="images" idprefix="IMAGE_" />
 <Image id="BACKGROUND_MUSHROOMGARDEN" path="Background_MushroomGarden" />
@@ -707,6 +716,7 @@
 <Image id="SURVIVAL_THUMBNAILS" path="Survival_Thumbnails" cols="11" />
 <Image id="LOCK" path="lock" />
 <Image id="LOCK_OPEN" path="lock_open" />
+<Image id="CHALLENGE_ALMANAC_PLANTCARD" path="Almanac_PlantCard" />
 </Resources>  
 
 <Resources id="DelayLoad_Achievements">

@@ -84,6 +84,7 @@ void Zombie::ZombieInitialize(int theRow, ZombieType theType, bool theVariant, Z
 {
     TOD_ASSERT(theType >= 0 && theType <= ZombieType::NUM_ZOMBIE_TYPES);
 
+    memset(mParticleIDs, 0, sizeof(mParticleIDs));
     mFromWave = theFromWave;
     mRow = theRow;
     mPosX = 780 + Rand(ZOMBIE_START_RANDOM_OFFSET) + BOARD_ADDITIONAL_WIDTH;
@@ -277,6 +278,7 @@ void Zombie::ZombieInitialize(int theRow, ZombieType theType, bool theVariant, Z
         ReanimShowPrefix("anim_hair", RENDER_GROUP_HIDDEN);
         mHelmType = HelmType::HELMTYPE_FOOTBALL;
         mHelmHealth = 1400;
+        mBodyHealth = 900;
         mAnimTicksPerFrame = 6;
         mVariant = false;
         break;
@@ -2064,6 +2066,15 @@ void Zombie::UpdateZombieGargantuar()
                             SquishAllInSquare(aPlant->mPlantCol, aPlant->mRow, ZombieAttackType::ATTACKTYPE_CHEW);
                         }
                     }
+                    else if (aPlant->mSeedType == SeedType::SEED_TALLNUT)
+                    {
+                        aPlant->mPlantHealth -= ceil(8000.0f / 3);
+                        if (aPlant->mPlantHealth <= 0)
+                        {
+                            aPlant->mPlantHealth = 0;
+                            SquishAllInSquare(aPlant->mPlantCol, aPlant->mRow, ZombieAttackType::ATTACKTYPE_CHEW);
+                        }
+                    }
                     else if (aPlant->mSeedType == SeedType::SEED_PUMPKINSHELL)
                     {
                         mBoard->mPlantsEaten++;
@@ -3445,6 +3456,20 @@ void Zombie::DropHead(unsigned int theDamageFlags)
         ColdExplode();
         UpdateAnimSpeed();
     }
+    if (mSunBeanSun > 0)
+    {
+        DropAllSunBeanSun();
+    }
+    if (mSporedCounter > 0)
+    {
+        DetachParticleAndRemoveFromStorage(ParticleEffect::PARTICLE_LANTERN_SHINE);
+        mSporedCounter = 0;
+        if (mBoard->GetTopPlantAt(mBoard->PixelToGridXKeepOnBoard(mX, mY), mBoard->PixelToGridYKeepOnBoard(mX, mY), PlantPriority::TOPPLANT_ANY))
+        {
+            mBoard->AddPlant(mBoard->PixelToGridXKeepOnBoard(mX, mY), mBoard->PixelToGridYKeepOnBoard(mX, mY), SeedType::SEED_SPORESHROOM, SeedType::SEED_NONE);
+        }
+    }
+
     mHasHead = false;
     SetupReanimForLostHead();
     if (TestBit(theDamageFlags, DamageFlags::DAMAGE_DOESNT_LEAVE_BODY))
@@ -4583,6 +4608,15 @@ void Zombie::UpdatePlaying()
             RemoveButter();
         }
     }
+    if (mSporedCounter > 0)
+    {
+        mSporedCounter--;
+        if (mSporedCounter == 0)
+        {
+            DetachParticleAndRemoveFromStorage(ParticleEffect::PARTICLE_LANTERN_SHINE);
+
+        }
+    }
     if (mStunCounter > 0)
     {
         mStunCounter--;
@@ -4791,6 +4825,22 @@ void Zombie::UpdateYuckyFace()
     }
 }
 
+TodParticleSystem* Zombie::DoesAttachedParticleExist(ParticleEffect theParticleEffect)
+{
+    for (int i = 0; i < MAX_PARTICLES_STORED; ++i)
+    {
+        if (mApp->ParticleTryToGet(mParticleIDs[i]) != nullptr)
+        {
+            if (mApp->ParticleTryToGet(mParticleIDs[i])->mEffectType == theParticleEffect)
+            {
+                return mApp->ParticleTryToGet(mParticleIDs[i]);
+            }
+
+        }
+    }
+    return nullptr;
+}
+
 void Zombie::AnimateChewSound()
 {
     if (mZombiePhase == ZombiePhase::PHASE_SNORKEL_UP_TO_EAT)
@@ -4816,6 +4866,18 @@ void Zombie::AnimateChewSound()
             {
                 mApp->GetAchievement(AchievementType::ACHIEVEMENT_DISCO_IS_UNDEAD);
             }
+        }
+        else if (aPlant->mSeedType == SeedType::SEED_SUNBEAN)
+        {
+            aPlant->Die();
+            if (!DoesAttachedParticleExist(ParticleEffect::PARTICLE_POTTED_PLANT_GLOW))
+            {
+                TodParticleSystem* aParticle = AddAttachedParticle(40, 40, ParticleEffect::PARTICLE_POTTED_PLANT_GLOW);
+                aParticle->OverrideImage("Ring", IMAGE_AWARDPICKUPGLOW);
+                mParticleIDs[mParticlesAttached++] = mApp->ParticleGetID(aParticle);
+            }
+
+            mSunBeanSun += min((mBodyHealth + mHelmHealth + mShieldHealth) / 5, 300);
         }
         else if (aPlant->mSeedType == SeedType::SEED_GARLIC)
         {
@@ -7483,6 +7545,10 @@ void Zombie::DieNoLoot()
         mItsGargover = true;
 
     }
+    if (mSunBeanSun > 0)
+    {
+        DropAllSunBeanSun();
+    }
     StopZombieSound();
     AttachmentDie(mAttachmentID);
     mApp->RemoveReanimation(mBodyReanimID);
@@ -8070,12 +8136,93 @@ void Zombie::TakeBodyDamage(int theDamage, unsigned int theDamageFlags)
     }
 }
 
+void Zombie::DropAllSunBeanSun()
+{
+    while (mSunBeanSun >= 5)
+    {
+        if (mSunBeanSun >= 50)
+        {
+            mSunBeanSun -= 50;
+            mBoard->AddCoin(mX + 40, mY + 40, CoinType::COIN_LARGESUN, CoinMotion::COIN_MOTION_FROM_PLANT);
+        }
+        else if (mSunBeanSun >= 25)
+        {
+            mSunBeanSun -= 25;
+            mBoard->AddCoin(mX + 40, mY + 40, CoinType::COIN_SUN, CoinMotion::COIN_MOTION_FROM_PLANT);
+
+        }
+        else if (mSunBeanSun >= 15)
+        {
+            mSunBeanSun -= 15;
+            mBoard->AddCoin(mX + 40, mY + 40, CoinType::COIN_SMALLSUN, CoinMotion::COIN_MOTION_FROM_PLANT);
+
+        }
+        else if (mSunBeanSun >= 5)
+        {
+            mSunBeanSun -= 5;
+            mBoard->AddCoin(mX + 40, mY + 40, CoinType::COIN_VERYSMALLSUN, CoinMotion::COIN_MOTION_FROM_PLANT);
+
+        }
+    }
+    mSunBeanSun = 0;
+    DetachParticleAndRemoveFromStorage(ParticleEffect::PARTICLE_POTTED_PLANT_GLOW);
+
+}
+
+void Zombie::DetachParticleAndRemoveFromStorage(ParticleEffect theParticleEffect)
+{
+    if (DoesAttachedParticleExist(theParticleEffect))
+    {
+        DoesAttachedParticleExist(theParticleEffect)->ParticleSystemDie();
+    }
+}
+
 void Zombie::TakeDamage(int theDamage, unsigned int theDamageFlags)
 {
     if (mZombiePhase == ZombiePhase::PHASE_JACK_IN_THE_BOX_POPPING || IsDeadOrDying())
         return;
 
     int aDamageRemaining = theDamage;
+    if (mSunBeanSun > 0)
+    {
+        mSunBeanDamageTaken += ClampFloat(theDamage / 5, 0, mSunBeanSun);
+        while (mSunBeanDamageTaken >= 5)
+        {
+            if (mSunBeanDamageTaken >= 50)
+            {
+                mSunBeanDamageTaken -= 50;
+                mBoard->AddCoin(mX + 40, mY + 40, CoinType::COIN_LARGESUN, CoinMotion::COIN_MOTION_FROM_PLANT);
+            }
+            else if (mSunBeanDamageTaken >= 25)
+            {
+                mSunBeanDamageTaken -= 25;
+                mBoard->AddCoin(mX + 40, mY + 40, CoinType::COIN_SUN, CoinMotion::COIN_MOTION_FROM_PLANT);
+
+            }
+            else if (mSunBeanDamageTaken >= 15)
+            {
+                mSunBeanDamageTaken -= 15;
+                mBoard->AddCoin(mX + 40, mY + 40, CoinType::COIN_SMALLSUN, CoinMotion::COIN_MOTION_FROM_PLANT);
+
+            }
+            else if (mSunBeanDamageTaken >= 5)
+            {
+                mSunBeanDamageTaken -= 5;
+                mBoard->AddCoin(mX + 40, mY + 40, CoinType::COIN_VERYSMALLSUN, CoinMotion::COIN_MOTION_FROM_PLANT);
+
+            }
+        }
+        mSunBeanSun -= theDamage / 5;
+        if (mSunBeanSun < 0)
+        {
+            mSunBeanSun = 0;
+        }
+        if (mSunBeanSun == 0)
+        {
+            DetachParticleAndRemoveFromStorage(ParticleEffect::PARTICLE_POTTED_PLANT_GLOW);
+        }
+    }
+    
 
     if (IsFlying())
     {
@@ -8856,11 +9003,24 @@ void Zombie::MowDown()
     {
         mStunCounter = 0;
     }
+    if (mSunBeanSun > 0)
+    {
+        DropAllSunBeanSun();
+    }
     if (mChilledCounter > 0)
     {
         mChilledCounter = 0;
         ColdExplode();
         UpdateAnimSpeed();
+    }
+    if (mSporedCounter > 0)
+    {
+        DetachParticleAndRemoveFromStorage(ParticleEffect::PARTICLE_LANTERN_SHINE);
+        mSporedCounter = 0;
+        if (mBoard->GetTopPlantAt(mBoard->PixelToGridXKeepOnBoard(mX, mY), mBoard->PixelToGridYKeepOnBoard(mX, mY), PlantPriority::TOPPLANT_ANY))
+        {
+            mBoard->AddPlant(mBoard->PixelToGridXKeepOnBoard(mX, mY), mBoard->PixelToGridYKeepOnBoard(mX, mY), SeedType::SEED_SPORESHROOM, SeedType::SEED_NONE);
+        }
     }
 
 
@@ -8933,9 +9093,9 @@ void Zombie::ApplyBurn()
     {
         mButteredCounter = 0;
     }
-    if (mStunCounter > 0)
+    if (mSunBeanSun > 0)
     {
-        mStunCounter = 0;
+        DropAllSunBeanSun();
     }
 
     AttachmentDetachCrossFadeParticleType(mAttachmentID, ParticleEffect::PARTICLE_ZAMBONI_SMOKE, nullptr);
@@ -9180,12 +9340,26 @@ void Zombie::PlayDeathAnim(unsigned int theDamageFlags)
     {
         mStunCounter = 0;
     }
+    if (mSunBeanSun > 0)
+    {
+        DropAllSunBeanSun();
+    }
     if (mChilledCounter > 0 && !CanLoseBodyParts())
     {
         mChilledCounter = 0;
         ColdExplode();
         UpdateAnimSpeed();
     }
+    if (mSporedCounter > 0)
+    {
+        DetachParticleAndRemoveFromStorage(ParticleEffect::PARTICLE_LANTERN_SHINE);
+        mSporedCounter = 0;
+        if (mBoard->GetTopPlantAt(mBoard->PixelToGridXKeepOnBoard(mX, mY), mBoard->PixelToGridYKeepOnBoard(mX, mY), PlantPriority::TOPPLANT_ANY))
+        {
+            mBoard->AddPlant(mBoard->PixelToGridXKeepOnBoard(mX, mY), mBoard->PixelToGridYKeepOnBoard(mX, mY), SeedType::SEED_SPORESHROOM, SeedType::SEED_NONE);
+        }
+    }
+
     if (mYuckyFace)
     {
         ShowYuckyFace(false);

@@ -167,7 +167,8 @@ public:
 	int								mPrevMouseY;											
 	int								mSunMoney;												
 	int								mNumWaves;												
-	int								mMainCounter;											
+	int								mMainCounter;		
+	int								mJumpscareCheckCounter;
 	int								mEffectCounter;											
 	int								mDrawCount;												
 	int								mRiseFromGraveCounter;									
@@ -243,7 +244,10 @@ public:
 	int								mGargantuarsKilled;
 	int								mCoinBankX;
 	int								mCoinBankY;
+	bool							mJumpscareIsTrue;
+	int								mJumpscareAge;
 	static const int MAX_DEBUG_AREA_RECTS = 10;
+	int mPlantSides[SeedType::NUM_SEED_TYPES];
 	DebugAreaRect mAreaDebugRects[MAX_DEBUG_AREA_RECTS];
 
 public:
@@ -331,6 +335,7 @@ public:
 	void							ZombiesWon(Zombie* theZombie = nullptr);
 	void							DrawLevel(Graphics* g);
 	void							DrawShovel(Graphics* g);
+	void							DrawJumpscare(Graphics* g);
 	void							UpdateZombieSpawning();
 	void							UpdateSunSpawning();
 	/*inline*/ void					ClearAdvice(AdviceType theHelpIndex);

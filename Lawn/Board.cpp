@@ -155,6 +155,9 @@ Board::Board(LawnApp* theApp)
 	mAdvice = new MessageWidget(mApp);
 	mBackground = BackgroundType::BACKGROUND_1_DAY;
 	mMainCounter = 0;
+	mJumpscareCheckCounter = 100;
+	mJumpscareIsTrue = false;
+	mJumpscareAge = 0;
 	mTutorialState = TutorialState::TUTORIAL_OFF;
 	mTutorialTimer = -1;
 	mTutorialParticleID = ParticleSystemID::PARTICLESYSTEMID_NULL;
@@ -691,6 +694,10 @@ void Board::PickZombieWaves()
 		{
 			aZombiePoints = aWave * 2 / 5 + 1;
 		}
+		//else if (mApp->mGameMode == GameMode::GAMEMODE_LOCAL_WARMING)
+		//{
+		//	aZombiePoints = aWave + 1;
+		//}
 		else
 		{
 			aZombiePoints = aWave / 3 + 1;
@@ -730,6 +737,10 @@ void Board::PickZombieWaves()
 		else if (mApp->IsShovelLevel() || mApp->IsBungeeBlitzLevel() || mApp->mGameMode == GameMode::GAMEMODE_CHALLENGE_PORTAL_COMBAT || mApp->mGameMode == GameMode::GAMEMODE_CHALLENGE_INVISIGHOUL)
 		{
 			aZombiePoints *= 2;
+		}
+		else if (mApp->mGameMode == GameMode::GAMEMODE_LOCAL_WARMING)
+		{
+			aZombiePoints *= aZombiePoints;
 		}
 		
 		if (aIntroZombieType != ZombieType::ZOMBIE_INVALID && aIntroZombieType != ZombieType::ZOMBIE_DUCKY_TUBE)
@@ -872,6 +883,10 @@ void Board::LoadBackgroundImages()
 
 	case BackgroundType::BACKGROUND_MUSHROOM_GARDEN:
 		TodLoadResources("DelayLoad_MushroomGarden");
+		break;
+
+	case BackgroundType::BACKGROUND_1_DAYEVENING:
+		TodLoadResources("DelayLoad_Background1Evening");
 		break;
 
 	default:
@@ -1017,6 +1032,9 @@ void Board::PickBackground()
 	case GameMode::GAMEMODE_TREE_OF_WISDOM:
 		mBackground = BackgroundType::BACKGROUND_TREEOFWISDOM;
 		break;
+	case GameMode::GAMEMODE_LOCAL_WARMING:
+		mBackground = BackgroundType::BACKGROUND_5_ROOF;
+		break;
 
 	default:
 		TOD_ASSERT();
@@ -1024,7 +1042,7 @@ void Board::PickBackground()
 	}
 	LoadBackgroundImages();
 
-	if (mBackground == BackgroundType::BACKGROUND_1_DAY || mBackground == BackgroundType::BACKGROUND_GREENHOUSE || mBackground == BackgroundType::BACKGROUND_TREEOFWISDOM)
+	if (mBackground == BackgroundType::BACKGROUND_1_DAY || mBackground == BackgroundType::BACKGROUND_1_DAYEVENING || mBackground == BackgroundType::BACKGROUND_GREENHOUSE || mBackground == BackgroundType::BACKGROUND_TREEOFWISDOM)
 	{
 		mPlantRow[0] = PlantRowType::PLANTROW_NORMAL;
 		mPlantRow[1] = PlantRowType::PLANTROW_NORMAL;
@@ -1368,6 +1386,9 @@ void Board::GetZenButtonRect(GameObjectType theObjectType, Rect& theRect)
 void Board::InitLevel()
 {
 	mMainCounter = 0;
+	mJumpscareCheckCounter = 100;
+	mJumpscareIsTrue = false;
+	mJumpscareAge = 0;
 	mEnableGraveStones = false;
 	mSodPosition = 0;
 	mPrevBoardResult = mApp->mBoardResult;
@@ -1681,6 +1702,8 @@ bool Board::ChooseSeedsOnCurrentLevel()
 
 void Board::StartLevel()
 {
+	for (int i = 0; i < (int)SeedType::NUM_SEED_TYPES; i++)
+		mPlantSides[i] = gPlantSides[i];
 	mCoinBankFadeCount = 0;
 	mApp->mLastLevelStats->Reset();
 	mChallenge->StartLevel();
@@ -2148,6 +2171,7 @@ Plant* Board::AddPlant(int theGridX, int theGridY, SeedType theSeedType, SeedTyp
 
 	if (theSeedType == SeedType::SEED_CABBAGEPULT ||
 		theSeedType == SeedType::SEED_KERNELPULT ||
+		theSeedType == SeedType::SEED_SPORESHROOM ||
 		theSeedType == SeedType::SEED_MELONPULT ||
 		theSeedType == SeedType::SEED_WINTERMELON)
 	{
@@ -5228,6 +5252,10 @@ void Board::UpdateSunSpawning()
 
 	mNumSunsFallen++;
 	mSunCountDown = min(SUN_COUNTDOWN_MAX, SUN_COUNTDOWN + mNumSunsFallen * 10) + Rand(SUN_COUNTDOWN_RANGE);
+	if (mApp->mGameMode == GameMode::GAMEMODE_LOCAL_WARMING)
+	{
+		mSunCountDown /= 4;
+	}
 	CoinType aSunType = mApp->mGameMode == GameMode::GAMEMODE_CHALLENGE_SUNNY_DAY ? CoinType::COIN_LARGESUN : CoinType::COIN_SUN;
 	AddCoin(RandRangeInt(100 + BOARD_ADDITIONAL_WIDTH, 649 + BOARD_ADDITIONAL_WIDTH), 60, aSunType, CoinMotion::COIN_MOTION_FROM_SKY);
 }
@@ -5667,6 +5695,36 @@ void Board::UpdateGame()
 		return;
 
 	mMainCounter++;
+	if (mApp->mJumpscareOn)
+	{
+		if (mJumpscareCheckCounter > 0)
+		{
+			mJumpscareCheckCounter--;
+			if (mJumpscareCheckCounter == 0)
+			{
+				if (0 == 0)
+				{
+					mJumpscareIsTrue = true;
+					mApp->PlaySample(Sexy::SOUND_JUMPSCARE);
+
+				}
+				else
+				{
+					mJumpscareCheckCounter = 100;
+				}
+			}
+		}
+		if (mJumpscareIsTrue)
+		{
+			mJumpscareAge++;
+			if (mJumpscareAge / 3 > 22)
+			{
+				mJumpscareAge = 0;
+				mJumpscareIsTrue = false;
+				mJumpscareCheckCounter = 100;
+			}
+		}
+	}
 	UpdateSunSpawning();
 	UpdateZombieSpawning();
 	UpdateIce();
@@ -5888,6 +5946,10 @@ int Board::GetIceZPos(int theRow)
 	return MakeRenderOrder(RenderLayer::RENDER_LAYER_GROUND, theRow, 2);
 }
 
+void Board::DrawJumpscare(Graphics* g)
+{
+
+}
 void Board::DrawIce(Graphics* g, int theGridY)
 {
 	int aPosY = GridToPixelY(8, theGridY) + 20;
@@ -5923,6 +5985,7 @@ void Board::DrawBackdrop(Graphics* g)
 	switch (mBackground)
 	{
 	case BackgroundType::BACKGROUND_1_DAY:				aBgImage = Sexy::IMAGE_BACKGROUND1;						break;
+	case BackgroundType::BACKGROUND_1_DAYEVENING:				aBgImage = Sexy::IMAGE_BACKGROUND1EVENING;						break;
 	case BackgroundType::BACKGROUND_2_NIGHT:			aBgImage = Sexy::IMAGE_BACKGROUND2;						break;
 	case BackgroundType::BACKGROUND_3_POOL:				aBgImage = Sexy::IMAGE_BACKGROUND3;						break;
 	case BackgroundType::BACKGROUND_4_FOG:				aBgImage = Sexy::IMAGE_BACKGROUND4;						break;
@@ -7592,7 +7655,7 @@ void Board::UpdateFog()
 		{
 			ClearFogAroundPlant(aPlant, 4);
 		}
-		else if (aPlant->mSeedType == SeedType::SEED_TORCHWOOD)
+		else if (aPlant->mSeedType == SeedType::SEED_TORCHWOOD || (aPlant->mSeedType == SeedType::SEED_GARLIC && aPlant->mState == PlantState::STATE_GARLIC_AURA))
 		{
 			ClearFogAroundPlant(aPlant, 1);
 		}
@@ -7741,6 +7804,11 @@ void Board::DrawUITop(Graphics* g)
 	mToolTip->Draw(g);
 	DrawDebugText(g);
 	DrawDebugObjectRects(g);
+	if (mJumpscareIsTrue)
+	{
+		TodDrawImageCelScaled(g, Sexy::IMAGE_FOXY_JUMPSCARE, 0, 0, 0, ClampInt(mJumpscareAge / 3, 0, 22), 1.5f, 1.5f);
+	}
+
 }
 
 void Board::Draw(Graphics* g)
@@ -9867,7 +9935,7 @@ void Board::FreezeAllZombiesInRadius(int theRow, int theX, int theY, int theRadi
 	mAreaDebugRects[0].mTimer = 300;
 
 	Zombie* aZombie = nullptr;
-	mApp->PlayFoley(FoleyType::FOLEY_FROZEN);
+	mApp->PlayFoley(FoleyType::FOLEY_SPLAT);
 
 	while (IterateZombies(aZombie))
 	{

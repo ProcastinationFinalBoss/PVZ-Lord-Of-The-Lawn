@@ -44,6 +44,7 @@ public:
 	Sexy::Slider*			mMusicVolumeSlider;					
 	Sexy::Slider*			mSfxVolumeSlider;					
 	Sexy::Checkbox*			mFullscreenCheckbox;				
+	Sexy::Checkbox*			mJumpscareCheckbox;				
 	Sexy::Checkbox*			mHardwareAccelerationCheckbox;		
 	Sexy::Checkbox*			mDebugModeCheckbox;
 	Sexy::Checkbox*			mDiscordCheckbox;

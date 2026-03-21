@@ -293,7 +293,8 @@ void Coin::CoinInitialize(int theX, int theY, CoinType theCoinType, CoinMotion t
     case CoinMotion::COIN_MOTION_FROM_SKY:
         mVelY = 0.67f;
         mVelX = 0.0f;
-        mGroundY = Rand(250) + 300;
+        mGroundY = 250 + 300;
+        //mGroundY = Rand(250) + 300;
         break;
 
     case CoinMotion::COIN_MOTION_FROM_SKY_SLOW:
@@ -373,9 +374,13 @@ void Coin::CoinInitialize(int theX, int theY, CoinType theCoinType, CoinMotion t
     }
 
     float aScale;
-    if (mType == CoinType::COIN_SMALLSUN)
+    if (mType == CoinType::COIN_VERYSMALLSUN)
     {
         aScale = 0.5f;
+    }
+    else if (mType == CoinType::COIN_SMALLSUN)
+    {
+        aScale = 0.75f;
     }
     else if (mType == CoinType::COIN_LARGESUN)
     {
@@ -410,7 +415,7 @@ bool Coin::IsMoney()
 
 bool Coin::IsSun()
 {
-    return mType == CoinType::COIN_SUN || mType == CoinType::COIN_SMALLSUN || mType == CoinType::COIN_LARGESUN;
+    return mType == CoinType::COIN_SUN || mType == CoinType::COIN_SMALLSUN || mType == CoinType::COIN_LARGESUN || mType == CoinType::COIN_VERYSMALLSUN;
 }
 
 bool Coin::IsPresentWithAdvice()
@@ -760,8 +765,43 @@ void Coin::Update()
         int aMouseX = mApp->mWidgetManager->mLastMouseX - mX;
         int aMouseY = mApp->mWidgetManager->mLastMouseY - mY;
         HitResult aHitResultCoin;
+
+        if (!(mDead || mIsBeingCollected) &&
+            aMouseX >= mPosX - 150 &&
+            aMouseX < mPosX + mWidth + 150 &&
+            aMouseY >= mPosY - 150 &&
+            aMouseY < mPosY + mHeight + 150 &&
+            (mCoinMotion == CoinMotion::COIN_MOTION_FROM_SKY || mCoinMotion == CoinMotion::COIN_MOTION_FROM_SKY_SLOW))
+        {
+            SexyVector2 aDestPos(aMouseX + mX, aMouseY + mY);
+            SexyVector2 aSrcPos(mPosX, mPosY);
+            SexyVector2 aDiff = aDestPos - aSrcPos;
+
+            float aDist = aDiff.Magnitude();
+            float aMaxRange = 150.0f;
+
+            float aT = 1.0f - ClampFloat(aDist / aMaxRange, 0.0f, 1.0f);
+
+            float aDynamicSpeed = 1.0f + (34.0f * aT);
+
+            SexyVector2 aMotion = aDiff.Normalize();
+
+            //if (!(mPosX > WIDE_BOARD_WIDTH || mPosX + mWidth < 0.0f + BOARD_ADDITIONAL_WIDTH))
+            mPosX -= aMotion.x * aDynamicSpeed;
+            mPosX = ClampFloat(mPosX, (float)BOARD_ADDITIONAL_WIDTH, (float)WIDE_BOARD_WIDTH);
+            mPosY -= aMotion.y * aDynamicSpeed;
+            if ((mPosX <= (float)BOARD_ADDITIONAL_WIDTH || mPosX >= (float)WIDE_BOARD_WIDTH || mPosY + mVelY >= mGroundY) && (mFadeCount == 0))
+            {
+                StartFade();
+            }
+        }
+
+
         if (MouseHitTest(aMouseX, aMouseY, &aHitResultCoin))
+        {
             MouseDown(aMouseX, aMouseY, 0);
+
+        }
     }
 }
 
@@ -1282,12 +1322,12 @@ void Coin::Collect()
 
 float Coin::GetSunScale()
 {
-    return mType == CoinType::COIN_SMALLSUN ? 0.5f : mType == CoinType::COIN_LARGESUN ? 1.5f : 1.0f;
+    return mType == CoinType::COIN_SMALLSUN ? 0.75f : mType == CoinType::COIN_LARGESUN ? 1.5f : mType == CoinType::COIN_VERYSMALLSUN ? 0.5f : 1.0f;
 }
 
 int Coin::GetSunValue()
 {
-    return mType == CoinType::COIN_SUN ? 25 : mType == CoinType::COIN_SMALLSUN ? 15 : mType == CoinType::COIN_LARGESUN ? 50 : 0;
+    return mType == CoinType::COIN_SUN ? 25 : mType == CoinType::COIN_SMALLSUN ? 15 : mType == CoinType::COIN_LARGESUN ? 50 : mType == CoinType::COIN_VERYSMALLSUN ? 5 : 0;
 }
 
 int Coin::GetCoinValue(CoinType theCoinType)

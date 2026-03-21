@@ -349,8 +349,11 @@ unsigned int SeedChooserScreen::SeedNotRecommendedToPick(SeedType theSeedType)
 
 bool SeedChooserScreen::SeedNotAllowedToPick(SeedType theSeedType)
 {
-	return mApp->mGameMode == GAMEMODE_CHALLENGE_LAST_STAND && (theSeedType == SEED_SUNFLOWER || theSeedType == SEED_SUNSHROOM ||
-		theSeedType == SEED_TWINSUNFLOWER || theSeedType == SEED_SEASHROOM || theSeedType == SEED_PUFFSHROOM);
+	return (mApp->mGameMode == GAMEMODE_CHALLENGE_LAST_STAND && (theSeedType == SEED_SUNFLOWER || theSeedType == SEED_SUNSHROOM ||
+		theSeedType == SEED_TWINSUNFLOWER || theSeedType == SEED_SEASHROOM || theSeedType == SEED_PUFFSHROOM || theSeedType == SEED_SUNBEAN) ||
+		mApp->mGameMode == GAMEMODE_LOCAL_WARMING && (theSeedType == SEED_SUNFLOWER || theSeedType == SEED_SUNSHROOM ||
+			theSeedType == SEED_TWINSUNFLOWER || theSeedType == SEED_SEASHROOM || theSeedType == SEED_SUNBEAN)
+		);
 }
 
 bool SeedChooserScreen::SeedNotAllowedDuringTrial(SeedType theSeedType)
@@ -436,7 +439,7 @@ void SeedChooserScreen::Draw(Graphics* g)
 	{
 		ChosenSeed& aChosenSeed = mChosenSeeds[aSeedType];
 		ChosenSeedState aSeedState = aChosenSeed.mSeedState;
-		if (mApp->SeedTypeAvailable(aSeedType) && (aSeedState == SEED_FLYING_TO_BANK))
+		if (mApp->SeedTypeAvailable(aSeedType) && (aSeedState == SEED_FLYING_TO_BANK || aSeedState == SEED_FLYING_TO_CHOOSER)) 
 		{
 			DrawSeedPacket(g, aChosenSeed.mX, aChosenSeed.mY, aChosenSeed.mSeedType, aChosenSeed.mImitaterType, 0, 255, true, false);
 		}
@@ -594,7 +597,7 @@ void SeedChooserScreen::Update()
 		if (mApp->SeedTypeAvailable(aSeedType))
 		{
 			ChosenSeed& aChosenSeed = mChosenSeeds[aSeedType];
-			if (aChosenSeed.mSeedState == SEED_FLYING_TO_BANK)
+			if (aChosenSeed.mSeedState == SEED_FLYING_TO_BANK || aChosenSeed.mSeedState == SEED_FLYING_TO_CHOOSER)
 			{
 				int aTimeStart = aChosenSeed.mTimeStartMotion;
 				int aTimeEnd = aChosenSeed.mTimeEndMotion;
@@ -698,8 +701,8 @@ void SeedChooserScreen::OnStartButton()
 			return;
 		}
 	}
-	if (!PickedPlantType(SEED_SUNFLOWER) && !PickedPlantType(SEED_TWINSUNFLOWER) && !PickedPlantType(SEED_SUNSHROOM) &&
-		!mBoard->mCutScene->IsSurvivalRepick() && mApp->mGameMode != GAMEMODE_CHALLENGE_LAST_STAND)
+	if (!PickedPlantType(SEED_SUNFLOWER) && !PickedPlantType(SEED_TWINSUNFLOWER) && !PickedPlantType(SEED_SUNSHROOM) && !PickedPlantType(SEED_SEASHROOM) &&
+		!mBoard->mCutScene->IsSurvivalRepick() && (mApp->mGameMode != GAMEMODE_CHALLENGE_LAST_STAND && mApp->mGameMode != GAMEMODE_LOCAL_WARMING))
 	{
 		if (mApp->IsFirstTimeAdventureMode() && mBoard->mLevel == 11)
 		{
@@ -906,17 +909,28 @@ void SeedChooserScreen::ClickedSeedInBank(ChosenSeed& theChosenSeed)
 			mSeedsInFlight++;
 		}
 	}
-	//theChosenSeed.mTimeStartMotion = mSeedChooserAge;
-	//theChosenSeed.mTimeEndMotion = mSeedChooserAge + 25;
-	//theChosenSeed.mStartX = theChosenSeed.mX;
-	//theChosenSeed.mStartY = theChosenSeed.mY;
-	GetSeedPositionInChooser(theChosenSeed.mSeedType, theChosenSeed.mX, theChosenSeed.mY);
-	theChosenSeed.mY += theChosenSeed.mSeedType == SEED_IMITATER ? 0 : mScrollPosition;
-	theChosenSeed.mSeedState = SEED_IN_CHOOSER;
+	////theChosenSeed.mTimeStartMotion = mSeedChooserAge;
+	////theChosenSeed.mTimeEndMotion = mSeedChooserAge + 25;
+	////theChosenSeed.mStartX = theChosenSeed.mX;
+	////theChosenSeed.mStartY = theChosenSeed.mY;
+	//GetSeedPositionInChooser(theChosenSeed.mSeedType, theChosenSeed.mX, theChosenSeed.mY);
+	//theChosenSeed.mY += theChosenSeed.mSeedType == SEED_IMITATER ? 0 : mScrollPosition;
+	//theChosenSeed.mSeedState = SEED_IN_CHOOSER;
+	//theChosenSeed.mImitaterType = SEED_NONE;
+	//theChosenSeed.mSeedIndexInBank = 0;
+	//mSeedsInBank--;
+	////mSeedsInFlight++;
+	theChosenSeed.mTimeStartMotion = mSeedChooserAge;
+	theChosenSeed.mTimeEndMotion = mSeedChooserAge + 25;
+	theChosenSeed.mStartX = theChosenSeed.mX;
+	theChosenSeed.mStartY = theChosenSeed.mY;
+	GetSeedPositionInChooser(theChosenSeed.mSeedType, theChosenSeed.mEndX, theChosenSeed.mEndY);
+	theChosenSeed.mEndY += theChosenSeed.mSeedType == SEED_IMITATER ? 0 : mScrollPosition;
+	theChosenSeed.mSeedState = SEED_FLYING_TO_CHOOSER;
 	theChosenSeed.mImitaterType = SEED_NONE;
 	theChosenSeed.mSeedIndexInBank = 0;
 	mSeedsInBank--;
-	//mSeedsInFlight++;
+	mSeedsInFlight++;
 	RemoveToolTip();
 	EnableStartButton(false);
 	mApp->PlaySample(Sexy::SOUND_TAP);
@@ -1041,7 +1055,9 @@ void SeedChooserScreen::ShowToolTip()
 			}
 			else
 			{
-				mToolTip->SetTitle(Plant::GetNameString(aSeedType, SEED_NONE));
+				SexyString aSideSuffix = AlmanacDialog::ConvertNumberCharactersToUppercaseLetters(StrFormat(_S("%d"), GetPlantSide(aSeedType)));
+				SexyString aSideKey = StrFormat(_S("(SIDE%s)"), GetPlantDefinition(aSeedType).mPlantName);
+				mToolTip->SetTitle(Plant::GetNameString(aSeedType, SEED_NONE) + (GetPlantSide(aSeedType) ? StrFormat(_S(" (SIDE %s)"), aSideSuffix.c_str()) : _S("") ));
 				mToolTip->SetLabel(Plant::GetToolTip(aSeedType));
 			}
 

@@ -119,6 +119,7 @@ ParticleParams gLawnParticleArray[(int)ParticleEffect::NUM_PARTICLES] = {
 	{ ParticleEffect::PARTICLE_CREDITS_FOG, "particles\\Credits_fog.xml" },
 	{ ParticleEffect::PARTICLE_PERSENT_PICK_UP_ARROW, "particles\\UpsellArrow.xml" },
 	{ ParticleEffect::PARTICLE_LASER, "particles\\LaserBeam.xml" },
+	{ ParticleEffect::PARTICLE_SUNBEAN, "particles\\SunBeanShit.xml" },
 };  
 
 static std::map<Image*, std::string> gImagePathCache;

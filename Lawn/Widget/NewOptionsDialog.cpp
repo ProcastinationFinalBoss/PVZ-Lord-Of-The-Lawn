@@ -53,6 +53,9 @@ NewOptionsDialog::NewOptionsDialog(LawnApp* theApp, bool theFromGameSelector, bo
     mSfxVolumeSlider->SetValue(mApp->GetSfxVolume());
 
     mFullscreenCheckbox = MakeNewCheckbox(NewOptionsDialog::NewOptionsDialog_Fullscreen, this, !mApp->mIsWindowed);
+    mJumpscareCheckbox = MakeNewCheckbox(-1, this, mApp->mJumpscareOn);
+    mJumpscareCheckbox->SetVisible(false);
+
     mHardwareAccelerationCheckbox = MakeNewCheckbox(NewOptionsDialog::NewOptionsDialog_HardwareAcceleration, this, mApp->Is3dAccel());
     mDebugModeCheckbox = MakeNewCheckbox(-1, this, mApp->mTodCheatKeys);
     mDebugModeCheckbox->SetVisible(false);
@@ -184,6 +187,7 @@ NewOptionsDialog::~NewOptionsDialog()
     delete mMusicVolumeSlider;
     delete mSfxVolumeSlider;
     delete mFullscreenCheckbox;
+    delete mJumpscareCheckbox;
     delete mHardwareAccelerationCheckbox;
     delete mDebugModeCheckbox;
     delete mDiscordCheckbox;
@@ -229,6 +233,7 @@ void NewOptionsDialog::AddedToManager(Sexy::WidgetManager* theWidgetManager)
     AddWidget(mBankKeybindsCheckbox);
     AddWidget(m09FormatCheckbox);
     AddWidget(mFullscreenCheckbox);
+    AddWidget(mJumpscareCheckbox);
     AddWidget(mBackToGameButton);
     AddWidget(mLeftPageButton);
     AddWidget(mRightPageButton);
@@ -253,6 +258,7 @@ void NewOptionsDialog::RemovedFromManager(Sexy::WidgetManager* theWidgetManager)
     RemoveWidget(mMusicVolumeSlider);
     RemoveWidget(mSfxVolumeSlider);
     RemoveWidget(mFullscreenCheckbox);
+    RemoveWidget(mJumpscareCheckbox);
     RemoveWidget(mHardwareAccelerationCheckbox);
     RemoveWidget(mDebugModeCheckbox);
     RemoveWidget(mDiscordCheckbox);
@@ -317,6 +323,7 @@ void NewOptionsDialog::Resize(int theX, int theY, int theWidth, int theHeight)
     //PAGE 4
     mRealHardwareAccelerationCheckbox->Resize(ADVANCEDOPTIONS_SPEED_X, ADVANCEDOPTIONS_SPEED_Y, 46, 39);
     mCustomCursorCheckbox->Resize(mRealHardwareAccelerationCheckbox->mX, mRealHardwareAccelerationCheckbox->mY + 40, 46, 39);
+    mJumpscareCheckbox->Resize(mRealHardwareAccelerationCheckbox->mX, mRealHardwareAccelerationCheckbox->mY + 80, 46, 39);
 
     if ((!mRestartButton->mVisible || !mAlmanacButton->mVisible) && !mFromGameSelector && !mAdvancedMode)
     {
@@ -403,6 +410,8 @@ void NewOptionsDialog::Draw(Sexy::Graphics* g)
         case 4:
             TodDrawString(g, TodStringTranslate(_S("[OPTIONS_ACTUAL_ACCELERATION]")), mRealHardwareAccelerationCheckbox->mX - 6, mRealHardwareAccelerationCheckbox->mY + 22, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_RIGHT);
             TodDrawString(g, TodStringTranslate(_S("[OPTIONS_CUSTOM_CURSOR]")), mCustomCursorCheckbox->mX - 6, mCustomCursorCheckbox->mY + 22, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_RIGHT);
+            TodDrawString(g, TodStringTranslate(_S("[OPTIONS_JUMPSCARE]")), 274, mJumpscareCheckbox->mY + 23, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_RIGHT);
+
             break;
         }
         TodDrawString(g, TodReplaceNumberString(_S("[OPTIONS_PAGE]"), _S("{PAGE}"), mAdvancedPage), mWidth / 2, ADVANCEDOPTIONS_PAGE_Y, FONT_DWARVENTODCRAFT18GREENINSET, Color::White, DrawStringJustification::DS_ALIGN_CENTER);
@@ -518,6 +527,8 @@ void NewOptionsDialog::UpdateAdvancedPage()
     mResourcePackButton->SetVisible(false);
     mRealHardwareAccelerationCheckbox->SetVisible(false);
     mCustomCursorCheckbox->SetVisible(false);
+    mJumpscareCheckbox->SetVisible(false);
+
 
     switch (mAdvancedPage)
     {
@@ -543,6 +554,8 @@ void NewOptionsDialog::UpdateAdvancedPage()
         case 4:
             mRealHardwareAccelerationCheckbox->SetVisible(true);
             mCustomCursorCheckbox->SetVisible(true);
+            mJumpscareCheckbox->SetVisible(true);
+
             break;
     }
 }
