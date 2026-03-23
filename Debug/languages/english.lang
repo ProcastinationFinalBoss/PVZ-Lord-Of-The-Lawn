@@ -523,7 +523,7 @@ carbon dioxide make it all possible."
 [PEASHOOTER_SIDEB]
 {STAT}SIDE B SPECIAL:
 {KEYWORD}- Slightly more expensive
-{KEYWORD}- Aim towards cursor
+{KEYWORD}- Aims towards cursor
 {KEYWORD}- Stackable up to three times
 
 [PEASHOOTER_SIDEC]
@@ -546,11 +546,18 @@ life-giving jazzy rhythm of the Earth itself, thumping at a frequency only Sunfl
 Wall-nuts have hard shells which you can use to protect your other plants.
 
 [WALL_NUT_DESCRIPTION]
-{SHORTLINE}
-{KEYWORD}Toughness:{STAT} high
-{SHORTLINE}
 {FLAVOR}"People wonder how I feel about getting constantly chewed on by zombies," says Wall-nut. 
 "What they don't realize is that with my limited senses all I can feel is a kind of tingling, like a relaxing back rub."
+
+[WALL_NUT_SIDEA]
+{STAT}SIDE A SPECIAL:
+{KEYWORD}- Vanilla stats
+
+[WALL_NUT_SIDEB]
+{STAT}SIDE B SPECIAL:
+{KEYWORD}- Acts like a bowling instead
+{KEYWORD}- Much weaker than in Wall-nut Bowling but can stun and push back enemies
+{KEYWORD}- Impact damage increases every hit
 
 [CHERRY_BOMB_DESCRIPTION_HEADER]
 Cherry Bombs can blow up all zombies in an area. They have a short fuse so plant them near zombies.
@@ -613,16 +620,16 @@ though. He says it's just part of the business.
 [CHOMPER_SIDEB]
 {STAT}SIDE B SPECIAL:
 {KEYWORD}- More costly
-{KEYWORD}- 3 tile range
-{KEYWORD}- Always deal high bite damage to targets in range
-{KEYWORD}- Take a break after dealing 900 damage in total
-
+{KEYWORD}- 2 tile range
+{KEYWORD}- Always deals high bite damage to targets in range
+{KEYWORD}- Takes a break after dealing enough damage
+{KEYWORD}- Armored zombies take 50% more damage and the damage boost does not count towards the limit
 
 [CHOMPER_SIDEC]
 {STAT}SIDE C SPECIAL:
 {KEYWORD}- Slightly more costly
-{KEYWORD}- Dynamic chewing time (15s vs. weak, 30s vs. average, 60s vs. strong) and windup speed
-{KEYWORD}- Gain health up to 3 times the original after every devour
+{KEYWORD}- Dynamic chewing time and windup speed (short vs. weak, medium vs. average, long vs. strong) 
+{KEYWORD}- Gains small doses of health up to 4 times the original after every devour
 
 [PUFF_SHROOM_DESCRIPTION_HEADER]
 Puff-shrooms are cheap, but can only fire a short distance.
@@ -638,9 +645,9 @@ I'd just assumed they were fairy tales or movie monsters. This whole experience 
 
 [PUFF_SHROOM_SIDEB]
 {STAT}SIDE B SPECIAL:
-{KEYWORD}- Reflourished stats
 {KEYWORD}- No longer {NOCTURNAL}sleeps during the day
-{KEYWORD}- {STATS}Lasts 60 seconds before disappearing
+{KEYWORD}- {STATS}Is fragile, lasts 60 seconds before disappearing
+{KEYWORD}- Deal up to 2 times the damage the closer it is to disappearing
 
 [PUFF_SHROOM_SIDEC]
 {STAT}SIDE C SPECIAL:
@@ -740,15 +747,21 @@ Lily pads let you plant non-aquatic plants on top of them.
 he won't say a thing. Does he have startling opinions or shocking secrets? Nobody knows. Lily Pad keeps it all inside.
 
 [SQUASH_DESCRIPTION_HEADER]
-Squashes will smash the first zombie that gets close to it.
+Squashes will smash the first zombie that gets close and deals damage in the area they're in.
 
 [SQUASH_DESCRIPTION]
-{SHORTLINE}
-{KEYWORD}Damage:{STAT} massive
-{KEYWORD}Range:{STAT} short range, hits all zombies that it lands on
-{KEYWORD}Usage:{STAT} single use
-{SHORTLINE}
 {FLAVOR}"I'm ready!" yells Squash. "Let's do it! Put me in! There's nobody better! I'm your guy! C'mon! Whaddya waiting for? I need this!"
+
+[SQUASH_SIDEA]
+{STAT}SIDE A SPECIAL:
+{KEYWORD}- Vanilla stats
+
+[SQUASH_SIDEB]
+{STAT}SIDE B SPECIAL:
+{KEYWORD}- Free and fast to plant
+{KEYWORD}- Damage becomes chip
+{KEYWORD}- Briefly stuns targets
+{KEYWORD}(Yes, this is just like Potato Chip from PVZ2 Reflourished.)
 
 [THREEPEATER_DESCRIPTION_HEADER]
 Threepeaters shoot peas in three lanes.

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <string>
 #include "GameObject.h"
 
@@ -200,7 +201,7 @@ public:
     bool                    mIsOnBoard;                     
     bool                    mHighlighted;     
     float                   mBonkChoyPunchCD;
-    bool						mBonkchoyUppercut;
+    bool					mBonkchoyUppercut;
     int                     mBonkchoyFlipped;
     int                     mFreeInt;
     int                     mThreePeaTargets;
@@ -320,6 +321,7 @@ public:
     int                     CalculateLaneZombieHealth(int theRow);
     void                    SlowAllZombies();
     void                    UpdateGoldBloom();
+    void                    UpdatePuffShroom();
 
 };
 
@@ -345,6 +347,23 @@ extern int gPlantSides[SeedType::NUM_SEED_TYPES];
 void ResetPlantSides();
 void SetPlantSide(SeedType theSeedType, int theValue);
 int GetPlantSide(SeedType theSeedType);
+
+class PlantAlmanacStat
+{
+public:
+    SexyString              mLabel;
+    SexyString              mValue;
+    int                     mSideMask;
+};
+
+extern const int kPlantAlmanacStatAllSides; // Use -1 for all sides, or 1 << sideIndex for a specific side (Side A = 1).
+extern std::vector<PlantAlmanacStat> gPlantAlmanacStats[SeedType::NUM_SEED_TYPES];
+
+int GetPlantAlmanacStatSideMaskForSide(int theSide);
+const std::vector<PlantAlmanacStat>& GetPlantAlmanacStats(SeedType theSeedType);
+std::vector<PlantAlmanacStat> GetVisiblePlantAlmanacStats(SeedType theSeedType);
+void AddPlantAlmanacStat(SeedType theSeedType, const SexyString& theLabel, const SexyString& theValue, int theSideMask = kPlantAlmanacStatAllSides);
+void DeletePlantAlmanacStat(SeedType theSeedType, const SexyString& theLabel, const SexyString& theValue, int theSideMask = kPlantAlmanacStatAllSides);
 
 extern int gPlantMaxSides[SeedType::NUM_SEED_TYPES];
 

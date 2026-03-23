@@ -61,6 +61,7 @@ public:
     int                     mOriginalX;
     int                     mOriginalY;
     int                     mOriginalRow;
+    int                     mSavedCountdown;
 
 public:
     Projectile();

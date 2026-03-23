@@ -457,22 +457,37 @@ void AlmanacDialog::DrawPlants(Graphics* g)
 	{
 		TodDrawString(g, aName, 617 + BOARD_ADDITIONAL_WIDTH, 288 + BOARD_OFFSET_Y, Sexy::FONT_DWARVENTODCRAFT18YELLOW, Color::White, DS_ALIGN_CENTER);
 		TodDrawString(g, ConvertNumberCharactersToUppercaseLetters(StrFormat(_S("Side %d"), GetPlantSide(aPlantDef.mSeedType))), 617 + BOARD_ADDITIONAL_WIDTH + 250, 288 + BOARD_OFFSET_Y - 175, Sexy::FONT_HOUSEOFTERROR20, Color::White, DS_ALIGN_CENTER);
-		TodDrawString(g, _S("Sun Cost"), 538 + BOARD_ADDITIONAL_WIDTH + 250, 288 + 40 + BOARD_OFFSET_Y - 175, Sexy::FONT_HOUSEOFTERROR20, Color::White, DS_ALIGN_LEFT);
-		TodDrawString(g, StrFormat(_S("%d"), Plant::GetCost(aPlantDef.mSeedType)), 538 + BOARD_ADDITIONAL_WIDTH + 250, 288 + 70 + BOARD_OFFSET_Y - 175, Sexy::FONT_HOUSEOFTERROR16, Color::White, DS_ALIGN_LEFT);
-		TodDrawString(g, _S("Toughness"), 538 + BOARD_ADDITIONAL_WIDTH + 250, 288 + 100 + BOARD_OFFSET_Y - 175, Sexy::FONT_HOUSEOFTERROR20, Color::White, DS_ALIGN_LEFT);
-		TodDrawString(g, StrFormat(_S("%d"), mPlant->mPlantHealth), 538 + BOARD_ADDITIONAL_WIDTH + 250, 288 + 130 + BOARD_OFFSET_Y - 175, Sexy::FONT_HOUSEOFTERROR16, Color::White, DS_ALIGN_LEFT);
+
+		std::vector<PlantAlmanacStat> aStats;
+		aStats.push_back({ _S("Sun Cost"), StrFormat(_S("%d"), Plant::GetCost(aPlantDef.mSeedType)), kPlantAlmanacStatAllSides });
+		aStats.push_back({ _S("Toughness"), StrFormat(_S("%d"), mPlant->mPlantHealth), kPlantAlmanacStatAllSides });
 		if (mSelectedSeed != SeedType::SEED_IMITATER)
-		{
-			TodDrawString(g, _S("Recharge"), 538 + BOARD_ADDITIONAL_WIDTH + 250, 288 + 160 + BOARD_OFFSET_Y - 175, Sexy::FONT_HOUSEOFTERROR20, Color::White, DS_ALIGN_LEFT);
-			TodDrawString(g, StrFormat(_S("%.1fs"), Plant::GetRefreshTime(aPlantDef.mSeedType) / 100.0f), 538 + BOARD_ADDITIONAL_WIDTH + 250, 288 + 190 + BOARD_OFFSET_Y - 175, Sexy::FONT_HOUSEOFTERROR16, Color::White, DS_ALIGN_LEFT);
-		}
+			aStats.push_back({ _S("Recharge"), StrFormat(_S("%.1fs"), Plant::GetRefreshTime(aPlantDef.mSeedType) / 100.0f), kPlantAlmanacStatAllSides });
 		else
+			aStats.push_back({ _S("Recharge"), _S("Same as the imitated plant"), kPlantAlmanacStatAllSides });
+
+		std::vector<PlantAlmanacStat> aCustomStats = GetVisiblePlantAlmanacStats(aPlantDef.mSeedType);
+		aStats.insert(aStats.end(), aCustomStats.begin(), aCustomStats.end());
+		int aRowOffset = -30;
+		for (int i = 0; i < 3; i++)
 		{
-			TodDrawString(g, _S("Recharge"), 538 + BOARD_ADDITIONAL_WIDTH + 250, 288 + 160 + BOARD_OFFSET_Y - 175, Sexy::FONT_HOUSEOFTERROR20, Color::White, DS_ALIGN_LEFT);
-			TodDrawString(g, _S("Same as the imitated plant"), 538 + BOARD_ADDITIONAL_WIDTH + 250, 288 + 190 + BOARD_OFFSET_Y - 175, Sexy::FONT_HOUSEOFTERROR16, Color::White, DS_ALIGN_LEFT);
+			aRowOffset += 30;
+			TodDrawString(g, aStats[i].mLabel + _S(": ") + aStats[i].mValue, 538 + BOARD_ADDITIONAL_WIDTH + 250, 288 + 40 + aRowOffset + BOARD_OFFSET_Y - 175, Sexy::FONT_HOUSEOFTERROR20, Color::White, DS_ALIGN_LEFT);
 		}
+		aRowOffset += 10;
+		for (int i = 3; i < (int)aStats.size(); i++)
+		{	
+			aRowOffset += 30;
+			TodDrawString(g, aStats[i].mLabel, 538 + BOARD_ADDITIONAL_WIDTH + 250, 288 + 40 + aRowOffset + BOARD_OFFSET_Y - 175, Sexy::FONT_HOUSEOFTERROR20, Color::White, DS_ALIGN_LEFT);
+			if (aStats[i].mValue != "")
+			{
+				aRowOffset += 30;
+				TodDrawString(g, aStats[i].mValue, 538 + BOARD_ADDITIONAL_WIDTH + 250, 288 + 40 + aRowOffset + BOARD_OFFSET_Y - 175, Sexy::FONT_HOUSEOFTERROR16, Color::White, DS_ALIGN_LEFT);
+			}
+		}
+		aRowOffset -= 30;
 		if (mApp->mBoard && mApp->mGameScene == GameScenes::SCENE_PLAYING)
-			TodDrawStringWrapped(g, _S("SIDES ARE LOCKED DURING LEVELS"), Rect(538 + 250 + BOARD_ADDITIONAL_WIDTH, 309 + BOARD_OFFSET_Y, 238, 210), Sexy::FONT_HOUSEOFTERROR16, Color(255,0,0), DS_ALIGN_LEFT);
+			TodDrawStringWrapped(g, _S("SIDES ARE LOCKED DURING LEVELS"), Rect(538 + 250 + BOARD_ADDITIONAL_WIDTH, 288 - 94 + aRowOffset + BOARD_OFFSET_Y, 238, 210), Sexy::FONT_HOUSEOFTERROR16, Color(255,0,0), DS_ALIGN_LEFT);
 
 	}
 

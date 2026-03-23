@@ -694,7 +694,7 @@ void Board::PickZombieWaves()
 		{
 			aZombiePoints = aWave * 2 / 5 + 1;
 		}
-		//else if (mApp->mGameMode == GameMode::GAMEMODE_LOCAL_WARMING)
+		//else if (mApp->mGameMode == GameMode::GAMEMODE_CHALLENGE_LOCAL_WARMING)
 		//{
 		//	aZombiePoints = aWave + 1;
 		//}
@@ -738,7 +738,7 @@ void Board::PickZombieWaves()
 		{
 			aZombiePoints *= 2;
 		}
-		else if (mApp->mGameMode == GameMode::GAMEMODE_LOCAL_WARMING)
+		else if (mApp->mGameMode == GameMode::GAMEMODE_CHALLENGE_LOCAL_WARMING)
 		{
 			aZombiePoints *= aZombiePoints;
 		}
@@ -1032,7 +1032,7 @@ void Board::PickBackground()
 	case GameMode::GAMEMODE_TREE_OF_WISDOM:
 		mBackground = BackgroundType::BACKGROUND_TREEOFWISDOM;
 		break;
-	case GameMode::GAMEMODE_LOCAL_WARMING:
+	case GameMode::GAMEMODE_CHALLENGE_LOCAL_WARMING:
 		mBackground = BackgroundType::BACKGROUND_5_ROOF;
 		break;
 
@@ -1702,8 +1702,19 @@ bool Board::ChooseSeedsOnCurrentLevel()
 
 void Board::StartLevel()
 {
-	for (int i = 0; i < (int)SeedType::NUM_SEED_TYPES; i++)
-		mPlantSides[i] = gPlantSides[i];
+	if (mApp->IsWallnutBowlingLevel() ||
+		mApp->IsIZombieLevel() ||
+		mApp->IsWhackAZombieLevel()
+		)
+	{
+		for (int i = 0; i < (int)SeedType::NUM_SEED_TYPES; i++)
+			mPlantSides[i] = 0;
+	}
+	else
+	{
+		for (int i = 0; i < (int)SeedType::NUM_SEED_TYPES; i++)
+			mPlantSides[i] = gPlantSides[i];
+	}
 	mCoinBankFadeCount = 0;
 	mApp->mLastLevelStats->Reset();
 	mChallenge->StartLevel();
@@ -2252,7 +2263,10 @@ void Board::GetPlantsOnLawn(int theGridX, int theGridY, PlantsOnLawn* thePlantOn
 		{
 			aSeedType = aPlant->mImitaterType;
 		}
-
+		if ((aPlant->mSeedType == SeedType::SEED_WALLNUT && GetPlantSide(aPlant->mSeedType) == 1))
+		{
+			continue;
+		}
 		if (aPlant->mRow != theGridY)
 		{
 			continue;
@@ -5252,7 +5266,7 @@ void Board::UpdateSunSpawning()
 
 	mNumSunsFallen++;
 	mSunCountDown = min(SUN_COUNTDOWN_MAX, SUN_COUNTDOWN + mNumSunsFallen * 10) + Rand(SUN_COUNTDOWN_RANGE);
-	if (mApp->mGameMode == GameMode::GAMEMODE_LOCAL_WARMING)
+	if (mApp->mGameMode == GameMode::GAMEMODE_CHALLENGE_LOCAL_WARMING)
 	{
 		mSunCountDown /= 4;
 	}

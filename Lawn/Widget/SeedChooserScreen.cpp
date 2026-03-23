@@ -351,7 +351,7 @@ bool SeedChooserScreen::SeedNotAllowedToPick(SeedType theSeedType)
 {
 	return (mApp->mGameMode == GAMEMODE_CHALLENGE_LAST_STAND && (theSeedType == SEED_SUNFLOWER || theSeedType == SEED_SUNSHROOM ||
 		theSeedType == SEED_TWINSUNFLOWER || theSeedType == SEED_SEASHROOM || theSeedType == SEED_PUFFSHROOM || theSeedType == SEED_SUNBEAN) ||
-		mApp->mGameMode == GAMEMODE_LOCAL_WARMING && (theSeedType == SEED_SUNFLOWER || theSeedType == SEED_SUNSHROOM ||
+		mApp->mGameMode == GAMEMODE_CHALLENGE_LOCAL_WARMING && (theSeedType == SEED_SUNFLOWER || theSeedType == SEED_SUNSHROOM ||
 			theSeedType == SEED_TWINSUNFLOWER || theSeedType == SEED_SEASHROOM || theSeedType == SEED_SUNBEAN)
 		);
 }
@@ -702,7 +702,7 @@ void SeedChooserScreen::OnStartButton()
 		}
 	}
 	if (!PickedPlantType(SEED_SUNFLOWER) && !PickedPlantType(SEED_TWINSUNFLOWER) && !PickedPlantType(SEED_SUNSHROOM) && !PickedPlantType(SEED_SEASHROOM) &&
-		!mBoard->mCutScene->IsSurvivalRepick() && (mApp->mGameMode != GAMEMODE_CHALLENGE_LAST_STAND && mApp->mGameMode != GAMEMODE_LOCAL_WARMING))
+		!mBoard->mCutScene->IsSurvivalRepick() && (mApp->mGameMode != GAMEMODE_CHALLENGE_LAST_STAND && mApp->mGameMode != GAMEMODE_CHALLENGE_LOCAL_WARMING))
 	{
 		if (mApp->IsFirstTimeAdventureMode() && mBoard->mLevel == 11)
 		{
@@ -1056,7 +1056,6 @@ void SeedChooserScreen::ShowToolTip()
 			else
 			{
 				SexyString aSideSuffix = AlmanacDialog::ConvertNumberCharactersToUppercaseLetters(StrFormat(_S("%d"), GetPlantSide(aSeedType)));
-				SexyString aSideKey = StrFormat(_S("(SIDE%s)"), GetPlantDefinition(aSeedType).mPlantName);
 				mToolTip->SetTitle(Plant::GetNameString(aSeedType, SEED_NONE) + (GetPlantSide(aSeedType) ? StrFormat(_S(" (SIDE %s)"), aSideSuffix.c_str()) : _S("") ));
 				mToolTip->SetLabel(Plant::GetToolTip(aSeedType));
 			}

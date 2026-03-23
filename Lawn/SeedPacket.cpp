@@ -9,6 +9,8 @@
 #include "../SexyAppFramework/Font.h"
 #include "../Sexy.TodLib/FilterEffect.h"
 #include "../SexyAppFramework/SexyMatrix.h"
+#include "../Lawn/Widget/AlmanacDialog.h"
+
 
 SeedPacket::SeedPacket()
 {
@@ -325,6 +327,13 @@ void DrawSeedPacket(Graphics* g, float x, float y, SeedType theSeedType, SeedTyp
 		aOffsetX = 12.0f;
 		aOffsetY = 22.0f;
 		break;
+	case SeedType::SEED_SQUASH:
+		if (GetPlantSide(theSeedType) == 1)
+		{
+			aOffsetX -= 20.0f;
+			aOffsetY -= 42.0f;
+		}
+		break;
 
 	case SeedType::SEED_INSTANT_COFFEE:
 		aScale = 0.55f;
@@ -357,7 +366,6 @@ void DrawSeedPacket(Graphics* g, float x, float y, SeedType theSeedType, SeedTyp
 	case SeedType::SEED_PUMPKINSHELL:
 	case SeedType::SEED_CHOMPER:
 	case SeedType::SEED_DOOMSHROOM:
-	case SeedType::SEED_SQUASH:
 	case SeedType::SEED_HYPNOSHROOM:
 	case SeedType::SEED_SPIKEWEED:
 	case SeedType::SEED_SPIKEROCK:
@@ -572,6 +580,17 @@ void DrawSeedPacket(Graphics* g, float x, float y, SeedType theSeedType, SeedTyp
 		if (g->mScaleX == 1.0f && g->mScaleY == 1.0f)
 		{
 			TodDrawString(g, aCostStr, x + aTextOffsetX, y + aTextOffsetY, aTextFont, Color::Black, DS_ALIGN_LEFT);
+			SexyString aSideSuffix = AlmanacDialog::ConvertNumberCharactersToUppercaseLetters(StrFormat(_S("%d"), GetPlantSide(theSeedType)));
+			AlmanacDialog* aAlmanac = (AlmanacDialog*)((LawnApp*)gSexyAppBase)->GetDialog(Dialogs::DIALOG_ALMANAC);
+			bool isPlantsPageOpenOutsideLevel =
+				aAlmanac != nullptr &&
+				aAlmanac->mOpenPage == AlmanacPage::ALMANAC_PAGE_PLANTS &&
+				!(((LawnApp*)gSexyAppBase)->mBoard && ((LawnApp*)gSexyAppBase)->mGameScene == GameScenes::SCENE_PLAYING);
+			if (GetPlantSide(theSeedType) != 0 && (((LawnApp*)gSexyAppBase)->mGameScene == GameScenes::SCENE_PLAYING || isPlantsPageOpenOutsideLevel))
+
+			{
+				TodDrawString(g, StrFormat(_S("%s"), aSideSuffix.c_str()), x + 7, y + 18, Sexy::FONT_HOUSEOFTERROR16, Color::White, DS_ALIGN_CENTER);
+			}
 		}
 		else
 		{

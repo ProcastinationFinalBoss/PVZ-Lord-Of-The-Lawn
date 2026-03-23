@@ -2667,7 +2667,7 @@ void Challenge::InitZombieWaves()
 		aList[ZOMBIE_DOLPHIN_RIDER] = true;
 		aList[ZOMBIE_BALLOON] = true;
 	}
-	else if (aGameMode == GAMEMODE_LOCAL_WARMING)
+	else if (aGameMode == GAMEMODE_CHALLENGE_LOCAL_WARMING)
 	{
 		aList[ZOMBIE_NORMAL] = true;
 		aList[ZOMBIE_TRAFFIC_CONE] = true;

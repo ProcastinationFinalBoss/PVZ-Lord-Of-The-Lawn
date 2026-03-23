@@ -1686,7 +1686,7 @@ void Zombie::UpdateZombiePolevaulter()
             Reanimation* aBodyReanim = mApp->ReanimationGet(mBodyReanimID);
             float aAnimDuration = aBodyReanim->mFrameCount / aBodyReanim->mAnimRate * 100.0f;
             int aJumpDistance = mX - aPlant->mX - 80;
-            if (mApp->IsWallnutBowlingLevel())
+            if (mApp->IsWallnutBowlingLevel() || (aPlant->mSeedType == SeedType::SEED_WALLNUT && GetPlantSide(aPlant->mSeedType) == 1))
             {
                 aJumpDistance = 0;
             }
@@ -3450,6 +3450,10 @@ void Zombie::DropHead(unsigned int theDamageFlags)
         mStunCounter = 0;
         UpdateAnimSpeed();
     }
+    if (mSlowCounter > 0)
+    {
+        mSlowCounter = 0;
+    }
     if (mChilledCounter > 0)
     {
         mChilledCounter = 0;
@@ -4350,6 +4354,7 @@ void Zombie::Update()
 
         if (mKnockBackCounter > 0) {
             mPosX += mKnockBackForce * mKnockBackDirection;
+            mPosY = GetPosYBasedOnRow(mRow);
             mKnockBackCounter--;
         }
 
@@ -6380,7 +6385,7 @@ void Zombie::Draw(Graphics* g)
 
 bool Zombie::CanTargetPlant(Plant* thePlant, ZombieAttackType theAttackType)
 {
-    if (mApp->IsWallnutBowlingLevel() && theAttackType != ZombieAttackType::ATTACKTYPE_VAULT)
+    if ((mApp->IsWallnutBowlingLevel() || (thePlant->mSeedType == SeedType::SEED_WALLNUT && GetPlantSide(thePlant->mSeedType) == 1)) && theAttackType != ZombieAttackType::ATTACKTYPE_VAULT)
         return false;
 
     if (thePlant->NotOnGround() || thePlant->mSeedType == SeedType::SEED_TANGLEKELP || thePlant->mSeedType == SeedType::SEED_BLOVER )
@@ -6467,6 +6472,10 @@ Plant* Zombie::FindPlantTarget(ZombieAttackType theAttackType)
         if (aPlant->mRow == mRow)
         {
             Rect aPlantRect = aPlant->GetPlantRect();
+            if (aPlant->mSeedType == SeedType::SEED_WALLNUT && GetPlantSide(aPlant->mSeedType) == 1 && mZombiePhase == ZombiePhase::PHASE_POLEVAULTER_PRE_VAULT)
+            {
+                aAttackRect.mX -= 200;
+            }
             if (GetRectOverlap(aAttackRect, aPlantRect) >= 20 && CanTargetPlant(aPlant, theAttackType))
             {
                 return aPlant;
@@ -9003,6 +9012,10 @@ void Zombie::MowDown()
     {
         mStunCounter = 0;
     }
+    if (mSlowCounter > 0)
+    {
+        mSlowCounter = 0;
+    }
     if (mSunBeanSun > 0)
     {
         DropAllSunBeanSun();
@@ -9073,7 +9086,8 @@ void Zombie::ApplyBurn()
     if (mDead || mZombiePhase == ZombiePhase::PHASE_ZOMBIE_BURNED)
         return;
 
-    if (mBodyHealth >= 1800 || mZombieType == ZombieType::ZOMBIE_BOSS)
+    if (mBodyHealth + mHelmHealth + mShieldHealth > 1800 ||
+        mZombieType == ZombieType::ZOMBIE_BOSS)
     {
         TakeDamage(1800, 18U);
         return;
@@ -9339,6 +9353,10 @@ void Zombie::PlayDeathAnim(unsigned int theDamageFlags)
     if (mStunCounter > 0)
     {
         mStunCounter = 0;
+    }
+    if (mSlowCounter > 0)
+    {
+        mSlowCounter = 0;
     }
     if (mSunBeanSun > 0)
     {

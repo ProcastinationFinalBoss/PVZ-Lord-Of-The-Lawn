@@ -19,7 +19,7 @@ ProjectileDefinition gProjectileDefinition[] = {
 	{ ProjectileType::PROJECTILE_PUFF,          0,  20  },
 	{ ProjectileType::PROJECTILE_WINTERMELON,   0,  80  },
 	{ ProjectileType::PROJECTILE_FIREBALL,      0,  40  },
-	{ ProjectileType::PROJECTILE_STAR,          0,  120  },
+	{ ProjectileType::PROJECTILE_STAR,          0,  20  },
 	{ ProjectileType::PROJECTILE_SPIKE,         0,  20  },
 	{ ProjectileType::PROJECTILE_BASKETBALL,    0,  75  },
 	{ ProjectileType::PROJECTILE_KERNEL,        0,  20  },
@@ -188,7 +188,7 @@ bool Projectile::PeaAboutToHitTorchwood()
 	if (mMotionType != ProjectileMotion::MOTION_STRAIGHT)
 		return false;
 
-	if (mProjectileType != ProjectileType::PROJECTILE_PEA && mProjectileType != ProjectileType::PROJECTILE_SNOWPEA)
+	if (mProjectileType != ProjectileType::PROJECTILE_PEA && mProjectileType != ProjectileType::PROJECTILE_SNOWPEA && mProjectileType != ProjectileType::PROJECTILE_FIREBALL)
 		return false;
 
 	Plant* aPlant = nullptr;
@@ -1223,6 +1223,21 @@ void Projectile::DoImpactToGrave(GridItem* theGridItem)
 		else
 		{
 			int aDamage = GetProjectileDef().mDamage;
+			if (mBoard->mPlants.DataArrayTryToGet(mPlantOwnerID))
+			{
+				if (mProjectileType == ProjectileType::PROJECTILE_PUFF &&
+					mBoard->mPlants.DataArrayTryToGet(mPlantOwnerID)->mSeedType == SeedType::SEED_PUFFSHROOM &&
+					GetPlantSide(mBoard->mPlants.DataArrayTryToGet(mPlantOwnerID)->mSeedType) == 1
+					)
+				{
+					float aClampedTimer = ClampFloat((float)mSavedCountdown, 800.0f, 5000.0f);
+					float aProgress = (5000.0f - aClampedTimer) / 4200.0f;
+					float aMultiplier = 1.0f + aProgress;
+					int aFinalDamage = (int)(aDamage * aMultiplier);
+					aDamage = aFinalDamage;
+					mBoard->mPlants.DataArrayTryToGet(mPlantOwnerID)->mFreeInt = aDamage;
+				}
+			}
 			unsigned int aDamageFlags = 0U;
 			theGridItem->TakeDamage(aDamage, aDamageFlags);
 		}
@@ -1384,6 +1399,21 @@ void Projectile::DoImpact(Zombie* theZombie)
 			aDamage /= 3;
 		}
 		unsigned int aDamageFlags = GetDamageFlags(theZombie);
+		if (mBoard->mPlants.DataArrayTryToGet(mPlantOwnerID))
+		{
+			if (mProjectileType == ProjectileType::PROJECTILE_PUFF &&
+				mBoard->mPlants.DataArrayTryToGet(mPlantOwnerID)->mSeedType == SeedType::SEED_PUFFSHROOM &&
+				GetPlantSide(mBoard->mPlants.DataArrayTryToGet(mPlantOwnerID)->mSeedType) == 1
+				)
+			{
+				float aClampedTimer = ClampFloat((float)mSavedCountdown, 800.0f, 5000.0f);
+				float aProgress = (5000.0f - aClampedTimer) / 4200.0f;
+				float aMultiplier = 1.0f + aProgress;
+				int aFinalDamage = (int)(aDamage * aMultiplier);
+				aDamage = aFinalDamage;
+				mBoard->mPlants.DataArrayTryToGet(mPlantOwnerID)->mFreeInt = aDamage;
+			}
+		}
 		theZombie->TakeDamage(aDamage, aDamageFlags);
 	}
 
@@ -1588,6 +1618,19 @@ void Projectile::Draw(Graphics* g)
 	{
 		aImage = IMAGE_PUFFSHROOM_PUFF1;
 		aScale = TodAnimateCurveFloat(0, 30, mProjectileAge, 0.3f, 1.0f, TodCurves::CURVE_LINEAR);
+		if (mBoard->mPlants.DataArrayTryToGet(mPlantOwnerID))
+		{
+			if (mProjectileType == ProjectileType::PROJECTILE_PUFF &&
+				mBoard->mPlants.DataArrayTryToGet(mPlantOwnerID)->mSeedType == SeedType::SEED_PUFFSHROOM &&
+				GetPlantSide(mBoard->mPlants.DataArrayTryToGet(mPlantOwnerID)->mSeedType) == 1
+				)
+			{
+				float aClampedTimer = ClampFloat((float)mSavedCountdown, 800.0f, 5000.0f);
+				float aProgress = (5000.0f - aClampedTimer) / 4200.0f;
+				float aMultiplier = 1.0f + aProgress;
+				aScale *= aMultiplier;
+			}
+		}
 	}
 	else if (mProjectileType == ProjectileType::PROJECTILE_BASKETBALL)
 	{
