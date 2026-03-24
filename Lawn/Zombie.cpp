@@ -1688,7 +1688,7 @@ void Zombie::UpdateZombiePolevaulter()
             Reanimation* aBodyReanim = mApp->ReanimationGet(mBodyReanimID);
             float aAnimDuration = aBodyReanim->mFrameCount / aBodyReanim->mAnimRate * 100.0f;
             int aJumpDistance = mX - aPlant->mX - 80;
-            if (mApp->IsWallnutBowlingLevel() || (aPlant->mSeedType == SeedType::SEED_WALLNUT && GetPlantSide(aPlant->mSeedType) == 1))
+            if (mApp->IsWallnutBowlingLevel() || (aPlant->mSeedType == SeedType::SEED_WALLNUT && aPlant->mSide == 1))
             {
                 aJumpDistance = 0;
             }
@@ -6400,7 +6400,7 @@ void Zombie::Draw(Graphics* g)
 
 bool Zombie::CanTargetPlant(Plant* thePlant, ZombieAttackType theAttackType)
 {
-    if ((mApp->IsWallnutBowlingLevel() || (thePlant->mSeedType == SeedType::SEED_WALLNUT && GetPlantSide(thePlant->mSeedType) == 1)) && theAttackType != ZombieAttackType::ATTACKTYPE_VAULT)
+    if ((mApp->IsWallnutBowlingLevel() || (thePlant->mSeedType == SeedType::SEED_WALLNUT && thePlant->mSide == 1)) && theAttackType != ZombieAttackType::ATTACKTYPE_VAULT)
         return false;
 
     if (thePlant->NotOnGround() || thePlant->mSeedType == SeedType::SEED_TANGLEKELP || thePlant->mSeedType == SeedType::SEED_BLOVER )
@@ -6487,7 +6487,7 @@ Plant* Zombie::FindPlantTarget(ZombieAttackType theAttackType)
         if (aPlant->mRow == mRow)
         {
             Rect aPlantRect = aPlant->GetPlantRect();
-            if (aPlant->mSeedType == SeedType::SEED_WALLNUT && GetPlantSide(aPlant->mSeedType) == 1 && mZombiePhase == ZombiePhase::PHASE_POLEVAULTER_PRE_VAULT)
+            if (aPlant->mSeedType == SeedType::SEED_WALLNUT && aPlant->mSide == 1 && mZombiePhase == ZombiePhase::PHASE_POLEVAULTER_PRE_VAULT)
             {
                 aAttackRect.mX -= 200;
             }
@@ -8595,6 +8595,27 @@ bool Zombie::ZombieTypeCanGoOnHighGround(ZombieType theZombieType)
 Rect Zombie::GetZombieRect()
 {
     Rect aZombieRect = mZombieRect;
+    if (IsWalkingBackwards())
+    {
+        aZombieRect.mX = mWidth - aZombieRect.mX - aZombieRect.mWidth;
+    }
+
+    ZombieDrawPosition aDrawPos;
+    GetDrawPos(aDrawPos);
+    aZombieRect.Offset(mX, mY + aDrawPos.mBodyY);
+    if (aDrawPos.mClipHeight > CLIP_HEIGHT_LIMIT)
+    {
+        aZombieRect.mHeight -= aDrawPos.mClipHeight;
+    }
+
+    return aZombieRect;
+}
+
+Rect Zombie::GetBasicRect()
+{
+    Rect aZombieRect = Rect(36, 0, 42, 115);
+    //mZombieRect = Rect(-17, -38, 125, 154);
+
     if (IsWalkingBackwards())
     {
         aZombieRect.mX = mWidth - aZombieRect.mX - aZombieRect.mWidth;

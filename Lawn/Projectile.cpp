@@ -499,6 +499,10 @@ unsigned int Projectile::GetDamageFlags(Zombie* theZombie)
 	{
 		SetBit(aDamageFlags, (int)DamageFlags::DAMAGE_FREEZE, true);
 	}
+	if (mProjectileType == ProjectileType::PROJECTILE_PIERCE_SPIKE)
+	{
+		SetBit(aDamageFlags, (int)DamageFlags::DAMAGE_HITS_SHIELD_AND_BODY, true);
+	}
 
 	return aDamageFlags;
 }

@@ -347,6 +347,8 @@ extern int gPlantSides[SeedType::NUM_SEED_TYPES];
 void ResetPlantSides();
 void SetPlantSide(SeedType theSeedType, int theValue);
 int GetPlantSide(SeedType theSeedType);
+//int GetImitaterSide(SeedType theImitaterType);
+
 
 class PlantAlmanacStat
 {

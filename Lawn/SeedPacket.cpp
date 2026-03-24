@@ -328,7 +328,7 @@ void DrawSeedPacket(Graphics* g, float x, float y, SeedType theSeedType, SeedTyp
 		aOffsetY = 22.0f;
 		break;
 	case SeedType::SEED_SQUASH:
-		if (GetPlantSide(theSeedType) == 1)
+		if (GetPlantSide(aSeedType) == 1)
 		{
 			aOffsetX -= 20.0f;
 			aOffsetY -= 42.0f;

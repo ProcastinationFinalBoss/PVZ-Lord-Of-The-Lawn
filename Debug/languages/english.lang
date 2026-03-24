@@ -585,7 +585,7 @@ minute. Potato Mine says nothing. He's too busy thinking about his investment st
 [POTATO_MINE_SIDEB]
 {STAT}SIDE B SPECIAL:
 {KEYWORD}- Attracts zombies in a 3x3 area to its position, very high health
-{KEYWORD}- Arms in less time and explodes automatically
+{KEYWORD}- Explodes automatically once armed
 {KEYWORD}(Note that this is not a better Potato Mine or Explode-O-Nut, it still can die from too many zombies eating it and will not explode if it's eaten before activation. It exploding automatically can be a waste if put too far away from targets.)
 
 [REPEATER_DESCRIPTION_HEADER]
@@ -670,16 +670,22 @@ Sun-shrooms give small sun at first and normal sun later.
 he spits it out as fast as he can. He just won't abide it. To him, sun is crass.
 
 [FUME_SHROOM_DESCRIPTION_HEADER]
-Fume-shrooms shoot fumes that can pass through screen doors.
+Fume-shrooms shoot fumes that pass through shields and damage all zombies in their range.
 
 [FUME_SHROOM_DESCRIPTION]
-{SHORTLINE}
-{KEYWORD}Damage:{STAT} normal, penetrates screen doors
-{KEYWORD}Range:{STAT} all zombies in the fume cloud
-{NOCTURNAL}Sleeps during the day
-{SHORTLINE}
+{KEYWORD}- {NOCTURNAL}Sleeps during the day
 {FLAVOR}"I was in a dead-end job producing yeast spores for a bakery," says Fume-shroom. 
 "Then Puff-shroom, bless 'im, told me about this great opportunity blasting zombies. Now I really feel like I'm making a difference."
+
+[FUME_SHROOM_SIDEA]
+{STAT}SIDE A SPECIAL:
+{KEYWORD}- Vanilla stats
+
+[FUME_SHROOM_SIDEB]
+{STAT}SIDE B SPECIAL:
+{KEYWORD}- Range reduced to 1 tile
+{KEYWORD}- Much faster firing rate, increased damage
+{KEYWORD}- 20% chance to knockback enemies within range
 
 [GRAVE_BUSTER_DESCRIPTION_HEADER]
 Plant Grave Busters on graves to remove the graves.

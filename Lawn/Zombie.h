@@ -181,6 +181,7 @@ public:
     int                             mParticlesAttached;
     bool                            mForcedWalkBackwards;
     int                             mForcedWalkBackwardsCounter;
+    PlantID                         mPlantAttractedID;
 
 public:
     Zombie();
@@ -230,6 +231,7 @@ public:
     void                            DrawZombieHead(Graphics* g, const ZombieDrawPosition& theDrawPos, int theFrame);
     void                            UpdateZombiePosition();
     Rect                            GetZombieRect();
+    Rect                            GetBasicRect();
     Rect                            GetZombieAttackRect();
     void                            UpdateZombieWalking();
     void                            UpdateZombieBobsled();
