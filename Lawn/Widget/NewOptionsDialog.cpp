@@ -301,17 +301,19 @@ void NewOptionsDialog::Resize(int theX, int theY, int theWidth, int theHeight)
     mGameAdvancedButton->Resize(mWidth - Sexy::IMAGE_BUTTON_SMALL->mWidth - 9, mRestartButton->mY, Sexy::IMAGE_BUTTON_SMALL->mWidth, Sexy::IMAGE_BUTTON_SMALL->mHeight);
 
     //PAGE 1
+    mJumpscareCheckbox->Resize(ADVANCEDOPTIONS_SPEED_X, ADVANCEDOPTIONS_SPEED_Y + 15, 46, 39);
+    //PAGE 2
     mDebugModeCheckbox->Resize(284, 148, 46, 39);
     mDiscordCheckbox->Resize(mDebugModeCheckbox->mX, mDebugModeCheckbox->mY + 40, 46, 39);
     mBankKeybindsCheckbox->Resize(mDiscordCheckbox->mX, mDiscordCheckbox->mY + 40, 46, 39);
     m09FormatCheckbox->Resize(mBankKeybindsCheckbox->mX, mBankKeybindsCheckbox->mY + 40, 46, 39);
-    //PAGE 2
+    //PAGE 3
     mSpeedEditWidget->Resize(ADVANCEDOPTIONS_SPEED_X + 9, ADVANCEDOPTIONS_SPEED_Y - 4, IMAGE_OPTIONS_CHECKBOX0->mWidth, IMAGE_OPTIONS_CHECKBOX0->mHeight + 4);
     mAutoCollectSunsCheckbox->Resize(mDiscordCheckbox->mX, mDiscordCheckbox->mY - 20, 46, 39);
     mAutoCollectCoinsCheckbox->Resize(mAutoCollectSunsCheckbox->mX, mAutoCollectSunsCheckbox->mY + 40, 46, 39);
     mZombieHealthbarsCheckbox->Resize(mAutoCollectCoinsCheckbox->mX, mAutoCollectCoinsCheckbox->mY + 40, 46, 39);
     mPlantHealthbarsCheckbox->Resize(mZombieHealthbarsCheckbox->mX, mZombieHealthbarsCheckbox->mY + 40, 46, 39);
-    //PAGE 3
+    //PAGE 4
     int aReloadResourcePacksWidth = 260;
     mReloadResourcePacksButton->Resize(mWidth / 2 - aReloadResourcePacksWidth / 2, ADVANCEDOPTIONS_SPEED_Y, aReloadResourcePacksWidth, 46);
     mResourcePackButton->Resize(mWidth / 2 + 15, mReloadResourcePacksButton->mY + 50, 0, FONT_DWARVENTODCRAFT18->GetHeight());
@@ -320,10 +322,10 @@ void NewOptionsDialog::Resize(int theX, int theY, int theWidth, int theHeight)
     mReloadLanguagesButton->Resize(mWidth / 2 - aReloadLanguagesWidth / 2, mResourcePackButton->mY + 50, aReloadLanguagesWidth, 46);
     mLanguageButton->Resize(mWidth / 2 + 15, mReloadLanguagesButton->mY + 50, 0, FONT_DWARVENTODCRAFT18->GetHeight());
     ResizeLanguageButton();
-    //PAGE 4
+    //PAGE 5
     mRealHardwareAccelerationCheckbox->Resize(ADVANCEDOPTIONS_SPEED_X, ADVANCEDOPTIONS_SPEED_Y, 46, 39);
     mCustomCursorCheckbox->Resize(mRealHardwareAccelerationCheckbox->mX, mRealHardwareAccelerationCheckbox->mY + 40, 46, 39);
-    mJumpscareCheckbox->Resize(mRealHardwareAccelerationCheckbox->mX, mRealHardwareAccelerationCheckbox->mY + 80, 46, 39);
+
 
     if ((!mRestartButton->mVisible || !mAlmanacButton->mVisible) && !mFromGameSelector && !mAdvancedMode)
     {
@@ -388,6 +390,10 @@ void NewOptionsDialog::Draw(Sexy::Graphics* g)
         switch (mAdvancedPage)
         {
         case 1:
+            TodDrawString(g, _S("LOTL v0.1"), mWidth / 2, 137, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_CENTER);
+            TodDrawString(g, TodStringTranslate(_S("[OPTIONS_JUMPSCARE]")), 274, mJumpscareCheckbox->mY + 23, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_RIGHT);
+            break;
+        case 2:
             TodDrawString(g, mApp->mReconVersion, mWidth / 2, 137, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_CENTER);
             TodDrawString(g, TodStringTranslate(_S("[OPTIONS_DEBUG_MODE]")), mDebugModeCheckbox->mX - 6, mDebugModeCheckbox->mY + 22, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_RIGHT);
             TodDrawString(g, TodStringTranslate(_S("[OPTIONS_DISCORD_PRESENCE]")), mDiscordCheckbox->mX - 6, mDiscordCheckbox->mY + 22, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_RIGHT);
@@ -395,7 +401,7 @@ void NewOptionsDialog::Draw(Sexy::Graphics* g)
             TodDrawString(g, TodReplaceString(_S("[OPTIONS_SEED_BANK_KEYBIND]"), _S("{KEYBIND}"), m09FormatCheckbox->mChecked ? "1-0" : "0-9"), m09FormatCheckbox->mX - 6, m09FormatCheckbox->mY + 22, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_RIGHT);
             TodDrawString(g, TodStringTranslate(_S("[OPTIONS_SHOVEL_KEYBIND]")), mWidth / 2, m09FormatCheckbox->mY + 55, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_CENTER);
             break;
-        case 2:
+        case 3:
             TodDrawString(g, TodStringTranslate(_S("[OPTIONS_SPEED_MODIFIER]")), ADVANCEDOPTIONS_SPEED_X - 6, ADVANCEDOPTIONS_SPEED_Y + 22, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_RIGHT);
             TodDrawString(g, TodStringTranslate(_S("[OPTIONS_AUTO_COLLECT_SUNS]")), mAutoCollectSunsCheckbox->mX - 6, mAutoCollectSunsCheckbox->mY + 22, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_RIGHT);
             TodDrawString(g, TodStringTranslate(_S("[OPTIONS_AUTO_COLLECT_COINS]")), mAutoCollectCoinsCheckbox->mX - 6, mAutoCollectCoinsCheckbox->mY + 22, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_RIGHT);
@@ -403,15 +409,13 @@ void NewOptionsDialog::Draw(Sexy::Graphics* g)
             TodDrawString(g, TodStringTranslate(_S("[OPTIONS_PLANT_HEALTHBARS]")), mPlantHealthbarsCheckbox->mX - 6, mPlantHealthbarsCheckbox->mY + 22, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_RIGHT);
             g->DrawImage(Sexy::IMAGE_OPTIONS_CHECKBOX0, ADVANCEDOPTIONS_SPEED_X, ADVANCEDOPTIONS_SPEED_Y);
             break;
-        case 3:
+        case 4:
             TodDrawString(g, TodStringTranslate(_S("[OPTIONS_LANGUAGE]")), mLanguageButton->mX - 6, mLanguageButton->mY + 23, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_RIGHT);
             TodDrawString(g, TodStringTranslate(_S("[OPTIONS_RESOURCE_PACK]")), mResourcePackButton->mX - 6, mResourcePackButton->mY + 23, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_RIGHT);
             break;
-        case 4:
+        case 5:
             TodDrawString(g, TodStringTranslate(_S("[OPTIONS_ACTUAL_ACCELERATION]")), mRealHardwareAccelerationCheckbox->mX - 6, mRealHardwareAccelerationCheckbox->mY + 22, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_RIGHT);
             TodDrawString(g, TodStringTranslate(_S("[OPTIONS_CUSTOM_CURSOR]")), mCustomCursorCheckbox->mX - 6, mCustomCursorCheckbox->mY + 22, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_RIGHT);
-            TodDrawString(g, TodStringTranslate(_S("[OPTIONS_JUMPSCARE]")), 274, mJumpscareCheckbox->mY + 23, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_RIGHT);
-
             break;
         }
         TodDrawString(g, TodReplaceNumberString(_S("[OPTIONS_PAGE]"), _S("{PAGE}"), mAdvancedPage), mWidth / 2, ADVANCEDOPTIONS_PAGE_Y, FONT_DWARVENTODCRAFT18GREENINSET, Color::White, DrawStringJustification::DS_ALIGN_CENTER);
@@ -532,31 +536,32 @@ void NewOptionsDialog::UpdateAdvancedPage()
 
     switch (mAdvancedPage)
     {
-        case 1:
-            mDebugModeCheckbox->SetVisible(true);
-            mDiscordCheckbox->SetVisible(true);
-            mBankKeybindsCheckbox->SetVisible(true);
-            m09FormatCheckbox->SetVisible(true);
-            break;
-        case 2:
-            mSpeedEditWidget->SetVisible(true);
-            mAutoCollectSunsCheckbox->SetVisible(true);
-            mAutoCollectCoinsCheckbox->SetVisible(true);
-            mZombieHealthbarsCheckbox->SetVisible(true);
-            mPlantHealthbarsCheckbox->SetVisible(true);
-            break;
-        case 3:
-            mReloadLanguagesButton->SetVisible(true);
-            mLanguageButton->SetVisible(true);
-            mReloadResourcePacksButton->SetVisible(true);
-            mResourcePackButton->SetVisible(true);
-            break;
-        case 4:
-            mRealHardwareAccelerationCheckbox->SetVisible(true);
-            mCustomCursorCheckbox->SetVisible(true);
-            mJumpscareCheckbox->SetVisible(true);
-
-            break;
+    case 1:
+        mJumpscareCheckbox->SetVisible(true);
+        break;
+    case 2:
+        mDebugModeCheckbox->SetVisible(true);
+        mDiscordCheckbox->SetVisible(true);
+        mBankKeybindsCheckbox->SetVisible(true);
+        m09FormatCheckbox->SetVisible(true);
+        break;
+    case 3:
+        mSpeedEditWidget->SetVisible(true);
+        mAutoCollectSunsCheckbox->SetVisible(true);
+        mAutoCollectCoinsCheckbox->SetVisible(true);
+        mZombieHealthbarsCheckbox->SetVisible(true);
+        mPlantHealthbarsCheckbox->SetVisible(true);
+        break;
+    case 4:
+        mReloadLanguagesButton->SetVisible(true);
+        mLanguageButton->SetVisible(true);
+        mReloadResourcePacksButton->SetVisible(true);
+        mResourcePackButton->SetVisible(true);
+        break;
+    case 5:
+        mRealHardwareAccelerationCheckbox->SetVisible(true);
+        mCustomCursorCheckbox->SetVisible(true);
+        break;
     }
 }
 

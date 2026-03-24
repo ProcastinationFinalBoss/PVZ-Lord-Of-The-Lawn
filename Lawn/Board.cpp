@@ -5728,15 +5728,15 @@ void Board::UpdateGame()
 				}
 			}
 		}
-		if (mJumpscareIsTrue)
+	}
+	if (mJumpscareIsTrue)
+	{
+		mJumpscareAge++;
+		if (mJumpscareAge / 3 > 22)
 		{
-			mJumpscareAge++;
-			if (mJumpscareAge / 3 > 22)
-			{
-				mJumpscareAge = 0;
-				mJumpscareIsTrue = false;
-				mJumpscareCheckCounter = 100;
-			}
+			mJumpscareAge = 0;
+			mJumpscareIsTrue = false;
+			mJumpscareCheckCounter = 100;
 		}
 	}
 	UpdateSunSpawning();

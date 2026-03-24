@@ -572,16 +572,21 @@ Cherry Bombs can blow up all zombies in an area. They have a short fuse so plant
 his brother, Cherry #2. After intense consultation they agree to explodonate.
 
 [POTATO_MINE_DESCRIPTION_HEADER]
-Potato Mines pack a powerful punch, but they need a while to arm themselves. You should plant them ahead of zombies. They will explode on contact.
+Potato Mines explode on contact, but take a while to arm.
 
 [POTATO_MINE_DESCRIPTION]
-{SHORTLINE}
-{KEYWORD}Damage:{STAT} massive
-{KEYWORD}Range:{STAT} all zombies in a small area
-{KEYWORD}Usage:{STAT} single use, delayed activation
-{SHORTLINE}
 {FLAVOR}Some folks say Potato Mine is lazy, that he leaves everything to the last 
 minute. Potato Mine says nothing. He's too busy thinking about his investment strategy.
+
+[POTATO_MINE_SIDEA]
+{STAT}SIDE A SPECIAL:
+{KEYWORD}- Vanilla stats
+
+[POTATO_MINE_SIDEB]
+{STAT}SIDE B SPECIAL:
+{KEYWORD}- Attracts zombies in a 3x3 area to its position, very high health
+{KEYWORD}- Arms in less time and explodes automatically
+{KEYWORD}(Note that this is not a better Potato Mine or Explode-O-Nut, it still can die from too many zombies eating it and will not explode if it's eaten before activation. It exploding automatically can be a waste if put too far away from targets.)
 
 [REPEATER_DESCRIPTION_HEADER]
 Repeaters fire two peas at a time.

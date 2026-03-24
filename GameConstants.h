@@ -71,7 +71,7 @@ const int           STORESCREEN_PAGESTRING_Y = 500 + BOARD_OFFSET_Y * 2;
 ///					   QOTL VARIABLES		   			 ///
 ////////////////////////////////////////////////////////////
 
-const int			ADVANCEDOPTIONS_MAX_PAGES = 4;
+const int			ADVANCEDOPTIONS_MAX_PAGES = 5;
 const int			ADVANCEDOPTIONS_PAGE_Y = 355;
 const int			ADVANCEDOPTIONS_SPEED_X = 284;
 const int			ADVANCEDOPTIONS_SPEED_Y = 128;

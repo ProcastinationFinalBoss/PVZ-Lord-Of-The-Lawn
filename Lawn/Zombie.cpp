@@ -85,6 +85,8 @@ void Zombie::ZombieInitialize(int theRow, ZombieType theType, bool theVariant, Z
     TOD_ASSERT(theType >= 0 && theType <= ZombieType::NUM_ZOMBIE_TYPES);
 
     memset(mParticleIDs, 0, sizeof(mParticleIDs));
+    mForcedWalkBackwards = false;
+    mForcedWalkBackwardsCounter = 0;
     mFromWave = theFromWave;
     mRow = theRow;
     mPosX = 780 + Rand(ZOMBIE_START_RANDOM_OFFSET) + BOARD_ADDITIONAL_WIDTH;
@@ -4613,6 +4615,17 @@ void Zombie::UpdatePlaying()
             RemoveButter();
         }
     }
+    if (mForcedWalkBackwardsCounter > 0)
+    {
+        mForcedWalkBackwardsCounter--;
+        mForcedWalkBackwards = true;
+        if (mForcedWalkBackwardsCounter == 0)
+        {
+            mForcedWalkBackwards = false;
+        }
+    }
+    mFreeInt = mForcedWalkBackwardsCounter;
+
     if (mSporedCounter > 0)
     {
         mSporedCounter--;
@@ -5115,6 +5128,8 @@ void Zombie::DrawZombie(Graphics* g, const ZombieDrawPosition& theDrawPos)
 
 bool Zombie::IsWalkingBackwards()
 {
+    if (mForcedWalkBackwards)
+        return true;
     if (mMindControlled)
         return true;
 
@@ -6686,7 +6701,6 @@ void Zombie::ApplyAnimRate(float theAnimRate)
         theAnimRate * (0.4f + (0.006f * aChillScaleFactor)) * aSlowFactor :
         theAnimRate;
     }
-    mFreeInt = mSlowCounter;
 
 }
 

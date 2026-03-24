@@ -78,6 +78,11 @@ static void InitializePlantAlmanacStats()
     gPlantAlmanacStats[SeedType::SEED_SQUASH].push_back({ _S("Stun Duration"), _S("1.25s"), GetPlantAlmanacStatSideMaskForSide(1) });
     gPlantAlmanacStats[SeedType::SEED_WALLNUT].push_back({ _S("Bowling Damage"), _S("200 + 40 every impact"), GetPlantAlmanacStatSideMaskForSide(1) });
     gPlantAlmanacStats[SeedType::SEED_WALLNUT].push_back({ _S("Stun Duration"), _S("1s"), GetPlantAlmanacStatSideMaskForSide(1) });
+    gPlantAlmanacStats[SeedType::SEED_POTATOMINE].push_back({ _S("Attraction Range"), _S("3x3"),  GetPlantAlmanacStatSideMaskForSide(1) });
+    gPlantAlmanacStats[SeedType::SEED_POTATOMINE].push_back({ _S("Arming Time"), _S("15s"), GetPlantAlmanacStatSideMaskForSide(0) });
+    gPlantAlmanacStats[SeedType::SEED_POTATOMINE].push_back({ _S("Arming Time"), _S("10s"), GetPlantAlmanacStatSideMaskForSide(1) });
+    gPlantAlmanacStats[SeedType::SEED_POTATOMINE].push_back({ _S("Damage"), _S("1800"), kPlantAlmanacStatAllSides });
+    gPlantAlmanacStats[SeedType::SEED_POTATOMINE].push_back({ _S("Range"), _S("1x1"), kPlantAlmanacStatAllSides });
 }
 
 const std::vector<PlantAlmanacStat>& GetPlantAlmanacStats(SeedType theSeedType)
@@ -225,7 +230,7 @@ PlantDefinition gPlantDefs[SeedType::NUM_SEED_TYPES] = {
     { SeedType::SEED_TWINSUNFLOWER,     nullptr, ReanimationType::REANIM_TWIN_SUNFLOWER,1,  150,    5000,   PlantSubClass::SUBCLASS_NORMAL,     2500,   _S("TWIN_SUNFLOWER") },
     { SeedType::SEED_GLOOMSHROOM,       nullptr, ReanimationType::REANIM_GLOOMSHROOM,   27, 150,    5000,   PlantSubClass::SUBCLASS_SHOOTER,    200,    _S("GLOOM_SHROOM") },
     { SeedType::SEED_CATTAIL,           nullptr, ReanimationType::REANIM_CATTAIL,       27, 225,    5000,   PlantSubClass::SUBCLASS_SHOOTER,    150,    _S("CATTAIL") },
-    { SeedType::SEED_WINTERMELON,       nullptr, ReanimationType::REANIM_WINTER_MELON,  27, 200,    5000,   PlantSubClass::SUBCLASS_SHOOTER,    300,    _S("WINTER_MELON") },
+    { SeedType::SEED_WINTERMELON,       nullptr, ReanimationType::REANIM_WINTER_MELON,  27, 350,    5000,   PlantSubClass::SUBCLASS_SHOOTER,    300,    _S("WINTER_MELON") },
     { SeedType::SEED_GOLD_MAGNET,       nullptr, ReanimationType::REANIM_GOLD_MAGNET,   27, 50,     5000,   PlantSubClass::SUBCLASS_NORMAL,     0,      _S("GOLD_MAGNET") },
     { SeedType::SEED_SPIKEROCK,         nullptr, ReanimationType::REANIM_SPIKEROCK,     27, 125,    5000,   PlantSubClass::SUBCLASS_NORMAL,     0,      _S("SPIKEROCK") },
     { SeedType::SEED_COBCANNON,         nullptr, ReanimationType::REANIM_COBCANNON,     16, 500,    5000,   PlantSubClass::SUBCLASS_NORMAL,     600,    _S("COB_CANNON") },
@@ -498,12 +503,20 @@ void Plant::PlantInitialize(int theGridX, int theGridY, SeedType theSeedType, Se
     {
         TOD_ASSERT(aBodyReanim);
 
+        if (GetPlantSide(theSeedType) == 1)
+        {
+            mPlantHealth = 8000;
+        }
         aBodyReanim->mAnimRate = 12.0f;
 
         if (IsInPlay())
         {
             aBodyReanim->AssignRenderGroupToTrack("anim_glow", RENDER_GROUP_HIDDEN);
             mStateCountdown = 1500;
+            if (GetPlantSide(theSeedType) == 1)
+            {
+                mStateCountdown = 1000;
+            }
         }
         else
         {
@@ -1521,6 +1534,62 @@ void Plant::UpdatePotato()
 
     if (mState == PlantState::STATE_NOTREADY)
     {
+        if (GetPlantSide(mSeedType) == 1)
+        {
+            Rect aAttackRect = GetPlantAttackRect(PlantWeapon::WEAPON_PRIMARY);
+
+            Zombie* aZombie = nullptr;
+            while (mBoard->IterateZombies(aZombie))
+            {
+                if (aZombie->mZombieType == ZombieType::ZOMBIE_ZAMBONI ||
+                    aZombie->mZombieType == ZombieType::ZOMBIE_GARGANTUAR ||
+                    aZombie->mZombieType == ZombieType::ZOMBIE_REDEYE_GARGANTUAR ||
+                    aZombie->mZombieType == ZombieType::ZOMBIE_CATAPULT)
+                {
+                    continue;
+                }
+                if (aZombie->mZombiePhase == ZombiePhase::PHASE_DIGGER_TUNNELING ||
+                    aZombie->mZombiePhase == ZombiePhase::PHASE_DIGGER_RISING ||
+                    aZombie->mZombiePhase == ZombiePhase::PHASE_DIGGER_TUNNELING_PAUSE_WITHOUT_AXE ||
+                    aZombie->mZombiePhase == ZombiePhase::PHASE_DIGGER_RISE_WITHOUT_AXE ||
+                    aZombie->mZombiePhase == ZombiePhase::PHASE_RISING_FROM_GRAVE ||
+                    aZombie->mZombiePhase == ZombiePhase::PHASE_DANCER_RISING)
+                {
+                    continue;
+                }
+                if (aZombie->IsDeadOrDying())
+                {
+                    continue;
+                }
+                int aRowDeviation = aZombie->mRow - mRow;
+                if (aZombie->mZombieType == ZombieType::ZOMBIE_BOSS)
+                {
+                    aRowDeviation = 0;
+                }
+                if (aRowDeviation < -1 || aRowDeviation > 1)
+                {
+                    continue;
+                }
+                Rect aZombieRect = aZombie->GetZombieRect();
+                if (GetRectOverlap(aAttackRect, aZombieRect) > 0)
+                {
+                    if (aRowDeviation != 0)
+                    {
+                        aZombie->SetRow(mRow);
+                    }
+                    if (aZombieRect.mX < GetPlantRect().mX)
+                    {
+                        aZombie->mForcedWalkBackwardsCounter = max(200, aZombie->mForcedWalkBackwardsCounter);
+                    }
+                    else
+                    {
+                        aZombie->mForcedWalkBackwardsCounter = 0;
+                        aZombie->mForcedWalkBackwards = false;
+                    }
+                }
+            }
+        }
+
         if (mStateCountdown == 0)
         {
             mApp->AddTodParticle(mX + mWidth / 2, mY + mHeight / 2, mRenderOrder, ParticleEffect::PARTICLE_POTATO_MINE_RISE);
@@ -1531,6 +1600,57 @@ void Plant::UpdatePotato()
     }
     else if (mState == PlantState::STATE_POTATO_RISING)
     {
+        if (GetPlantSide(mSeedType) == 1)
+        {
+            Rect aAttackRect = GetPlantAttackRect(PlantWeapon::WEAPON_PRIMARY);
+
+            Zombie* aZombie = nullptr;
+            while (mBoard->IterateZombies(aZombie))
+            {
+                if (aZombie->mZombieType == ZombieType::ZOMBIE_ZAMBONI ||
+                    aZombie->mZombieType == ZombieType::ZOMBIE_GARGANTUAR ||
+                    aZombie->mZombieType == ZombieType::ZOMBIE_REDEYE_GARGANTUAR ||
+                    aZombie->mZombieType == ZombieType::ZOMBIE_CATAPULT)
+                {
+                    continue;
+                }
+                if (aZombie->mZombiePhase == ZombiePhase::PHASE_DIGGER_TUNNELING ||
+                    aZombie->mZombiePhase == ZombiePhase::PHASE_DIGGER_RISING ||
+                    aZombie->mZombiePhase == ZombiePhase::PHASE_DIGGER_TUNNELING_PAUSE_WITHOUT_AXE ||
+                    aZombie->mZombiePhase == ZombiePhase::PHASE_DIGGER_RISE_WITHOUT_AXE ||
+                    aZombie->mZombiePhase == ZombiePhase::PHASE_RISING_FROM_GRAVE ||
+                    aZombie->mZombiePhase == ZombiePhase::PHASE_DANCER_RISING)
+                {
+                    continue;
+                }
+                if (aZombie->IsDeadOrDying())
+                {
+                    continue;
+                }
+                int aRowDeviation = aZombie->mRow - mRow;
+                if (aZombie->mZombieType == ZombieType::ZOMBIE_BOSS)
+                {
+                    aRowDeviation = 0;
+                }
+                if (aRowDeviation < -1 || aRowDeviation > 1)
+                {
+                    continue;
+                }
+                Rect aZombieRect = aZombie->GetZombieRect();
+                if (GetRectOverlap(aAttackRect, aZombieRect) > 0)
+                {
+                    if (aRowDeviation != 0)
+                    {
+                        aZombie->SetRow(mRow);
+                    }
+                    if (aZombieRect.mX < GetPlantRect().mX)
+                    {
+                        aZombie->mForcedWalkBackwardsCounter = max(200, aZombie->mForcedWalkBackwardsCounter);
+                    }
+                }
+            }
+        }
+
         if (aBodyReanim->mLoopCount > 0)
         {
             float aRate = RandRangeFloat(12.0f, 15.0f);
@@ -1549,11 +1669,68 @@ void Plant::UpdatePotato()
             mState = PlantState::STATE_POTATO_ARMED;
             mBlinkCountdown = 400 + Sexy::Rand(4000);
         }
+
     }
     else if (mState == PlantState::STATE_POTATO_ARMED)
     {
-        if (FindTargetZombie(mRow, PlantWeapon::WEAPON_PRIMARY))
+        if (FindTargetZombie(mRow, PlantWeapon::WEAPON_PRIMARY) || GetPlantSide(mSeedType) == 1)
         {
+            if (GetPlantSide(mSeedType) == 1)
+            {
+                Rect aAttackRect = GetPlantAttackRect(PlantWeapon::WEAPON_PRIMARY);
+
+                Zombie* aZombie = nullptr;
+                while (mBoard->IterateZombies(aZombie))
+                {
+                    if (aZombie->mZombieType == ZombieType::ZOMBIE_ZAMBONI ||
+                        aZombie->mZombieType == ZombieType::ZOMBIE_GARGANTUAR ||
+                        aZombie->mZombieType == ZombieType::ZOMBIE_REDEYE_GARGANTUAR ||
+                        aZombie->mZombieType == ZombieType::ZOMBIE_CATAPULT)
+                    {
+                        continue;
+                    }
+                    if (aZombie->mZombiePhase == ZombiePhase::PHASE_DIGGER_TUNNELING ||
+                        aZombie->mZombiePhase == ZombiePhase::PHASE_DIGGER_RISING ||
+                        aZombie->mZombiePhase == ZombiePhase::PHASE_DIGGER_TUNNELING_PAUSE_WITHOUT_AXE ||
+                        aZombie->mZombiePhase == ZombiePhase::PHASE_DIGGER_RISE_WITHOUT_AXE ||
+                        aZombie->mZombiePhase == ZombiePhase::PHASE_RISING_FROM_GRAVE ||
+                        aZombie->mZombiePhase == ZombiePhase::PHASE_DANCER_RISING)
+                    {
+                        continue;
+                    }
+                    if (aZombie->IsDeadOrDying())
+                    {
+                        continue;
+                    }
+                    int aRowDeviation = aZombie->mRow - mRow;
+                    if (aZombie->mZombieType == ZombieType::ZOMBIE_BOSS)
+                    {
+                        aRowDeviation = 0;
+                    }
+                    if (aRowDeviation < -1 || aRowDeviation > 1)
+                    {
+                        continue;
+                    }
+                    Rect aZombieRect = aZombie->GetZombieRect();
+                    if (GetRectOverlap(aAttackRect, aZombieRect) > 0)
+                    {
+                        if (aRowDeviation != 0)
+                        {
+                            aZombie->SetRow(mRow);
+                        }
+                        if (aZombieRect.mX < GetPlantRect().mX)
+                        {
+                            aZombie->mForcedWalkBackwardsCounter = max(200, aZombie->mForcedWalkBackwardsCounter);
+                        }
+                        else
+                        {
+                            aZombie->mForcedWalkBackwardsCounter = 0;
+                            aZombie->mForcedWalkBackwards = false;
+                        }
+                    }
+                }
+            }
+
             DoSpecial();
         }
         else
@@ -6093,7 +6270,11 @@ int Plant::GetCost(SeedType theSeedType, SeedType theImitaterType)
     }
     else if (GetPlantSide(theSeedType) == 1 && theSeedType == SeedType::SEED_WALLNUT)
     {
-        return 100;
+        return 75;
+    }
+    else if (GetPlantSide(theSeedType) == 1 && theSeedType == SeedType::SEED_POTATOMINE)
+    {
+        return 75;
     }
     else if (GetPlantSide(theSeedType) == 1 && theSeedType == SeedType::SEED_SQUASH)
     {
@@ -6182,10 +6363,12 @@ int Plant::GetRefreshTime(SeedType theSeedType, SeedType theImitaterType)
         const PlantDefinition& aPlantDef = GetPlantDefinition(theSeedType);
         if (theSeedType == SeedType::SEED_PUFFSHROOM && GetPlantSide(theSeedType) == 1)
             return 1000;
-        if (theSeedType == SeedType::SEED_SQUASH && GetPlantSide(theSeedType) == 1)
+        else if (theSeedType == SeedType::SEED_SQUASH && GetPlantSide(theSeedType) == 1)
             return 750;
-        if (theSeedType == SeedType::SEED_WALLNUT && GetPlantSide(theSeedType) == 1)
-            return 1500;
+        else if (theSeedType == SeedType::SEED_WALLNUT && GetPlantSide(theSeedType) == 1)
+            return 2000;
+        //else if (theSeedType == SeedType::SEED_POTATOMINE && GetPlantSide(theSeedType) == 1)
+        //    return 2000;
         return aPlantDef.mRefreshTime;
     }
 
@@ -6274,7 +6457,9 @@ Rect Plant::GetPlantAttackRect(PlantWeapon thePlantWeapon)
     case SeedType::SEED_SQUASH:         aRect = Rect(mX + 20,       mY,             mWidth - 35,        mHeight);               break;
     case SeedType::SEED_CHOMPER:
         if (GetPlantSide(mSeedType) == 1)
+        {
             aRect = Rect(mX + 80, mY, 120, mHeight);
+        }
         else
         {
             aRect = Rect(mX + 80, mY, 40, mHeight);
@@ -6283,7 +6468,16 @@ Rect Plant::GetPlantAttackRect(PlantWeapon thePlantWeapon)
     case SeedType::SEED_BONKCHOY:        aRect = Rect(mX - 60,       mY,             (60 * 2) + 80, mHeight);               break;
     case SeedType::SEED_SPIKEWEED:
     case SeedType::SEED_SPIKEROCK:      aRect = Rect(mX + 20,       mY,             mWidth - 50,        mHeight);               break;
-    case SeedType::SEED_POTATOMINE:     aRect = Rect(mX,            mY,             mWidth - 25,        mHeight);               break;
+    case SeedType::SEED_POTATOMINE:
+        if (GetPlantSide(mSeedType) == 1)
+        {
+            aRect = Rect(mX - 80, mY - 80, 240, 240);
+        }
+        else
+        {
+            aRect = Rect(mX, mY, mWidth - 25, mHeight);
+        }
+        break;
     case SeedType::SEED_TORCHWOOD:      aRect = Rect(mX + 50,       mY,             30,                 mHeight);               break;
     case SeedType::SEED_PUFFSHROOM:
     //case SeedType::SEED_SEASHROOM:      aRect = Rect(mX + 60,       mY,             230,                mHeight);               break;

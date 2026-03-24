@@ -179,6 +179,8 @@ public:
     float                           mSunBeanDamageTaken;
     ParticleSystemID                mParticleIDs[MAX_PARTICLES_STORED];
     int                             mParticlesAttached;
+    bool                            mForcedWalkBackwards;
+    int                             mForcedWalkBackwardsCounter;
 
 public:
     Zombie();

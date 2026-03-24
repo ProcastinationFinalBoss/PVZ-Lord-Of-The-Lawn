@@ -493,7 +493,7 @@ void AlmanacDialog::DrawPlants(Graphics* g)
 
 	Font* descriptionFont = Sexy::FONT_BRIANNETOD12;
 	Color descriptionColor = Color(40, 50, 90);
-	mDescriptionRect = Rect(485 + BOARD_ADDITIONAL_WIDTH, 309 + BOARD_OFFSET_Y, 258, 210);
+	mDescriptionRect = Rect(485 + BOARD_ADDITIONAL_WIDTH, 309 + BOARD_OFFSET_Y, 258, 224);
 	DrawStringJustification descriptionJustification = DS_ALIGN_LEFT;
 	SexyString descriptionHeader = TranslateAndSanitize(StrFormat(_S("[%s_DESCRIPTION_HEADER]"), aPlantDef.mPlantName));
 	TodDrawStringWrapped(g, descriptionHeader, mDescriptionRect, descriptionFont, descriptionColor, descriptionJustification);
