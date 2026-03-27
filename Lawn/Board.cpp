@@ -1713,7 +1713,10 @@ void Board::StartLevel()
 	else
 	{
 		for (int i = 0; i < (int)SeedType::NUM_SEED_TYPES; i++)
-			mPlantSides[i] = gPlantSides[i];
+		{
+			mPlantSides[i] = mApp->mPlayerInfo ? mApp->mPlayerInfo->mPlantSides[i] : 0;			//mPlantSides[i] = 1;
+		}
+
 	}
 	mCoinBankFadeCount = 0;
 	mApp->mLastLevelStats->Reset();
@@ -2811,7 +2814,7 @@ PlantingReason Board::CanPlantAt(int theGridX, int theGridY, SeedType theSeedTyp
 	}
 
 	bool aHasGrave = GetGraveStoneAt(theGridX, theGridY);
-	if (theSeedType == SeedType::SEED_GRAVEBUSTER)
+	if (theSeedType == SeedType::SEED_GRAVEBUSTER && GetPlantSide(theSeedType) == 0)
 	{
 		if (aPlantOnLawn.mNormalPlant)
 		{
@@ -2819,6 +2822,19 @@ PlantingReason Board::CanPlantAt(int theGridX, int theGridY, SeedType theSeedTyp
 		}
 
 		return aHasGrave ? PlantingReason::PLANTING_OK : PlantingReason::PLANTING_ONLY_ON_GRAVES;
+	}
+	if (theSeedType == SeedType::SEED_GRAVEBUSTER && GetPlantSide(theSeedType) == 1)
+	{
+		if (aPlantOnLawn.mFlyingPlant)
+		{
+			return PlantingReason::PLANTING_NOT_HERE;
+		}
+		if (!(aPlantOnLawn.mNormalPlant || aPlantOnLawn.mPumpkinPlant || aPlantOnLawn.mUnderPlant))
+		{
+			return PlantingReason::PLANTING_NOT_HERE;
+		}
+
+		return PlantingReason::PLANTING_OK;
 	}
 	if (theSeedType == SeedType::SEED_INSTANT_COFFEE)
 	{
@@ -3239,6 +3255,17 @@ void Board::UpdateMousePosition()
 
 		Plant* aPlant = GetTopPlantAt(aGridX, aGridY, PlantPriority::TOPPLANT_ONLY_NORMAL_POSITION);
 		if (aPlant && aPlant->mIsAsleep && CanPlantAt(aGridX, aGridY, SeedType::SEED_INSTANT_COFFEE) == PlantingReason::PLANTING_OK)
+		{
+			aPlant->mHighlighted = true;
+		}
+	}
+	if (aCursorSeedType == SeedType::SEED_GRAVEBUSTER && GetPlantSide(SeedType::SEED_GRAVEBUSTER) == 1)
+	{
+		int aGridX = PlantingPixelToGridX(aMouseX, aMouseY, aCursorSeedType);
+		int aGridY = PlantingPixelToGridY(aMouseX, aMouseY, aCursorSeedType);
+
+		Plant* aPlant = GetTopPlantAt(aGridX, aGridY, PlantPriority::TOPPLANT_EATING_ORDER);
+		if (CanPlantAt(aGridX, aGridY, SeedType::SEED_GRAVEBUSTER) == PlantingReason::PLANTING_OK)
 		{
 			aPlant->mHighlighted = true;
 		}

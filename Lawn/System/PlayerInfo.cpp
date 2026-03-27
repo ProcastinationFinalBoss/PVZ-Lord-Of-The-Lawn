@@ -47,6 +47,10 @@ void PlayerInfo::SyncDetails(DataSync& theSync)
 	{
 		theSync.SyncLong(mPurchases[i]);
 	}
+	for (int i = 0; i < SeedType::NUM_SEED_TYPES; i++)
+	{
+		theSync.SyncLong(mPlantSides[i]);
+	}
 	theSync.SyncLong(mPlayTimeActivePlayer);
 	theSync.SyncLong(mPlayTimeInactivePlayer);
 	theSync.SyncLong(mHasUsedCheatKeys);
@@ -139,6 +143,7 @@ void PlayerInfo::Reset()
 	mFinishedAdventure = 0;
 	memset(mChallengeRecords, 0, sizeof(mChallengeRecords));
 	memset(mPurchases, 0, sizeof(mPurchases));
+	memset(mPlantSides, 0, sizeof(mPlantSides));
 	mPlayTimeActivePlayer = 0;
 	mPlayTimeInactivePlayer = 0;
 	mHasUsedCheatKeys = 0;

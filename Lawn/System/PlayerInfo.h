@@ -44,7 +44,8 @@ class PlayerInfo
 public:
     SexyString          mName;                              
     ulong               mUseSeq;                            
-    ulong               mId;                                
+    ulong               mId;       
+    int                 mPlantSides[SeedType::NUM_SEED_TYPES];
     int                 mLevel;                             
     int                 mCoins;                             
     int                 mFinishedAdventure;                 

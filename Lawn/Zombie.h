@@ -182,7 +182,6 @@ public:
     bool                            mForcedWalkBackwards;
     int                             mForcedWalkBackwardsCounter;
     PlantID                         mPlantAttractedID;
-
 public:
     Zombie();
     ~Zombie();
@@ -194,6 +193,7 @@ public:
     void                            EatPlant(Plant* thePlant);
     void                            Update();
     void                            DieNoLoot();
+    void                            SpawnSporeShroom();
     /*inline*/ void                 DieWithLoot();
     void                            Draw(Graphics* g);
     void                            DrawZombie(Graphics* g, const ZombieDrawPosition& theDrawPos);
@@ -316,6 +316,7 @@ public:
     bool                            IsImmobilizied();
     void                            ApplyButter();
     void                            ApplyStun(int theStunDuration);
+    void                            ApplySpore(int theSporeDuration);
     float                           ZombieTargetLeadX(float theTime);
     void                            UpdateZombieImp();
     void                            SquishAllInSquare(int theX, int theY, ZombieAttackType theAttackType);
@@ -421,7 +422,7 @@ public:
     void                            PlantsStackIceTrap();
     void                            DropAllSunBeanSun();
     void                            EatGridItem(GridItem* theGridItem);
-    TodParticleSystem*                            DoesAttachedParticleExist(ParticleEffect theParticleEffect);
+    TodParticleSystem*                            TryToGetAttachedParticle(ParticleEffect theParticleEffect);
     void                            DetachParticleAndRemoveFromStorage(ParticleEffect theParticleEffect);
     GridItem* FindGridItemTarget();
 

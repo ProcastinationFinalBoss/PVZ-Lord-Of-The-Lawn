@@ -684,19 +684,26 @@ Fume-shrooms shoot fumes that pass through shields and damage all zombies in the
 [FUME_SHROOM_SIDEB]
 {STAT}SIDE B SPECIAL:
 {KEYWORD}- Range reduced to 1 tile
-{KEYWORD}- Much faster firing rate, increased damage
-{KEYWORD}- 20% chance to knockback enemies within range
+{KEYWORD}- Increased damage and has a chance to slightly push back enemies within range
 
 [GRAVE_BUSTER_DESCRIPTION_HEADER]
 Plant Grave Busters on graves to remove the graves.
 
 [GRAVE_BUSTER_DESCRIPTION]
-{SHORTLINE}
-{KEYWORD}Usage:{STAT} single use, must be planted on graves
-{KEYWORD}Special:{STAT} removes graves
-{SHORTLINE}
 {FLAVOR}Despite Grave Buster's fearsome appearance, he wants everyone to know that he loves 
 kittens and spends his off hours volunteering at a local zombie rehabilitation center. "It's just the right thing to do," he says.
+
+[GRAVE_BUSTER_SIDEA]
+{STAT}SIDE A SPECIAL:
+{KEYWORD}- Vanilla stats
+{KEYWORD}- {STAT}Must be planted on graves
+
+[GRAVE_BUSTER_SIDEB]
+{STAT}SIDE B SPECIAL:
+{KEYWORD}- {STAT}Must be planted on plants
+{KEYWORD}- When planted, acts as an insurance to the plant it's planted on
+{KEYWORD}- When the insuranced plant dies, Grave Buster will bring it back to life
+{KEYWORD}- Cannot be eaten, but is still vulnerable to crushes and bungees
 
 [HYPNO_SHROOM_DESCRIPTION_HEADER]
 When eaten, Hypno-shrooms will make a zombie turn around and fight for you.

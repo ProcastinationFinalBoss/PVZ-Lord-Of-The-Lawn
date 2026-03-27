@@ -244,7 +244,8 @@ void AlmanacDialog::SetPage(AlmanacPage thePage)
 		mPlant = new Plant();
 		mPlant->mBoard = nullptr;
 		mPlant->mIsOnBoard = false;
-		mPlant->PlantInitialize(0, 0, SeedType::SEED_SUNFLOWER, SeedType::SEED_NONE);
+		//mPlant->PlantInitialize(0, 0, (SeedType)RandRangeInt((int)SeedType::SEED_PEASHOOTER, (int)SeedType::NUM_SEED_TYPES - 1) , SeedType::SEED_NONE);
+		mPlant->PlantInitialize(0, 0, SeedType::SEED_SUNFLOWER , SeedType::SEED_NONE);
 		mPlant->mX = ALMANAC_INDEXPLANT_POSITION_X;
 		mPlant->mY = ALMANAC_INDEXPLANT_POSITION_Y;
 

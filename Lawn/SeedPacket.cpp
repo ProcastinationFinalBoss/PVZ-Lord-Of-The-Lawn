@@ -264,8 +264,7 @@ void SeedPacketDrawSeed(Graphics* g, float x, float y, SeedType theSeedType, See
 	}
 }
 
-void DrawSeedPacket(Graphics* g, float x, float y, SeedType theSeedType, SeedType theImitaterType, float thePercentDark, int theGrayness, bool theDrawCost, bool theUseCurrentCost)
-{
+void DrawSeedPacket(Graphics* g, float x, float y, SeedType theSeedType, SeedType theImitaterType, float thePercentDark, int theGrayness, bool theDrawCost, bool theUseCurrentCost, bool theDrawSideSuffix) {
 	SeedType aSeedType = theSeedType;
 	if (aSeedType == SeedType::SEED_IMITATER && theImitaterType != SeedType::SEED_NONE)
 	{
@@ -288,6 +287,8 @@ void DrawSeedPacket(Graphics* g, float x, float y, SeedType theSeedType, SeedTyp
 		aPacketBackground = 0;
 	else if (Plant::IsUpgrade(aSeedType))
 		aPacketBackground = 1;
+	else if (!theDrawSideSuffix)
+		aPacketBackground = 2;
 	else if (theSeedType == SeedType::SEED_BEGHOULED_BUTTON_CRATER)
 		aPacketBackground = 3;
 	else if (theSeedType == SeedType::SEED_BEGHOULED_BUTTON_SHUFFLE)
@@ -586,7 +587,10 @@ void DrawSeedPacket(Graphics* g, float x, float y, SeedType theSeedType, SeedTyp
 				aAlmanac != nullptr &&
 				aAlmanac->mOpenPage == AlmanacPage::ALMANAC_PAGE_PLANTS &&
 				!(((LawnApp*)gSexyAppBase)->mBoard && ((LawnApp*)gSexyAppBase)->mGameScene == GameScenes::SCENE_PLAYING);
-			if (GetPlantSide(theSeedType) != 0 && (((LawnApp*)gSexyAppBase)->mGameScene == GameScenes::SCENE_PLAYING || isPlantsPageOpenOutsideLevel))
+			bool isSeedChooserScreenActive =
+				((LawnApp*)gSexyAppBase)->mSeedChooserScreen != nullptr &&
+				((LawnApp*)gSexyAppBase)->mGameScene == GameScenes::SCENE_LEVEL_INTRO;
+			if (theDrawSideSuffix && GetPlantSide(theSeedType) != 0 && (((LawnApp*)gSexyAppBase)->mGameScene == GameScenes::SCENE_PLAYING || isPlantsPageOpenOutsideLevel || isSeedChooserScreenActive))
 
 			{
 				TodDrawString(g, StrFormat(_S("%s"), aSideSuffix.c_str()), x + 7, y + 18, Sexy::FONT_HOUSEOFTERROR16, Color::White, DS_ALIGN_CENTER);

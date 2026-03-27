@@ -225,6 +225,7 @@ TodParticleSystem::TodParticleSystem()
 	mDontUpdate = false;
 	mIsAttachment = false;
 	mRenderOrder = 0;
+	mFieldPositionXScale = 1.0f;
 }
 
 TodParticleSystem::~TodParticleSystem()
@@ -490,7 +491,10 @@ void TodParticleEmitter::UpdateParticleField(TodParticle* theParticle, ParticleF
 	{
 		float aLastX = FloatTrackEvaluateFromLastTime(theParticleField->mX, theParticle->mParticleLastTimeValue, aInterpX);
 		float aLastY = FloatTrackEvaluateFromLastTime(theParticleField->mY, theParticle->mParticleLastTimeValue, aInterpY);
-		theParticle->mPosition.x += x - aLastX;
+		float aDeltaX = x - aLastX;
+		//if (mParticleSystem->mEffectType == ParticleEffect::PARTICLE_FUMECLOUD)
+		aDeltaX *= mParticleSystem->mFieldPositionXScale;
+		theParticle->mPosition.x += aDeltaX;
 		theParticle->mPosition.y += y - aLastY;
 		break;
 	}

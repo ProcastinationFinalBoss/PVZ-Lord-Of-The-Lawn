@@ -28,6 +28,7 @@ ProjectileDefinition gProjectileDefinition[] = {
 	{ ProjectileType::PROJECTILE_ZOMBIE_PEA,    0,  20  },
 	{ ProjectileType::PROJECTILE_PIERCE_SPIKE,    0,  30  },
 	{ ProjectileType::PROJECTILE_PIERCE_SNOW,    0,  20  },
+	{ ProjectileType::PROJECTILE_SPORE,    0,  40  },
 	{ ProjectileType::PROJECTILE_SAKURA,    0,  100  }
 };
 
@@ -81,7 +82,7 @@ void Projectile::ProjectileInitialize(int theX, int theY, int theRenderOrder, in
 	memset(mPiercedZombies, 0, sizeof(mPiercedZombies));
 	memset(mPiercedZombiesSNOW, 0, sizeof(mPiercedZombiesSNOW));
 	mNumPierced = 0;
-	if (mProjectileType == ProjectileType::PROJECTILE_CABBAGE || mProjectileType == ProjectileType::PROJECTILE_BUTTER)
+	if (mProjectileType == ProjectileType::PROJECTILE_CABBAGE || mProjectileType == ProjectileType::PROJECTILE_BUTTER || mProjectileType == ProjectileType::PROJECTILE_SPORE)
 	{
 		mRotation = -7 * PI / 25;  // DEG_TO_RAD(-50.4f);
 		mRotationSpeed = RandRangeFloat(-0.08f, -0.02f);
@@ -503,6 +504,10 @@ unsigned int Projectile::GetDamageFlags(Zombie* theZombie)
 	{
 		SetBit(aDamageFlags, (int)DamageFlags::DAMAGE_HITS_SHIELD_AND_BODY, true);
 	}
+	if (mProjectileType == ProjectileType::PROJECTILE_SPORE)
+	{
+		SetBit(aDamageFlags, (int)DamageFlags::DAMAGE_SPORE, true);
+	}
 
 	return aDamageFlags;
 }
@@ -762,7 +767,7 @@ void Projectile::UpdateLobMotion()
 		{
 			aMinCollisionZ = -35.0f;
 		}
-		else if (mProjectileType == ProjectileType::PROJECTILE_CABBAGE || mProjectileType == ProjectileType::PROJECTILE_KERNEL)
+		else if (mProjectileType == ProjectileType::PROJECTILE_CABBAGE || mProjectileType == ProjectileType::PROJECTILE_KERNEL|| mProjectileType == ProjectileType::PROJECTILE_SPORE)
 		{
 			aMinCollisionZ = -30.0f;
 		}
@@ -1546,6 +1551,7 @@ void Projectile::Update()
 	int aTime = 20;
 	if (mProjectileType == ProjectileType::PROJECTILE_PEA || 
 		mProjectileType == ProjectileType::PROJECTILE_SNOWPEA || 
+		mProjectileType == ProjectileType::PROJECTILE_SPORE || 
 		mProjectileType == ProjectileType::PROJECTILE_CABBAGE || 
 		mProjectileType == ProjectileType::PROJECTILE_MELON || 
 		mProjectileType == ProjectileType::PROJECTILE_WINTERMELON || 
@@ -1597,6 +1603,11 @@ void Projectile::Draw(Graphics* g)
 	else if (mProjectileType == ProjectileType::PROJECTILE_PIERCE_SNOW)
 	{
 		aImage = IMAGE_PROJECTILEPRIMALSNOWPEA;
+	}
+	else if (mProjectileType == ProjectileType::PROJECTILE_SPORE)
+	{
+		aImage = IMAGE_PROJECTILESPORE;
+		aScale = 0.8f;
 	}
 	else if (mProjectileType == ProjectileType::PROJECTILE_SAKURA)
 	{
@@ -1759,6 +1770,7 @@ void Projectile::DrawShadow(Graphics* g)
 	case ProjectileType::PROJECTILE_BUTTER:
 	case ProjectileType::PROJECTILE_MELON:
 	case ProjectileType::PROJECTILE_WINTERMELON:
+	case ProjectileType::PROJECTILE_SPORE:
 		aOffsetX += 3.0f;
 		aOffsetY += 10.0f;
 		aScale = 1.6f;

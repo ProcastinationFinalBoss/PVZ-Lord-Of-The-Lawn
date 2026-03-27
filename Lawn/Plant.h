@@ -208,6 +208,7 @@ public:
     int                     mThreePeaRowOffset;
     int                     mThreePeaRowLesserOffset;
     int                     mSide;
+    Plant*                  mGraveStoneGetPlant;
 
 public:
     Plant();
@@ -342,7 +343,7 @@ public:
     const SexyChar*         mPlantName;         
 };
 extern PlantDefinition gPlantDefs[SeedType::NUM_SEED_TYPES];
-extern int gPlantSides[SeedType::NUM_SEED_TYPES];
+//extern int gPlantSides[SeedType::NUM_SEED_TYPES];
 
 void ResetPlantSides();
 void SetPlantSide(SeedType theSeedType, int theValue);

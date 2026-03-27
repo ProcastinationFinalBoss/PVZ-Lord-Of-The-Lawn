@@ -202,6 +202,7 @@
 <Image id="PROJECTILE_STAR" path="Projectile_star" />
 <Image id="PROJECTILEPRIMALPEA" path="projectileprimal" />
 <Image id="PROJECTILEPRIMALSNOWPEA" path="projectileprimalsnow" />
+<Image id="PROJECTILESPORE" path="projectilespore" />
 <Image id="PROJECTILE_SAKURA" path="projectilesakura" />
 
 <!-- Background -->

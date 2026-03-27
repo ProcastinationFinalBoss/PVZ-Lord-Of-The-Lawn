@@ -85,6 +85,7 @@ void Zombie::ZombieInitialize(int theRow, ZombieType theType, bool theVariant, Z
     TOD_ASSERT(theType >= 0 && theType <= ZombieType::NUM_ZOMBIE_TYPES);
 
     memset(mParticleIDs, 0, sizeof(mParticleIDs));
+    mParticlesAttached = 0;
     mForcedWalkBackwards = false;
     mForcedWalkBackwardsCounter = 0;
     mFromWave = theFromWave;
@@ -564,6 +565,8 @@ void Zombie::ZombieInitialize(int theRow, ZombieType theType, bool theVariant, Z
             mAltitude = 15.0f;
             mZombiePhase = ZombiePhase::PHASE_BALLOON_FLYING;
             PlayZombieReanim("anim_idle", ReanimLoopType::REANIM_LOOP, 0, aBodyReanim->mAnimRate);
+            PickRandomSpeed();
+
         }
         else
         {
@@ -1143,10 +1146,11 @@ void Zombie::PickRandomSpeed()
     {
         mVelX = RandRangeFloat(0.79f, 0.81f);
     }
-    //else if (mZombiePhase == ZombiePhase::PHASE_BALLOON_WALKING || mZombieType == ZombieType::ZOMBIE_BALLOON)
-    //{
-    //    mVelX = RandRangeFloat(0.11f, 0.23f);
-    //}
+    else if (mZombiePhase == ZombiePhase::PHASE_BALLOON_FLYING)
+    {
+        mVelX = RandRangeFloat(0.11f, 0.23f);
+        //mVelX = RandRangeFloat(1.11f, 1.23f);
+    }
     else if (mZombiePhase == ZombiePhase::PHASE_NEWSPAPER_MAD || mZombiePhase == ZombiePhase::PHASE_DOLPHIN_WALKING || 
         mZombiePhase == ZombiePhase::PHASE_DOLPHIN_WALKING_WITHOUT_DOLPHIN)
     {
@@ -3468,12 +3472,8 @@ void Zombie::DropHead(unsigned int theDamageFlags)
     }
     if (mSporedCounter > 0)
     {
-        DetachParticleAndRemoveFromStorage(ParticleEffect::PARTICLE_LANTERN_SHINE);
-        mSporedCounter = 0;
-        if (mBoard->GetTopPlantAt(mBoard->PixelToGridXKeepOnBoard(mX, mY), mBoard->PixelToGridYKeepOnBoard(mX, mY), PlantPriority::TOPPLANT_ANY))
-        {
-            mBoard->AddPlant(mBoard->PixelToGridXKeepOnBoard(mX, mY), mBoard->PixelToGridYKeepOnBoard(mX, mY), SeedType::SEED_SPORESHROOM, SeedType::SEED_NONE);
-        }
+        SpawnSporeShroom();
+
     }
 
     mHasHead = false;
@@ -4356,7 +4356,6 @@ void Zombie::Update()
 
         if (mKnockBackCounter > 0) {
             mPosX += mKnockBackForce * mKnockBackDirection;
-            mPosY = GetPosYBasedOnRow(mRow);
             mKnockBackCounter--;
         }
 
@@ -4624,7 +4623,6 @@ void Zombie::UpdatePlaying()
             mForcedWalkBackwards = false;
         }
     }
-    mFreeInt = mForcedWalkBackwardsCounter;
 
     if (mSporedCounter > 0)
     {
@@ -4635,6 +4633,8 @@ void Zombie::UpdatePlaying()
 
         }
     }
+    mFreeInt = mSporedCounter;
+
     if (mStunCounter > 0)
     {
         mStunCounter--;
@@ -4843,21 +4843,7 @@ void Zombie::UpdateYuckyFace()
     }
 }
 
-TodParticleSystem* Zombie::DoesAttachedParticleExist(ParticleEffect theParticleEffect)
-{
-    for (int i = 0; i < MAX_PARTICLES_STORED; ++i)
-    {
-        if (mApp->ParticleTryToGet(mParticleIDs[i]) != nullptr)
-        {
-            if (mApp->ParticleTryToGet(mParticleIDs[i])->mEffectType == theParticleEffect)
-            {
-                return mApp->ParticleTryToGet(mParticleIDs[i]);
-            }
 
-        }
-    }
-    return nullptr;
-}
 
 void Zombie::AnimateChewSound()
 {
@@ -4888,11 +4874,18 @@ void Zombie::AnimateChewSound()
         else if (aPlant->mSeedType == SeedType::SEED_SUNBEAN)
         {
             aPlant->Die();
-            if (!DoesAttachedParticleExist(ParticleEffect::PARTICLE_POTTED_PLANT_GLOW))
+            if (!TryToGetAttachedParticle(ParticleEffect::PARTICLE_POTTED_PLANT_GLOW))
             {
-                TodParticleSystem* aParticle = AddAttachedParticle(40, 40, ParticleEffect::PARTICLE_POTTED_PLANT_GLOW);
+                TodParticleSystem* aParticle = AddAttachedParticle(50, 40, ParticleEffect::PARTICLE_POTTED_PLANT_GLOW);
                 aParticle->OverrideImage("Ring", IMAGE_AWARDPICKUPGLOW);
-                mParticleIDs[mParticlesAttached++] = mApp->ParticleGetID(aParticle);
+
+                ParticleSystemID aParticleID = mApp->ParticleGetID(aParticle);
+                bool aStoredParticleAlready = find(mParticleIDs, mParticleIDs + mParticlesAttached, aParticleID) != (mParticleIDs + mParticlesAttached);
+                if (!aStoredParticleAlready && mParticlesAttached < MAX_PARTICLES_STORED)
+                {
+                    mParticleIDs[mParticlesAttached++] = aParticleID;
+                }
+
             }
 
             mSunBeanSun += min((mBodyHealth + mHelmHealth + mShieldHealth) / 5, 300);
@@ -6403,7 +6396,7 @@ bool Zombie::CanTargetPlant(Plant* thePlant, ZombieAttackType theAttackType)
     if ((mApp->IsWallnutBowlingLevel() || (thePlant->mSeedType == SeedType::SEED_WALLNUT && thePlant->mSide == 1)) && theAttackType != ZombieAttackType::ATTACKTYPE_VAULT)
         return false;
 
-    if (thePlant->NotOnGround() || thePlant->mSeedType == SeedType::SEED_TANGLEKELP || thePlant->mSeedType == SeedType::SEED_BLOVER )
+    if (thePlant->NotOnGround() || thePlant->mSeedType == SeedType::SEED_TANGLEKELP || thePlant->mSeedType == SeedType::SEED_BLOVER || (thePlant->mSeedType == SeedType::SEED_GRAVEBUSTER && thePlant->mSide == 1))
         return false;
 
     if (!mInPool && mBoard->IsPoolSquare(thePlant->mPlantCol, thePlant->mRow))
@@ -7059,6 +7052,7 @@ void Zombie::CheckForHighGround()
 void Zombie::StartMindControlled()
 {
     mApp->PlaySample(SOUND_MINDCONTROLLED);
+    DropAllSunBeanSun();
     mMindControlled = true;
     mLastPortalX = -1;
     mBodyHealth = mBodyMaxHealth;
@@ -7913,6 +7907,10 @@ int Zombie::TakeHelmDamage(int theDamage, unsigned int theDamageFlags)
             RemoveColdEffects();
         }
     }
+    if (TestBit(theDamageFlags, (int)DamageFlags::DAMAGE_SPORE))
+    {
+        ApplySpore(75);
+    }
     if (mHelmHealth == 0)
     {
         DropHelm(theDamageFlags);
@@ -8020,6 +8018,10 @@ void Zombie::TakeBodyDamage(int theDamage, unsigned int theDamageFlags)
             mChilledZombieAge = 3000;
             RemoveColdEffects();
         }
+    }
+    if (TestBit(theDamageFlags, (int)DamageFlags::DAMAGE_SPORE))
+    {
+        ApplySpore(200);
     }
 
     int aBodyHealthOrigin = mBodyHealth;
@@ -8191,12 +8193,54 @@ void Zombie::DropAllSunBeanSun()
     DetachParticleAndRemoveFromStorage(ParticleEffect::PARTICLE_POTTED_PLANT_GLOW);
 
 }
+TodParticleSystem* Zombie::TryToGetAttachedParticle(ParticleEffect theParticleEffect)
+{
+    //for (int i = 0; i < MAX_PARTICLES_STORED; ++i)
+    //{
+    //    if (mApp->ParticleTryToGet(mParticleIDs[i]) != nullptr)
+    //    {
+    //        if (mApp->ParticleTryToGet(mParticleIDs[i])->mEffectType == theParticleEffect)
+    //        {
+    //            return mApp->ParticleTryToGet(mParticleIDs[i]);
+    //        }
 
+    //    }
+    //}
+    //return nullptr;
+    for (int i = 0; i < mParticlesAttached; i++)
+    {
+        TodParticleSystem* aParticle = mApp->ParticleTryToGet(mParticleIDs[i]);
+        if (aParticle && aParticle->mEffectType == theParticleEffect)
+            return aParticle;
+    }
+
+    return nullptr;
+}
 void Zombie::DetachParticleAndRemoveFromStorage(ParticleEffect theParticleEffect)
 {
-    if (DoesAttachedParticleExist(theParticleEffect))
+    //if (TryToGetAttachedParticle(theParticleEffect))
+    //{
+    //    TryToGetAttachedParticle(theParticleEffect)->ParticleSystemDie();
+    //}
+    for (int i = 0; i < mParticlesAttached; i++)
     {
-        DoesAttachedParticleExist(theParticleEffect)->ParticleSystemDie();
+        TodParticleSystem* aParticle = mApp->ParticleTryToGet(mParticleIDs[i]);
+        if (aParticle && aParticle->mEffectType == theParticleEffect)
+        {
+            aParticle->ParticleSystemDie();
+            memmove(mParticleIDs + i, mParticleIDs + i + 1, sizeof(mParticleIDs[0]) * (mParticlesAttached - i - 1));
+            mParticlesAttached--;
+            mParticleIDs[mParticlesAttached] = ParticleSystemID::PARTICLESYSTEMID_NULL;
+            return;
+        }
+
+        if (!aParticle)
+        {
+            memmove(mParticleIDs + i, mParticleIDs + i + 1, sizeof(mParticleIDs[0]) * (mParticlesAttached - i - 1));
+            mParticlesAttached--;
+            mParticleIDs[mParticlesAttached] = ParticleSystemID::PARTICLESYSTEMID_NULL;
+            i--;
+        }
     }
 }
 
@@ -8937,6 +8981,36 @@ void Zombie::ApplyStun(int theStunDuration)
         StopZombieSound();
     }
 }
+void Zombie::ApplySpore(int theSporeDuration)
+{
+    if (!mHasHead || !CanBeFrozen())
+        return;
+
+    if (IsTangleKelpTarget() || IsBobsledTeamWithSled() || IsFlying())
+        return;
+
+    if (mSporedCounter <= 0)
+    {
+        mSporedCounter = theSporeDuration;
+    }
+    else
+    {
+        mSporedCounter += theSporeDuration;
+    }
+    if (!TryToGetAttachedParticle(ParticleEffect::PARTICLE_LANTERN_SHINE))
+    {
+        TodParticleSystem* aParticle = AddAttachedParticle(50, 40, ParticleEffect::PARTICLE_LANTERN_SHINE);
+        //aParticle->OverrideImage("Ring", IMAGE_AWARDPICKUPGLOW);
+
+        ParticleSystemID aParticleID = mApp->ParticleGetID(aParticle);
+        bool aStoredParticleAlready = find(mParticleIDs, mParticleIDs + mParticlesAttached, aParticleID) != (mParticleIDs + mParticlesAttached);
+        if (!aStoredParticleAlready && mParticlesAttached < MAX_PARTICLES_STORED)
+        {
+            mParticleIDs[mParticlesAttached++] = aParticleID;
+        }
+
+    }
+}
 void Zombie::ApplyButter()
 {
     if (!mHasHead || !CanBeFrozen())
@@ -8978,6 +9052,37 @@ void Zombie::ApplyButter()
     if (mZombieType != ZombieType::ZOMBIE_REDEYE_GARGANTUAR)
     {
         StopZombieSound();
+    }
+}
+
+void Zombie::SpawnSporeShroom()
+{
+    DetachParticleAndRemoveFromStorage(ParticleEffect::PARTICLE_LANTERN_SHINE);
+    mSporedCounter = 0;
+    int aX = mBoard->PixelToGridXKeepOnBoard(mX, mY);
+    int aY = mRow;
+    if (mBoard->CanPlantAt(aX, aY, SeedType::SEED_SPORESHROOM) == PlantingReason::PLANTING_OK)
+    {
+        mBoard->AddPlant(aX, aY, SeedType::SEED_SPORESHROOM, SeedType::SEED_NONE);
+        return;
+    }
+    else
+    {
+        aX = mBoard->PixelToGridXKeepOnBoard(mX + 80, mY);
+        if (mBoard->CanPlantAt(aX, aY, SeedType::SEED_SPORESHROOM) == PlantingReason::PLANTING_OK)
+        {
+            mBoard->AddPlant(aX, aY, SeedType::SEED_SPORESHROOM, SeedType::SEED_NONE);
+            return;
+        }
+        //else
+        //{
+        //    aX = mBoard->PixelToGridXKeepOnBoard(mX - 80, mY);
+        //    if (mBoard->CanPlantAt(aX, aY, SeedType::SEED_SPORESHROOM) == PlantingReason::PLANTING_OK)
+        //    {
+        //        mBoard->AddPlant(aX, aY, SeedType::SEED_SPORESHROOM, SeedType::SEED_NONE);
+        //        return;
+        //    }
+        //}
     }
 }
 
@@ -9063,12 +9168,7 @@ void Zombie::MowDown()
     }
     if (mSporedCounter > 0)
     {
-        DetachParticleAndRemoveFromStorage(ParticleEffect::PARTICLE_LANTERN_SHINE);
-        mSporedCounter = 0;
-        if (mBoard->GetTopPlantAt(mBoard->PixelToGridXKeepOnBoard(mX, mY), mBoard->PixelToGridYKeepOnBoard(mX, mY), PlantPriority::TOPPLANT_ANY))
-        {
-            mBoard->AddPlant(mBoard->PixelToGridXKeepOnBoard(mX, mY), mBoard->PixelToGridYKeepOnBoard(mX, mY), SeedType::SEED_SPORESHROOM, SeedType::SEED_NONE);
-        }
+        SpawnSporeShroom();
     }
 
 
@@ -9146,7 +9246,11 @@ void Zombie::ApplyBurn()
     {
         DropAllSunBeanSun();
     }
+    if (mSporedCounter > 0)
+    {
+        SpawnSporeShroom();
 
+    }
     AttachmentDetachCrossFadeParticleType(mAttachmentID, ParticleEffect::PARTICLE_ZAMBONI_SMOKE, nullptr);
     BungeeDropPlant();
 
@@ -9405,12 +9509,8 @@ void Zombie::PlayDeathAnim(unsigned int theDamageFlags)
     }
     if (mSporedCounter > 0)
     {
-        DetachParticleAndRemoveFromStorage(ParticleEffect::PARTICLE_LANTERN_SHINE);
-        mSporedCounter = 0;
-        if (mBoard->GetTopPlantAt(mBoard->PixelToGridXKeepOnBoard(mX, mY), mBoard->PixelToGridYKeepOnBoard(mX, mY), PlantPriority::TOPPLANT_ANY))
-        {
-            mBoard->AddPlant(mBoard->PixelToGridXKeepOnBoard(mX, mY), mBoard->PixelToGridYKeepOnBoard(mX, mY), SeedType::SEED_SPORESHROOM, SeedType::SEED_NONE);
-        }
+        SpawnSporeShroom();
+
     }
 
     if (mYuckyFace)
@@ -11177,8 +11277,36 @@ void Zombie::KnockBackZombie(int theDirection, float theForce, int theTime) {
 
     if (mZombieType == ZombieType::ZOMBIE_ZAMBONI || mZombieType == ZombieType::ZOMBIE_BOSS || IsTangleKelpTarget() || IsBobsledTeamWithSled() || IsFlying())
         return;
+
+    if (mKnockBackCounter > 0)
+    {
+        if (mKnockBackDirection == theDirection)
+        {
+            mKnockBackCounter = max(mKnockBackCounter, theTime);
+            mKnockBackForce = max(mKnockBackForce, theForce);
+            if (mZombieType == ZombieType::ZOMBIE_GARGANTUAR ||
+                mZombieType == ZombieType::ZOMBIE_REDEYE_GARGANTUAR)
+            {
+                mKnockBackForce /= 3;
+            }
+            return;
+        }
+
+        float aCurrentImpulse = mKnockBackForce * mKnockBackCounter;
+        float aNewImpulse = theForce * theTime;
+        if (aNewImpulse <= aCurrentImpulse)
+        {
+            return;
+        }
+    }
+
     mKnockBackCounter = theTime;
     mKnockBackDirection = theDirection;
     mKnockBackForce = theForce;
+    if (mZombieType == ZombieType::ZOMBIE_GARGANTUAR ||
+        mZombieType == ZombieType::ZOMBIE_REDEYE_GARGANTUAR)
+    {
+        mKnockBackForce /= 3;
+    }
 
 }

@@ -329,7 +329,7 @@ public:
     bool							mIsAttachment;					
     int								mRenderOrder;					
     bool							mDontUpdate;					
-
+    float                           mFieldPositionXScale;
 public:
     TodParticleSystem();
     ~TodParticleSystem();
