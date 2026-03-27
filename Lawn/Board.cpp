@@ -2833,6 +2833,10 @@ PlantingReason Board::CanPlantAt(int theGridX, int theGridY, SeedType theSeedTyp
 		{
 			return PlantingReason::PLANTING_NOT_HERE;
 		}
+		if (!aPlantOnLawn.mPumpkinPlant && aPlantOnLawn.mNormalPlant->mSeedType == SeedType::SEED_IMITATER)
+		{
+			return PlantingReason::PLANTING_NOT_HERE;
+		}
 
 		return PlantingReason::PLANTING_OK;
 	}

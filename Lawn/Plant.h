@@ -208,7 +208,8 @@ public:
     int                     mThreePeaRowOffset;
     int                     mThreePeaRowLesserOffset;
     int                     mSide;
-    Plant*                  mGraveStoneGetPlant;
+    Plant*                  mGraveBusterGetPlant;
+    SeedType                mGraveBusterGetPlantSeedType;
 
 public:
     Plant();

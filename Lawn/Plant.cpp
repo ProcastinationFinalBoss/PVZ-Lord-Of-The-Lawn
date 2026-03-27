@@ -304,6 +304,8 @@ void Plant::PlantInitialize(int theGridX, int theGridY, SeedType theSeedType, Se
         mX = mBoard->GridToPixelX(theGridX, theGridY);
         mY = mBoard->GridToPixelY(theGridX, theGridY);
     }
+    mGraveBusterGetPlant = nullptr;
+    mGraveBusterGetPlantSeedType = SeedType::SEED_NONE;
     mAnimCounter = 0;
     mAnimPing = true;
     mFrame = 0;
@@ -586,7 +588,8 @@ void Plant::PlantInitialize(int theGridX, int theGridY, SeedType theSeedType, Se
             if (mSide == 1)
             {
                 mState = PlantState::STATE_GRAVEBUSTER_EATING;
-                mGraveStoneGetPlant = mBoard->GetTopPlantAt(mPlantCol, mRow, PlantPriority::TOPPLANT_EATING_ORDER);
+                mGraveBusterGetPlant = mBoard->GetTopPlantAt(mPlantCol, mRow, PlantPriority::TOPPLANT_EATING_ORDER);
+                mGraveBusterGetPlantSeedType = mGraveBusterGetPlant->mSeedType;
 
             }
             else
@@ -1599,9 +1602,13 @@ void Plant::UpdateGraveBuster()
     {
         if (mSide == 1)
         {
-            if (!mGraveStoneGetPlant)
+            if (mGraveBusterGetPlant)
             {
-                Die();
+                if (mGraveBusterGetPlant->mDead)
+                {
+                    mBoard->AddPlant(mPlantCol, mRow, mGraveBusterGetPlantSeedType, SeedType::SEED_NONE);
+                    Die();
+                }
             }
         }
         else
@@ -6473,8 +6480,8 @@ bool Plant::IsAquatic(SeedType theSeedType)
 
 bool Plant::IsFlying(SeedType theSeedtype)
 {
-    return theSeedtype == SeedType::SEED_INSTANT_COFFEE;
-    return theSeedtype == SeedType::SEED_GRAVEBUSTER && GetPlantSide(theSeedtype) == 1;
+    return theSeedtype == SeedType::SEED_INSTANT_COFFEE ||
+           (theSeedtype == SeedType::SEED_GRAVEBUSTER && GetPlantSide(theSeedtype) == 1);
 }
 
 bool Plant::IsUpgrade(SeedType theSeedtype)
