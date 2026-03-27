@@ -1,3 +1,6 @@
+Lord Of The Lawn is just your average hard mode mod, with changes to the plants that are still faithful to their original function instead of just random gimmicks, zombie variants that feel refreshing, new minigames, challenge and more. Currently a work in progress. 
+
+Decompile's description and credits:
 # QEWide-Tweaks
 An edit of Quality Enhanced Wide that addresses and fixes many of the bugs that that decompilation (and the ones it was based off of) brought.
 ## Original Credits:
