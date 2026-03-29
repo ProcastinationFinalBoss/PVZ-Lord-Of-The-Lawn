@@ -460,26 +460,46 @@ void AlmanacDialog::DrawPlants(Graphics* g)
 		TodDrawString(g, ConvertNumberCharactersToUppercaseLetters(StrFormat(_S("Side %d"), GetPlantSide(aPlantDef.mSeedType))), 617 + BOARD_ADDITIONAL_WIDTH + 250, 288 + BOARD_OFFSET_Y - 175, Sexy::FONT_HOUSEOFTERROR20, Color::White, DS_ALIGN_CENTER);
 
 		std::vector<PlantAlmanacStat> aStats;
-		aStats.push_back({ _S("Sun Cost"), StrFormat(_S("%d"), Plant::GetCost(aPlantDef.mSeedType)), kPlantAlmanacStatAllSides });
-		aStats.push_back({ _S("Toughness"), StrFormat(_S("%d"), mPlant->mPlantHealth), kPlantAlmanacStatAllSides });
+		int aMaxHeadings = 3;
 		if (mSelectedSeed != SeedType::SEED_IMITATER)
+		{
+			aStats.push_back({ _S("Sun Cost"), StrFormat(_S("%d"), Plant::GetCost(aPlantDef.mSeedType)), kPlantAlmanacStatAllSides });
+			aStats.push_back({ _S("Toughness"), StrFormat(_S("%d"), mPlant->mPlantHealth), kPlantAlmanacStatAllSides });
 			aStats.push_back({ _S("Recharge"), StrFormat(_S("%.1fs"), Plant::GetRefreshTime(aPlantDef.mSeedType) / 100.0f), kPlantAlmanacStatAllSides });
+		}
 		else
-			aStats.push_back({ _S("Recharge"), _S("Same as the imitated plant"), kPlantAlmanacStatAllSides });
+		{
+			aMaxHeadings = 0;
+			aStats.push_back({ _S("Sun Cost"), StrFormat(_S("(*)"), Plant::GetCost(aPlantDef.mSeedType)), kPlantAlmanacStatAllSides });
+			aStats.push_back({ _S("Toughness"), StrFormat(_S("300, then (*)"), mPlant->mPlantHealth), kPlantAlmanacStatAllSides });
+			aStats.push_back({ _S("Recharge"), _S("(*)"), kPlantAlmanacStatAllSides });
+			aStats.push_back({ _S(" "), _S("(*): same as imitated plant"), kPlantAlmanacStatAllSides });
+		}
 
 		std::vector<PlantAlmanacStat> aCustomStats = GetVisiblePlantAlmanacStats(aPlantDef.mSeedType);
 		aStats.insert(aStats.end(), aCustomStats.begin(), aCustomStats.end());
 		int aRowOffset = -30;
-		for (int i = 0; i < 3; i++)
+		for (int i = 0; i < aMaxHeadings; i++)
 		{
 			aRowOffset += 30;
 			TodDrawString(g, aStats[i].mLabel + _S(": ") + aStats[i].mValue, 538 + BOARD_ADDITIONAL_WIDTH + 250, 288 + 40 + aRowOffset + BOARD_OFFSET_Y - 175, Sexy::FONT_HOUSEOFTERROR20, Color::White, DS_ALIGN_LEFT);
 		}
-		aRowOffset += 10;
-		for (int i = 3; i < (int)aStats.size(); i++)
+		if (mSelectedSeed != SeedType::SEED_IMITATER)
+		{
+			aRowOffset += 10;
+		}
+		else
+		{
+			aRowOffset = -30;
+		}
+		for (int i = aMaxHeadings; i < (int)aStats.size(); i++)
 		{	
-			aRowOffset += 30;
-			TodDrawString(g, aStats[i].mLabel, 538 + BOARD_ADDITIONAL_WIDTH + 250, 288 + 40 + aRowOffset + BOARD_OFFSET_Y - 175, Sexy::FONT_HOUSEOFTERROR20, Color::White, DS_ALIGN_LEFT);
+			if (aStats[i].mLabel != "")
+			{
+				aRowOffset += 30;
+				TodDrawString(g, aStats[i].mLabel, 538 + BOARD_ADDITIONAL_WIDTH + 250, 288 + 40 + aRowOffset + BOARD_OFFSET_Y - 175, Sexy::FONT_HOUSEOFTERROR20, Color::White, DS_ALIGN_LEFT);
+			}
+
 			if (aStats[i].mValue != "")
 			{
 				aRowOffset += 30;

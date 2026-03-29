@@ -292,6 +292,10 @@ Zombie* Projectile::FindCollisionTarget()
 			{
 				continue;
 			}
+			if (mMotionType == ProjectileMotion::MOTION_LOBBED && mPosZ < 0.0f)
+			{
+				continue;
+			}
 
 			if (mProjectileType == ProjectileType::PROJECTILE_STAR && mProjectileAge < 25 && mVelX >= 0.0f && aZombie->mZombieType == ZombieType::ZOMBIE_DIGGER)
 			{
@@ -507,6 +511,7 @@ unsigned int Projectile::GetDamageFlags(Zombie* theZombie)
 	if (mProjectileType == ProjectileType::PROJECTILE_SPORE)
 	{
 		SetBit(aDamageFlags, (int)DamageFlags::DAMAGE_SPORE, true);
+		SetBit(aDamageFlags, (int)DamageFlags::DAMAGE_DOESNT_LEAVE_BODY, true);
 	}
 
 	return aDamageFlags;

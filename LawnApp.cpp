@@ -2529,6 +2529,10 @@ bool LawnApp::HasSeedType(SeedType theSeedType)
 	{
 		return mPlayerInfo->mPurchases[(int)StoreItem::STORE_ITEM_PLANT_GATLINGPEA] > 0;
 	}
+	if (theSeedType == SeedType::SEED_SLINGPEA) //WIDETWEAK: fix gatling pea unlocking after adventure
+	{
+		return true;
+	}
 	if (theSeedType == SeedType::SEED_TWINSUNFLOWER)
 	{
 		return mPlayerInfo->mPurchases[(int)StoreItem::STORE_ITEM_PLANT_TWINSUNFLOWER] > 0;

@@ -175,7 +175,9 @@ public:
     int                             mSlowCounter;
     int                             mBlowCounter;
     bool                            mItsGargover;
-    float                             mSunBeanSun;
+    float                           mSunBeanSun;
+    float                           mSunBeanMultiplier;
+    int                           mSunBeanCounter;
     float                           mSunBeanDamageTaken;
     ParticleSystemID                mParticleIDs[MAX_PARTICLES_STORED];
     int                             mParticlesAttached;

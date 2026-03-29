@@ -995,6 +995,7 @@ enum ReanimationType
     REANIM_SAKURA,
     REANIM_SUNBEANFEMALE,
     REANIM_SPORESHROOM,
+    REANIM_SLINGPEA,
     NUM_REANIMS
 };
 enum ReanimLoopType
@@ -1127,6 +1128,7 @@ enum SeedType
     ENUM_AUTO_VALUE(SEED_SUNBEAN)                  
     ENUM_AUTO_VALUE(SEED_SAKURA)                  
     ENUM_AUTO_VALUE(SEED_SPORESHROOM)                  
+    ENUM_AUTO_VALUE(SEED_SLINGPEA)                  
     ENUM_AUTO_VALUE(SEED_IMITATER)                   
     ENUM_AUTO_VALUE(SEED_EXPLODE_O_NUT)              
     ENUM_AUTO_VALUE(SEED_GIANT_WALLNUT)              

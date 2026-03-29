@@ -132,6 +132,7 @@ Board::Board(LawnApp* theApp)
 	mDiamondsCollected = 0;
 	mPottedPlantsCollected = 0;
 	mChocolateCollected = 0;
+
 	for (int y = 0; y < MAX_GRID_SIZE_Y; y++)
 	{
 		for (int x = 0; x < 12; x++)
@@ -1383,6 +1384,20 @@ void Board::GetZenButtonRect(GameObjectType theObjectType, Rect& theRect)
 	//return theRect;
 }
 
+static void InitBoardPlantSides(Board* theBoard)
+{
+	if (theBoard->mApp->IsWallnutBowlingLevel() ||
+		//theBoard->mApp->IsIZombieLevel() ||
+		theBoard->mApp->IsPuzzleMode() ||
+		theBoard->mApp->IsWhackAZombieLevel())
+	{
+		for (int i = 0; i < (int)SeedType::NUM_SEED_TYPES; i++)
+		{
+			theBoard->mPlantSides[i] = 0;
+		}
+	}
+}
+
 void Board::InitLevel()
 {
 	mMainCounter = 0;
@@ -1396,6 +1411,7 @@ void Board::InitLevel()
 		mLevel = mApp->mQuickLevel;
 	else
 		mLevel = mApp->IsAdventureMode() ? mApp->mPlayerInfo->mLevel : 0;
+	InitBoardPlantSides(this);
 	if (mApp->IsWhackAZombieLevel())
 	{
 		ReanimatorEnsureDefinitionLoaded(ReanimationType::REANIM_HAMMER, true);
@@ -1412,6 +1428,22 @@ void Board::InitLevel()
 	}
 	PickBackground();
 	InitZombieWaves();
+	//if (mApp->IsWallnutBowlingLevel() ||
+	//	mApp->IsIZombieLevel() ||
+	//	mApp->IsWhackAZombieLevel()
+	//	)
+	//{
+	//	for (int i = 0; i < (int)SeedType::NUM_SEED_TYPES; i++)
+	//		mPlantSides[i] = 0;
+	//}
+	//else
+	//{
+	//	for (int i = 0; i < (int)SeedType::NUM_SEED_TYPES; i++)
+	//	{
+	//		mPlantSides[i] = mApp->mPlayerInfo ? mApp->mPlayerInfo->mPlantSides[i] : 0;			//mPlantSides[i] = 1;
+	//	}
+
+	//}
 	if (aGameMode == GameMode::GAMEMODE_CHALLENGE_BEGHOULED || aGameMode == GameMode::GAMEMODE_CHALLENGE_BEGHOULED_TWIST ||
 		mApp->IsScaryPotterLevel() || mApp->IsWhackAZombieLevel())
 	{
@@ -1702,6 +1734,8 @@ bool Board::ChooseSeedsOnCurrentLevel()
 
 void Board::StartLevel()
 {
+	//InitBoardPlantSides(this);
+
 	if (mApp->IsWallnutBowlingLevel() ||
 		mApp->IsIZombieLevel() ||
 		mApp->IsWhackAZombieLevel()
@@ -2833,7 +2867,7 @@ PlantingReason Board::CanPlantAt(int theGridX, int theGridY, SeedType theSeedTyp
 		{
 			return PlantingReason::PLANTING_NOT_HERE;
 		}
-		if (!aPlantOnLawn.mPumpkinPlant && aPlantOnLawn.mNormalPlant->mSeedType == SeedType::SEED_IMITATER)
+		if (!aPlantOnLawn.mPumpkinPlant && aPlantOnLawn.mNormalPlant && aPlantOnLawn.mNormalPlant->mSeedType == SeedType::SEED_IMITATER)
 		{
 			return PlantingReason::PLANTING_NOT_HERE;
 		}
@@ -3269,6 +3303,8 @@ void Board::UpdateMousePosition()
 		int aGridY = PlantingPixelToGridY(aMouseX, aMouseY, aCursorSeedType);
 
 		Plant* aPlant = GetTopPlantAt(aGridX, aGridY, PlantPriority::TOPPLANT_EATING_ORDER);
+		//Plant* aPlant = ToolHitTest(aMouseX, aMouseY);
+
 		if (CanPlantAt(aGridX, aGridY, SeedType::SEED_GRAVEBUSTER) == PlantingReason::PLANTING_OK)
 		{
 			aPlant->mHighlighted = true;
@@ -4021,7 +4057,7 @@ Plant* Board::ToolHitTestHelper(HitResult* theHitResult)
 {
 	theHitResult->mObjectType = GameObjectType::OBJECT_TYPE_PLANT;
 	Plant* aPlant = (Plant*)theHitResult->mObject;
-	return (aPlant->mSeedType != SeedType::SEED_GRAVEBUSTER || mApp->mGameMode == GameMode::GAMEMODE_CHALLENGE_ZEN_GARDEN) ? aPlant : nullptr;
+	return ((aPlant->mSeedType != SeedType::SEED_GRAVEBUSTER) || (aPlant->mSeedType == SeedType::SEED_GRAVEBUSTER && aPlant->mSide == 1) || mApp->mGameMode == GameMode::GAMEMODE_CHALLENGE_ZEN_GARDEN) ? aPlant : nullptr;
 }
 
 Plant* Board::ToolHitTest(int theX, int theY)
@@ -6780,7 +6816,7 @@ void Board::DrawGameObjects(Graphics* g)
 			}
 			Color textColor = Color::White;
 			bool drawBarOutline = true;
-			if (aPlant->mPlantHealth > 0)
+			if (aPlant->mPlantHealth > 0 && !(aPlant->mSeedType == SeedType::SEED_GRAVEBUSTER && aPlant->mSide == 1))
 			{
 				barOffsetY += baseBarOffsetY;
 				int barOffsetX = (aPlant->mSeedType != SeedType::SEED_IMITATER && isPumpkin) || aPlant->mSeedType == SeedType::SEED_TALLNUT ? 10 : 0;
@@ -9654,7 +9690,7 @@ unsigned int Board::SeedNotRecommendedForLevel(SeedType theSeedType)
 	{
 		SetBit(aNotRec, NotRecommend::NOT_RECOMMENDED_AT_NIGHT, true);
 	}
-	if (theSeedType == SeedType::SEED_GRAVEBUSTER && !StageHasGraveStones())
+	if (theSeedType == SeedType::SEED_GRAVEBUSTER && GetPlantSide(theSeedType) == 0 && !StageHasGraveStones())
 	{
 		SetBit(aNotRec, NotRecommend::NOT_RECOMMENDED_NEEDS_GRAVES, true);
 	}

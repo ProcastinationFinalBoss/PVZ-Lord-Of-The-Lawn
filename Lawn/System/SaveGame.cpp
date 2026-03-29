@@ -424,6 +424,20 @@ void FixBoardAfterLoad(Board* theBoard)
 		{
 			aPlant->mApp = theBoard->mApp;
 			aPlant->mBoard = theBoard;
+			// Pointers inside Plant are serialized as raw addresses, so they are stale
+			// after a full restart/load cycle. Rebuild Grave Buster's tracked plant pointer
+			// from board state to avoid reading invalid memory.
+			if (aPlant->mSeedType == SeedType::SEED_GRAVEBUSTER && aPlant->mSide == 1 &&
+				aPlant->mState == PlantState::STATE_GRAVEBUSTER_EATING)
+			{
+				aPlant->mGraveBusterGetPlant = theBoard->GetTopPlantAt(
+					aPlant->mPlantCol, aPlant->mRow, PlantPriority::TOPPLANT_EATING_ORDER);
+
+				if (aPlant->mGraveBusterGetPlant != nullptr)
+				{
+					aPlant->mGraveBusterGetPlantSeedType = aPlant->mGraveBusterGetPlant->mSeedType;
+				}
+			}
 		}
 	}
 	{

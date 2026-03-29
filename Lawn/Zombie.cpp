@@ -86,6 +86,9 @@ void Zombie::ZombieInitialize(int theRow, ZombieType theType, bool theVariant, Z
 
     memset(mParticleIDs, 0, sizeof(mParticleIDs));
     mParticlesAttached = 0;
+    mSunBeanSun = 0;
+    mSunBeanMultiplier = 0;
+    mSunBeanCounter = 0;
     mForcedWalkBackwards = false;
     mForcedWalkBackwardsCounter = 0;
     mFromWave = theFromWave;
@@ -1179,9 +1182,9 @@ void Zombie::BungeeStealTarget()
     Plant* aPlant = mBoard->GetTopPlantAt(mTargetCol, mRow, PlantPriority::TOPPLANT_BUNGEE_ORDER);
     if (aPlant && !aPlant->NotOnGround())
     {
-        TOD_ASSERT(aPlant->mSeedType != SeedType::SEED_GRAVEBUSTER);
+        TOD_ASSERT(!(aPlant->mSeedType == SeedType::SEED_GRAVEBUSTER && aPlant->mSide == 0));
 
-        if (aPlant->mSeedType != SeedType::SEED_COBCANNON && aPlant->mSeedType != SeedType::SEED_GRAVEBUSTER)
+        if (aPlant->mSeedType != SeedType::SEED_COBCANNON && !(aPlant->mSeedType == SeedType::SEED_GRAVEBUSTER && aPlant->mSide == 0))
         {
             mTargetPlantID = (PlantID)mBoard->mPlants.DataArrayGetID(aPlant);
             aPlant->mOnBungeeState = PlantOnBungeeState::GETTING_GRABBED_BY_BUNGEE;
@@ -4633,7 +4636,18 @@ void Zombie::UpdatePlaying()
 
         }
     }
-    mFreeInt = mSporedCounter;
+    if (mSunBeanSun > 0)
+    {
+        if (mSunBeanCounter > 0)
+        {
+            mSunBeanCounter--;
+            if (mSunBeanCounter == 0)
+            {
+                TakeDamage(mSunBeanMultiplier, 8U);
+                mSunBeanCounter = 15;
+            }
+        }
+    }
 
     if (mStunCounter > 0)
     {
@@ -4889,6 +4903,8 @@ void Zombie::AnimateChewSound()
             }
 
             mSunBeanSun += min((mBodyHealth + mHelmHealth + mShieldHealth) / 5, 300);
+            mSunBeanMultiplier++;
+            mSunBeanCounter = 15;
         }
         else if (aPlant->mSeedType == SeedType::SEED_GARLIC)
         {
@@ -7909,7 +7925,7 @@ int Zombie::TakeHelmDamage(int theDamage, unsigned int theDamageFlags)
     }
     if (TestBit(theDamageFlags, (int)DamageFlags::DAMAGE_SPORE))
     {
-        ApplySpore(75);
+        ApplySpore(50);
     }
     if (mHelmHealth == 0)
     {
@@ -8021,7 +8037,7 @@ void Zombie::TakeBodyDamage(int theDamage, unsigned int theDamageFlags)
     }
     if (TestBit(theDamageFlags, (int)DamageFlags::DAMAGE_SPORE))
     {
-        ApplySpore(200);
+        ApplySpore(50);
     }
 
     int aBodyHealthOrigin = mBodyHealth;
@@ -8248,11 +8264,17 @@ void Zombie::TakeDamage(int theDamage, unsigned int theDamageFlags)
 {
     if (mZombiePhase == ZombiePhase::PHASE_JACK_IN_THE_BOX_POPPING || IsDeadOrDying())
         return;
+    //SetBit(theDamageFlags, (int)DamageFlags::DAMAGE_DOESNT_LEAVE_BODY, true);
 
     int aDamageRemaining = theDamage;
+    if (mSporedCounter > 0)
+    {
+        aDamageRemaining *= 1.25f;
+    }
     if (mSunBeanSun > 0)
     {
-        mSunBeanDamageTaken += ClampFloat(theDamage / 5, 0, mSunBeanSun);
+        float aSunBeanDamage = ClampFloat(aDamageRemaining * mSunBeanMultiplier / 5, 0, mSunBeanSun);
+        mSunBeanDamageTaken += aSunBeanDamage;
         while (mSunBeanDamageTaken >= 5)
         {
             if (mSunBeanDamageTaken >= 50)
@@ -8279,7 +8301,7 @@ void Zombie::TakeDamage(int theDamage, unsigned int theDamageFlags)
 
             }
         }
-        mSunBeanSun -= theDamage / 5;
+        mSunBeanSun -= aSunBeanDamage;
         if (mSunBeanSun < 0)
         {
             mSunBeanSun = 0;
@@ -9000,7 +9022,8 @@ void Zombie::ApplySpore(int theSporeDuration)
     if (!TryToGetAttachedParticle(ParticleEffect::PARTICLE_LANTERN_SHINE))
     {
         TodParticleSystem* aParticle = AddAttachedParticle(50, 40, ParticleEffect::PARTICLE_LANTERN_SHINE);
-        //aParticle->OverrideImage("Ring", IMAGE_AWARDPICKUPGLOW);
+        aParticle->OverrideColor(nullptr, Color(200, 0, 200));
+        aParticle->OverrideScale(nullptr, 0.75f);
 
         ParticleSystemID aParticleID = mApp->ParticleGetID(aParticle);
         bool aStoredParticleAlready = find(mParticleIDs, mParticleIDs + mParticlesAttached, aParticleID) != (mParticleIDs + mParticlesAttached);
@@ -9057,6 +9080,7 @@ void Zombie::ApplyButter()
 
 void Zombie::SpawnSporeShroom()
 {
+    DieNoLoot();
     DetachParticleAndRemoveFromStorage(ParticleEffect::PARTICLE_LANTERN_SHINE);
     mSporedCounter = 0;
     int aX = mBoard->PixelToGridXKeepOnBoard(mX, mY);
@@ -11275,7 +11299,7 @@ void Zombie::KnockBackZombie(int theDirection, float theForce, int theTime) {
     if (!mHasHead || !CanBeFrozen())
         return;
 
-    if (mZombieType == ZombieType::ZOMBIE_ZAMBONI || mZombieType == ZombieType::ZOMBIE_BOSS || IsTangleKelpTarget() || IsBobsledTeamWithSled() || IsFlying())
+    if (mZombieType == ZombieType::ZOMBIE_ZAMBONI || mZombieType == ZombieType::ZOMBIE_BOSS || mZombieType == ZombieType::ZOMBIE_BUNGEE || IsTangleKelpTarget() || IsBobsledTeamWithSled() || IsFlying())
         return;
 
     if (mKnockBackCounter > 0)

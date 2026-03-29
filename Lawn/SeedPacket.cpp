@@ -336,6 +336,13 @@ void DrawSeedPacket(Graphics* g, float x, float y, SeedType theSeedType, SeedTyp
 		}
 		break;
 
+	case SeedType::SEED_SLINGPEA:
+		aScale -= 0.1f;
+		aOffsetX += 9.0f;
+		aOffsetY += 4.0f;
+
+		break;
+
 	case SeedType::SEED_INSTANT_COFFEE:
 		aScale = 0.55f;
 		aOffsetX = 0;
