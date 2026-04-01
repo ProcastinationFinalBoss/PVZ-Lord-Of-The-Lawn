@@ -208,6 +208,7 @@ public:
     int                     mThreePeaRowOffset;
     int                     mThreePeaRowLesserOffset;
     int                     mSide;
+    int                     mSpeedCounter;
     Plant*                  mGraveBusterGetPlant;
     SeedType                mGraveBusterGetPlantSeedType;
 
@@ -277,6 +278,7 @@ public:
     void                    UpdateShooting();
     void                    DrawShadow(Graphics* g, float theOffsetX, float theOffsetY);
     void                    UpdateScaredyShroom();
+    void                    UpdateHypnoShroom();
     int                     DistanceToClosestZombie();
     void                    UpdateSpikeweed();
     void                    MagnetShroomAttactItem(Zombie* theZombie);
@@ -321,9 +323,11 @@ public:
     void                    UpdateBonkchoy();
     void                    UpdateLaserBean();
     int                     CalculateLaneZombieHealth(int theRow);
+    Zombie*                 GetRandomZombie(SeedType theSeedType);
     void                    SlowAllZombies();
     void                    UpdateGoldBloom();
     void                    UpdatePuffShroom();
+    void                    DrawChain(Sexy::Graphics* g);
 
 };
 

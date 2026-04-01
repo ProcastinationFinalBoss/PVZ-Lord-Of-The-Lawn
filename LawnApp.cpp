@@ -1179,6 +1179,7 @@ bool LawnApp::KillNewOptionsDialog()
 		mZombieHealthbars = aNewOptionsDialog->mZombieHealthbarsCheckbox->IsChecked();
 		mPlantHealthbars = aNewOptionsDialog->mPlantHealthbarsCheckbox->IsChecked();
 		mJumpscareOn = aNewOptionsDialog->mJumpscareCheckbox->IsChecked();
+		mSunRepelOn = aNewOptionsDialog->mSunRepelCheckbox->IsChecked();
 		ToggleDebugMode();
 		SwitchScreenMode(wantWindowed, want3D, false);
 		bool aCustomCursor = aNewOptionsDialog->mCustomCursorCheckbox->IsChecked();

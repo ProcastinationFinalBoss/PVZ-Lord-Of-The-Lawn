@@ -759,13 +759,11 @@ void Coin::Update()
             AttachmentOverrideColor(mAttachmentID, Color(0, 0, 0, 0));  
         }
     }
-
-    if ((mApp->mAutoCollectSuns && IsSun()) || (mApp->mAutoCollectCoins && IsMoney()))
+    if (mApp->mSunRepelOn)
     {
         int aMouseX = mApp->mWidgetManager->mLastMouseX - mX;
         int aMouseY = mApp->mWidgetManager->mLastMouseY - mY;
         HitResult aHitResultCoin;
-
         if (!(mDead || mIsBeingCollected) &&
             aMouseX >= mPosX - 150 &&
             aMouseX < mPosX + mWidth + 150 &&
@@ -795,6 +793,13 @@ void Coin::Update()
                 StartFade();
             }
         }
+    }
+
+    if ((mApp->mAutoCollectSuns && IsSun()) || (mApp->mAutoCollectCoins && IsMoney()))
+    {
+        int aMouseX = mApp->mWidgetManager->mLastMouseX - mX;
+        int aMouseY = mApp->mWidgetManager->mLastMouseY - mY;
+        HitResult aHitResultCoin;
 
 
         if (MouseHitTest(aMouseX, aMouseY, &aHitResultCoin))

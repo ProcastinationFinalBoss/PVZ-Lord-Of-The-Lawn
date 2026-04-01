@@ -56,6 +56,9 @@ NewOptionsDialog::NewOptionsDialog(LawnApp* theApp, bool theFromGameSelector, bo
     mJumpscareCheckbox = MakeNewCheckbox(-1, this, mApp->mJumpscareOn);
     mJumpscareCheckbox->SetVisible(false);
 
+    mSunRepelCheckbox = MakeNewCheckbox(-1, this, mApp->mSunRepelOn);
+    mSunRepelCheckbox->SetVisible(false);
+
     mHardwareAccelerationCheckbox = MakeNewCheckbox(NewOptionsDialog::NewOptionsDialog_HardwareAcceleration, this, mApp->Is3dAccel());
     mDebugModeCheckbox = MakeNewCheckbox(-1, this, mApp->mTodCheatKeys);
     mDebugModeCheckbox->SetVisible(false);
@@ -188,6 +191,7 @@ NewOptionsDialog::~NewOptionsDialog()
     delete mSfxVolumeSlider;
     delete mFullscreenCheckbox;
     delete mJumpscareCheckbox;
+    delete mSunRepelCheckbox;
     delete mHardwareAccelerationCheckbox;
     delete mDebugModeCheckbox;
     delete mDiscordCheckbox;
@@ -234,6 +238,7 @@ void NewOptionsDialog::AddedToManager(Sexy::WidgetManager* theWidgetManager)
     AddWidget(m09FormatCheckbox);
     AddWidget(mFullscreenCheckbox);
     AddWidget(mJumpscareCheckbox);
+    AddWidget(mSunRepelCheckbox);
     AddWidget(mBackToGameButton);
     AddWidget(mLeftPageButton);
     AddWidget(mRightPageButton);
@@ -259,6 +264,7 @@ void NewOptionsDialog::RemovedFromManager(Sexy::WidgetManager* theWidgetManager)
     RemoveWidget(mSfxVolumeSlider);
     RemoveWidget(mFullscreenCheckbox);
     RemoveWidget(mJumpscareCheckbox);
+    RemoveWidget(mSunRepelCheckbox);
     RemoveWidget(mHardwareAccelerationCheckbox);
     RemoveWidget(mDebugModeCheckbox);
     RemoveWidget(mDiscordCheckbox);
@@ -302,6 +308,7 @@ void NewOptionsDialog::Resize(int theX, int theY, int theWidth, int theHeight)
 
     //PAGE 1
     mJumpscareCheckbox->Resize(ADVANCEDOPTIONS_SPEED_X, ADVANCEDOPTIONS_SPEED_Y + 15, 46, 39);
+    mSunRepelCheckbox->Resize(ADVANCEDOPTIONS_SPEED_X, ADVANCEDOPTIONS_SPEED_Y + 55, 46, 39);
     //PAGE 2
     mDebugModeCheckbox->Resize(284, 148, 46, 39);
     mDiscordCheckbox->Resize(mDebugModeCheckbox->mX, mDebugModeCheckbox->mY + 40, 46, 39);
@@ -392,6 +399,7 @@ void NewOptionsDialog::Draw(Sexy::Graphics* g)
         case 1:
             TodDrawString(g, _S("LOTL v0.1"), mWidth / 2, 137, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_CENTER);
             TodDrawString(g, TodStringTranslate(_S("[OPTIONS_JUMPSCARE]")), 274, mJumpscareCheckbox->mY + 23, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_RIGHT);
+            TodDrawString(g, TodStringTranslate(_S("[OPTIONS_SUNREPEL]")), 274, mSunRepelCheckbox->mY + 23, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_RIGHT);
             break;
         case 2:
             TodDrawString(g, mApp->mReconVersion, mWidth / 2, 137, FONT_DWARVENTODCRAFT18, cTextColor, DrawStringJustification::DS_ALIGN_CENTER);
@@ -532,12 +540,14 @@ void NewOptionsDialog::UpdateAdvancedPage()
     mRealHardwareAccelerationCheckbox->SetVisible(false);
     mCustomCursorCheckbox->SetVisible(false);
     mJumpscareCheckbox->SetVisible(false);
+    mSunRepelCheckbox->SetVisible(false);
 
 
     switch (mAdvancedPage)
     {
     case 1:
         mJumpscareCheckbox->SetVisible(true);
+        mSunRepelCheckbox->SetVisible(true);
         break;
     case 2:
         mDebugModeCheckbox->SetVisible(true);

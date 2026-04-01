@@ -292,7 +292,7 @@ Zombie* Projectile::FindCollisionTarget()
 			{
 				continue;
 			}
-			if (mMotionType == ProjectileMotion::MOTION_LOBBED && mPosZ < 0.0f)
+			if (mMotionType == ProjectileMotion::MOTION_LOBBED && mProjectileAge < 25)
 			{
 				continue;
 			}
@@ -597,7 +597,7 @@ void Projectile::DoSplashDamageToGraves(GridItem* theGridItem)
 	GridItem* aGridItem = nullptr;
 	while (mBoard->IterateGridItems(aGridItem))
 	{
-		if (aGridItem != theGridItem && IsGridItemHitBySplash(aGridItem))
+		if (aGridItem != theGridItem && aGridItem->mGridItemType == GridItemType::GRIDITEM_PVZ2_GRAVE && IsGridItemHitBySplash(aGridItem))
 		{ 
 			aGridItemsGetSplashed++;
 		}
@@ -640,14 +640,17 @@ void Projectile::DoSplashDamageToGraves(GridItem* theGridItem)
 	{
 		if (IsGridItemHitBySplash(aGridItem))
 		{
-			if (aGridItem == theGridItem)
+			if (aGridItem->mGridItemType == GridItemType::GRIDITEM_PVZ2_GRAVE)
 			{
-				aGridItem->TakeDamage(aOriginalDamage, 0U);
-			}
-			else
-			{
-				aGridItem->TakeDamage(aSplashDamage, 0U);
+				if (aGridItem == theGridItem)
+				{
+					aGridItem->TakeDamage(aOriginalDamage, 0U);
+				}
+				else
+				{
+					aGridItem->TakeDamage(aSplashDamage, 0U);
 
+				}
 			}
 		}
 	}
@@ -671,7 +674,7 @@ void Projectile::DoSplashDamage(Zombie* theZombie)
 	GridItem* aGridItem = nullptr;
 	while (mBoard->IterateGridItems(aGridItem))
 	{
-		if (IsGridItemHitBySplash(aGridItem))
+		if (IsGridItemHitBySplash(aGridItem) && aGridItem->mGridItemType == GridItemType::GRIDITEM_PVZ2_GRAVE)
 		{
 			aGridItemsGetSplashed++;
 		}
@@ -718,7 +721,7 @@ void Projectile::DoSplashDamage(Zombie* theZombie)
 	aGridItem = nullptr;
 	while (mBoard->IterateGridItems(aGridItem))
 	{
-		if (IsGridItemHitBySplash(aGridItem))
+		if (IsGridItemHitBySplash(aGridItem) && aGridItem->mGridItemType == GridItemType::GRIDITEM_PVZ2_GRAVE)
 		{
 			aGridItem->TakeDamage(aSplashDamage, 0U);
 		}
@@ -746,6 +749,7 @@ void Projectile::UpdateLobMotion()
 	mPosX += mVelX;
 	mPosY += mVelY;
 	mPosZ += mVelZ;
+	mShadowY += mVelY;
 
 	bool isRising = mVelZ < 0.0f;
 	if (isRising && (mProjectileType == ProjectileType::PROJECTILE_BASKETBALL || mProjectileType == ProjectileType::PROJECTILE_COBBIG))
@@ -767,6 +771,10 @@ void Projectile::UpdateLobMotion()
 		else if (mProjectileType == ProjectileType::PROJECTILE_BASKETBALL)
 		{
 			aMinCollisionZ = 60.0f;
+		}
+		else if (mProjectileType == ProjectileType::PROJECTILE_PEA)
+		{
+			aMinCollisionZ = -45.0f;
 		}
 		else if (mProjectileType == ProjectileType::PROJECTILE_MELON || mProjectileType == ProjectileType::PROJECTILE_WINTERMELON)
 		{
@@ -1281,6 +1289,10 @@ void Projectile::DoImpactToGrave(GridItem* theGridItem)
 	else if (mProjectileType == ProjectileType::PROJECTILE_PEA)
 	{
 		aSplatPosX -= 15.0f;
+		if (mMotionType == ProjectileMotion::MOTION_LOBBED)
+		{
+			aSplatPosX -= 30.0f;
+		}
 		aEffect = ParticleEffect::PARTICLE_PEA_SPLAT;
 	}
 	else if (mProjectileType == ProjectileType::PROJECTILE_SNOWPEA)
@@ -1455,6 +1467,10 @@ void Projectile::DoImpact(Zombie* theZombie)
 	else if (mProjectileType == ProjectileType::PROJECTILE_PEA)
 	{
 		aSplatPosX -= 15.0f;
+		if (mMotionType == ProjectileMotion::MOTION_LOBBED)
+		{
+			aSplatPosX -= 30.0f;
+		}
 		aEffect = ParticleEffect::PARTICLE_PEA_SPLAT;
 	}
 	else if (mProjectileType == ProjectileType::PROJECTILE_SNOWPEA)

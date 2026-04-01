@@ -2936,7 +2936,8 @@ void Challenge::SpawnZombieWave()
 	}
 
 	bool aIsFlagWave = mBoard->IsFlagWave(mBoard->mCurrentWave);
-	if (mApp->mGameMode == GAMEMODE_CHALLENGE_GRAVE_DANGER && mBoard->mCurrentWave != mBoard->mNumWaves - 1)
+	//if (mApp->mGameMode == GAMEMODE_CHALLENGE_GRAVE_DANGER && mBoard->mCurrentWave != mBoard->mNumWaves - 1)
+	if (mBoard->StageHasGraveStones() && mBoard->mCurrentWave != mBoard->mNumWaves - 1)
 	{
 		if (aIsFlagWave)
 		{

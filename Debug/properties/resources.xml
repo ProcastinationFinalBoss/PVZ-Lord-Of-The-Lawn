@@ -290,6 +290,7 @@
 <Image id="ZOMBIE_SEAWEED" path="Zombie_seaweed" cols="4" />
 <Image id="PINATA" path="pinata" cols="5" />
 <Image id="ZOMBIEFUTUREGLASSES" path="ZombieFutureGlasses" cols="4" />
+<Image id="LASERGLOW" path="Tanglekelp_arm3" />
 <Image id="DUST_PUFFS" path="Dust_puffs" cols="3" />
 
 <SetDefaults path="reanim" idprefix="IMAGE_REANIM_" />

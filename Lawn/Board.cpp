@@ -1387,7 +1387,7 @@ void Board::GetZenButtonRect(GameObjectType theObjectType, Rect& theRect)
 static void InitBoardPlantSides(Board* theBoard)
 {
 	if (theBoard->mApp->IsWallnutBowlingLevel() ||
-		//theBoard->mApp->IsIZombieLevel() ||
+		theBoard->mApp->IsFinalBossLevel() ||
 		theBoard->mApp->IsPuzzleMode() ||
 		theBoard->mApp->IsWhackAZombieLevel())
 	{
@@ -1737,7 +1737,8 @@ void Board::StartLevel()
 	//InitBoardPlantSides(this);
 
 	if (mApp->IsWallnutBowlingLevel() ||
-		mApp->IsIZombieLevel() ||
+		mApp->IsPuzzleMode() ||
+		mApp->IsFinalBossLevel() ||
 		mApp->IsWhackAZombieLevel()
 		)
 	{
@@ -2880,7 +2881,17 @@ PlantingReason Board::CanPlantAt(int theGridX, int theGridY, SeedType theSeedTyp
 		{
 			return PlantingReason::PLANTING_NOT_HERE;
 		}
-
+		if (GetPlantSide(theSeedType) == 1)
+		{
+			if (aPlantOnLawn.mNormalPlant && !aPlantOnLawn.mNormalPlant->mIsAsleep)
+			{
+				return PlantingReason::PLANTING_OK;
+			}
+			else if (aPlantOnLawn.mNormalPlant && aPlantOnLawn.mNormalPlant->mIsAsleep)
+			{
+				return PlantingReason::PLANTING_NOT_HERE;
+			}
+		}
 		if (!aPlantOnLawn.mNormalPlant || !aPlantOnLawn.mNormalPlant->mIsAsleep || aPlantOnLawn.mNormalPlant->mWakeUpCounter > 0 ||
 			aPlantOnLawn.mNormalPlant->mOnBungeeState == PlantOnBungeeState::GETTING_GRABBED_BY_BUNGEE)
 		{
@@ -3005,7 +3016,7 @@ PlantingReason Board::CanPlantAt(int theGridX, int theGridY, SeedType theSeedTyp
 			}
 		}
 	}
-
+	bool aTest = aNormalPlant;
 	if (aNormalPlant)
 	{
 		if (aNormalPlant->IsUpgradableTo(theSeedType) && aNormalPlant->mOnBungeeState != PlantOnBungeeState::GETTING_GRABBED_BY_BUNGEE)
@@ -3292,7 +3303,7 @@ void Board::UpdateMousePosition()
 		int aGridY = PlantingPixelToGridY(aMouseX, aMouseY, aCursorSeedType);
 
 		Plant* aPlant = GetTopPlantAt(aGridX, aGridY, PlantPriority::TOPPLANT_ONLY_NORMAL_POSITION);
-		if (aPlant && aPlant->mIsAsleep && CanPlantAt(aGridX, aGridY, SeedType::SEED_INSTANT_COFFEE) == PlantingReason::PLANTING_OK)
+		if (aPlant && ((aPlant->mIsAsleep && GetPlantSide(aCursorSeedType) == 0) || (!aPlant->mIsAsleep && GetPlantSide(aCursorSeedType) == 1)) && CanPlantAt(aGridX, aGridY, SeedType::SEED_INSTANT_COFFEE) == PlantingReason::PLANTING_OK)
 		{
 			aPlant->mHighlighted = true;
 		}
@@ -4966,6 +4977,11 @@ void Board::SpawnZombiesFromGraves()
 	GridItem* aGridItem = nullptr;
 	while (IterateGridItems(aGridItem))
 	{
+		if (mCurrentWave < mNumWaves)
+		{
+			if (mApp->mGameMode != GAMEMODE_CHALLENGE_GRAVE_DANGER && Rand(4) != 0)
+				continue;
+		}
 		if ((aGridItem->mGridItemType != GridItemType::GRIDITEM_GRAVESTONE && aGridItem->mGridItemType != GridItemType::GRIDITEM_PVZ2_GRAVE)|| aGridItem->mGridItemCounter < 100)
 		{
 			continue;
@@ -5070,6 +5086,14 @@ void Board::UpdateGameObjects()
 	while (IteratePlants(aPlant))
 	{
 		aPlant->Update();
+		if (aPlant->mSpeedCounter > 0)
+		{
+			aPlant->Update();
+			if (aPlant->mSpeedCounter > 1500)
+			{
+				aPlant->Update();
+			}
+		}
 	}
 
 	Zombie* aZombie = nullptr;
@@ -9014,7 +9038,27 @@ void Board::ProcessDeleteQueue()
 		{
 			if (aPlant->mDead)
 			{
+				//SeedType aSeed = aPlant->mSeedType;
+				//Plant* aPlant2 = nullptr;
+				//Plant* aPlantGB = nullptr;
+				//while (IteratePlants(aPlant2))
+				//{
+				//	if (aPlant2->mSeedType == SeedType::SEED_GRAVEBUSTER && aPlant2->mSide == 1 && aPlant2->mGraveBusterGetPlant == aPlant)
+				//	{
+				//		aPlantGB = aPlant2;
+				//	}
+				//}
 				mPlants.DataArrayFree(aPlant);
+				//if (aPlantGB)
+				//{
+				//	if (CanPlantAt(aPlantGB->mPlantCol, aPlantGB->mRow, aSeed))
+				//	{
+				//		AddPlant(aPlantGB->mPlantCol, aPlantGB->mRow, aSeed, SeedType::SEED_NONE);
+				//		TodParticleSystem* aParticleSystem = mApp->AddTodParticle(mX + 40, mY + 40, (int)RenderLayer::RENDER_LAYER_TOP, ParticleEffect::PARTICLE_IMITATER_MORPH);
+				//	}
+				//	aPlantGB->Die();
+
+				//}
 			}
 		}
 	}

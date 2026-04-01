@@ -2353,7 +2353,17 @@ void Zombie::UpdateZombiePeaHead()
 
 void Zombie::EatGridItem(GridItem* theGridItem)
 {
-    theGridItem->TakeDamage(DAMAGE_PER_EAT, 8U);
+    int anActualDamage = DAMAGE_PER_EAT;
+    Plant* aPlant = nullptr;
+    while (mBoard->IteratePlants(aPlant))
+    {
+        if (aPlant->mTargetZombieID == mBoard->ZombieGetID(this) && aPlant->mSeedType == SeedType::SEED_HYPNOSHROOM && aPlant->mSide == 1)
+        {
+            anActualDamage *= 2;
+            aPlant->mStateCountdown += 0.5f;
+        }
+    }
+    theGridItem->TakeDamage(anActualDamage, 8U);
     StartEating();
 }
 
@@ -6951,7 +6961,7 @@ void Zombie::CheckIfPreyCaught()
         return;
     }
     GridItem* aGridItem = FindGridItemTarget();
-    if (aGridItem)
+    if (aGridItem && aGridItem->mGridItemType == GridItemType::GRIDITEM_PVZ2_GRAVE)
     {
         EatGridItem(aGridItem);
         return;
@@ -7210,7 +7220,21 @@ void Zombie::EatPlant(Plant* thePlant)
         }
     }
 
-    thePlant->mPlantHealth -= DAMAGE_PER_EAT;
+    if (thePlant->mSpeedCounter > 0 && (thePlant->mSeedType == SeedType::SEED_WALLNUT || thePlant->mSeedType == SeedType::SEED_TALLNUT || thePlant->mSeedType == SeedType::SEED_PUMPKINSHELL))
+    {
+        if (thePlant->mSpeedCounter > 1500)
+        {
+            thePlant->mPlantHealth -= DAMAGE_PER_EAT / 3;
+        }
+        else
+        {
+            thePlant->mPlantHealth -= DAMAGE_PER_EAT / 2;
+        }
+    }
+    else
+    {
+        thePlant->mPlantHealth -= DAMAGE_PER_EAT;
+    }
     if (thePlant->mSeedType == SeedType::SEED_BONKCHOY)
     {
         thePlant->mBonkChoyPunchCD -= 0.2f;
@@ -7276,7 +7300,17 @@ void Zombie::EatPlant(Plant* thePlant)
 
 void Zombie::EatZombie(Zombie* theZombie)
 {
-    theZombie->TakeDamage(DAMAGE_PER_EAT, 9U);
+    int anActualDamage = DAMAGE_PER_EAT;
+    Plant* aPlant = nullptr;
+    while (mBoard->IteratePlants(aPlant))
+    {
+        if (aPlant->mTargetZombieID == mBoard->ZombieGetID(this) && aPlant->mSeedType == SeedType::SEED_HYPNOSHROOM && aPlant->mSide == 1)
+        {
+            anActualDamage *= 2;
+            aPlant->mStateCountdown += 0.5f;
+        }
+    }
+    theZombie->TakeDamage(anActualDamage, 9U);
     StartEating();
     if (theZombie->mBodyHealth <= 0)
     {

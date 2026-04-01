@@ -186,6 +186,7 @@ SexyAppBase::SexyAppBase()
 	mIsPhysWindowed = true;
 	mFullScreenWindow = false;
 	mJumpscareOn = false;
+	mSunRepelOn = false;
 	mPreferredX = -1;
 	mPreferredY = -1;
 	mIsScreenSaver = false;
