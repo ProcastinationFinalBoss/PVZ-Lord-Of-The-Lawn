@@ -49,7 +49,10 @@ public:
     SeedPacket		    mSeedPackets[SEEDBANK_MAX];     
     int				    mCutSceneDarken;                
     int				    mConveyorBeltCounter;           
-
+    int				    mExtraImageAnimationCounter;
+    float				mExtraImageOffset;
+    int					mLastChosenSeedCount;
+    int					mSlidingAnimationDelay;			
 public:
     SeedBank();
 
@@ -64,6 +67,9 @@ public:
     void			    UpdateConveyorBelt();
     void			    UpdateWidth();
     void			    RefreshAllPackets();
+    int				    CountChosenSeeds();
+    void			    UpdateExtraImageAnimation();
+
 };
 
 void				    SeedPacketDrawSeed(Graphics* g, float x, float y, SeedType theSeedType, SeedType theImitaterType, float theOffsetX, float theOffsetY, float theScale);

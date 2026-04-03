@@ -131,6 +131,7 @@ public:
     Zombie*                 ZombieHitTest(int x, int y);
     bool                    IsOverImitater(int x, int y);
     void                    ResizeSlider();
+    int                     CountChosenSeedsInChooser();
 };
 
 #endif

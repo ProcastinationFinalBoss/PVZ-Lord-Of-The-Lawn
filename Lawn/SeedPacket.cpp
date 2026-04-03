@@ -10,7 +10,7 @@
 #include "../Sexy.TodLib/FilterEffect.h"
 #include "../SexyAppFramework/SexyMatrix.h"
 #include "../Lawn/Widget/AlmanacDialog.h"
-
+#include "../Lawn/Widget/SeedChooserScreen.h"
 
 SeedPacket::SeedPacket()
 {
@@ -946,6 +946,82 @@ SeedBank::SeedBank()
 	mNumPackets = 0;
 	mConveyorBeltCounter = 0;
 	mCutSceneDarken = 255;
+	mExtraImageAnimationCounter = 0;
+	mExtraImageOffset = 0.0f;
+	mLastChosenSeedCount = 0;
+	mSlidingAnimationDelay = 0;
+}
+
+int SeedBank::CountChosenSeeds()
+{
+	int aCount = 0;
+	for (int i = 0; i < mNumPackets; i++)
+	{
+		if (mSeedPackets[i].mPacketType != SeedType::SEED_NONE)
+		{
+			aCount++;
+		}
+	}
+	return aCount;
+}
+//void SeedBank::UpdateExtraImageAnimation()
+//{
+//	constexpr int ANIMATION_TIME = 30;
+//	int anExtraImageHeight = IMAGE_SEEDBANK->GetHeight() - 8;
+//
+//	int aChosenSeedsCount = CountChosenSeeds();
+//
+//	if (mApp->mGameScene == GameScenes::SCENE_LEVEL_INTRO && ((LawnApp*)gSexyAppBase)->mSeedChooserScreen)
+//	{
+//		aChosenSeedsCount = ((LawnApp*)gSexyAppBase)->mSeedChooserScreen->CountChosenSeedsInChooser();
+//	}
+//	if (aChosenSeedsCount > 10)
+//	{
+//		mExtraImageAnimationCounter = min(mExtraImageAnimationCounter + 1, ANIMATION_TIME);
+//		mExtraImageOffset = TodAnimateCurveFloat(0, ANIMATION_TIME, mExtraImageAnimationCounter, 0.0f, (float)anExtraImageHeight, TodCurves::CURVE_EASE_IN_OUT);
+//	}
+//	else
+//	{
+//		mExtraImageAnimationCounter = max(mExtraImageAnimationCounter - 1, 0);
+//		mExtraImageOffset = TodAnimateCurveFloat(0, ANIMATION_TIME, mExtraImageAnimationCounter, 0.0f, (float)anExtraImageHeight, TodCurves::CURVE_EASE_IN_OUT);
+//	}
+//}
+void SeedBank::UpdateExtraImageAnimation()
+{
+	constexpr int ANIMATION_TIME = 40;
+	int anExtraImageHeight = IMAGE_SEEDBANK->GetHeight() - 8;
+	constexpr int SLIDING_DELAY = 20; 
+
+	int aChosenSeedsCount = CountChosenSeeds();
+
+	//if (mApp->mGameScene == GameScenes::SCENE_LEVEL_INTRO && ((LawnApp*)gSexyAppBase)->mSeedChooserScreen)
+	if (mApp->mGameScene == GameScenes::SCENE_LEVEL_INTRO && mApp->mSeedChooserScreen)
+	{
+		//aChosenSeedsCount = ((LawnApp*)gSexyAppBase)->mSeedChooserScreen->CountChosenSeedsInChooser();
+		aChosenSeedsCount = mApp->mSeedChooserScreen->CountChosenSeedsInChooser();
+	}
+
+	if (aChosenSeedsCount < mLastChosenSeedCount)
+	{
+		mSlidingAnimationDelay = SLIDING_DELAY;
+	}
+	mLastChosenSeedCount = aChosenSeedsCount;
+
+	if (mSlidingAnimationDelay > 0)
+	{
+		mSlidingAnimationDelay--;
+	}
+
+	if (aChosenSeedsCount > 10)
+	{
+		mExtraImageAnimationCounter = min(mExtraImageAnimationCounter + 1, ANIMATION_TIME);
+	}
+	else if (mSlidingAnimationDelay == 0)
+	{
+		mExtraImageAnimationCounter = max(mExtraImageAnimationCounter - 1, 0);
+	}
+
+	mExtraImageOffset = TodAnimateCurveFloat(0, ANIMATION_TIME, mExtraImageAnimationCounter, 0.0f, (float)anExtraImageHeight, TodCurves::CURVE_EASE_IN_OUT);
 }
 
 void SeedBank::Draw(Graphics* g)
@@ -973,11 +1049,19 @@ void SeedBank::Draw(Graphics* g)
 	}
 	else
 	{
+		UpdateExtraImageAnimation();
 		int aExtraWidth = mBoard->GetSeedBankExtraWidth();
 		Rect theSrcRect(IMAGE_SEEDBANK->mWidth - aExtraWidth - 12, 0, aExtraWidth + 12, IMAGE_SEEDBANK->mHeight);
+		Rect theSrcRectExtra(IMAGE_SEEDBANK->mWidth - aExtraWidth - 12, 0, aExtraWidth + 12, IMAGE_SEEDBANK->mHeight);
+
+		int aExtraImageY = FloatRoundToInt(mExtraImageOffset);
+		g->DrawImage(IMAGE_SEEDBANK, 0, aExtraImageY);
+		g->DrawImage(IMAGE_SEEDBANK, IMAGE_SEEDBANK->mWidth - 12, aExtraImageY, theSrcRectExtra);
+		
 		g->DrawImage(IMAGE_SEEDBANK, 0, 0);
 		g->DrawImage(IMAGE_SEEDBANK, IMAGE_SEEDBANK->mWidth - 12, 0, theSrcRect);
 	}
+
 
 	for (int i = 0; i < mNumPackets; i++)
 	{
@@ -1037,7 +1121,7 @@ bool SeedBank::ContainsPoint(int theX, int theY)
 	return theX >= mX && theX < mX + mWidth && theY >= mY && theY < mY + mHeight;
 }
 
-void SeedBank::AddSeed(SeedType theSeedType, bool thePlaceOnLeft)
+void SeedBank::AddSeed(SeedType theSeedType, bool thePlaceOnLeft) // note: this shit is for FUCKING CONVEYORS
 {
 	TOD_ASSERT(mBoard->HasConveyorBeltSeedBank());
 	TOD_ASSERT(theSeedType != SeedType::SEED_NONE);

@@ -273,7 +273,7 @@ void SeedChooserScreen::CrazyDavePickSeeds() //WIDETWEAK: Fixes the seed packets
 
 		int aPosX = mBoard->GetSeedPacketPositionX(i);
 		aChosenSeed.mX = aPosX;
-		aChosenSeed.mY = 8;
+		aChosenSeed.mY = mBoard->GetSeedPacketPositionY(i);
 		aChosenSeed.mStartX = aPosX;
 		aChosenSeed.mStartY = 8;
 		aChosenSeed.mEndX = aPosX;
@@ -311,7 +311,7 @@ void SeedChooserScreen::GetSeedPositionInChooser(int theIndex, int& x, int& y)
 void SeedChooserScreen::GetSeedPositionInBank(int theIndex, int& x, int& y)
 {
 	x = mBoard->mSeedBank->mX - mX + mBoard->GetSeedPacketPositionX(theIndex);
-	y = mBoard->mSeedBank->mY - mY + 8;
+	y = mBoard->mSeedBank->mY - mY + mBoard->GetSeedPacketPositionY(theIndex);
 }
 
 SeedChooserScreen::~SeedChooserScreen()
@@ -468,6 +468,19 @@ void SeedChooserScreen::Draw(Graphics* g)
 	mToolTip->Draw(g);
 }
 
+int SeedChooserScreen::CountChosenSeedsInChooser()
+{
+	int aCount = 0;
+	for (SeedType aSeedType = SEED_PEASHOOTER; aSeedType < NUM_SEEDS_IN_CHOOSER; aSeedType = (SeedType)(aSeedType + 1))
+	{
+		ChosenSeed& aChosenSeed = mChosenSeeds[aSeedType];
+		if (aChosenSeed.mSeedState == SEED_IN_BANK)
+		{
+			aCount++;
+		}
+	}
+	return aCount;
+}
 void SeedChooserScreen::UpdateViewLawn()
 {
 	if (mChooseState != CHOOSE_VIEW_LAWN) return;

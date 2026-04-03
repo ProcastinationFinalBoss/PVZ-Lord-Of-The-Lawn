@@ -186,7 +186,7 @@ bool StoreScreen::IsItemSoldOut(StoreItem theStoreItem)
     if (theStoreItem == STORE_ITEM_INVALID)
         return false;
     else if (theStoreItem == STORE_ITEM_PACKET_UPGRADE)
-        return aPlayer->mPurchases[STORE_ITEM_PACKET_UPGRADE] >= 4;
+        return aPlayer->mPurchases[STORE_ITEM_PACKET_UPGRADE] >= 4 + 4;
     else if (theStoreItem == STORE_ITEM_FERTILIZER || theStoreItem == STORE_ITEM_BUG_SPRAY)
         return aPlayer->mPurchases[theStoreItem] - PURCHASE_COUNT_OFFSET > 15;
     else if (theStoreItem == STORE_ITEM_TREE_FOOD)
@@ -577,7 +577,7 @@ void StoreScreen::UpdateMouse()
                 case STORE_ITEM_WHEEL_BARROW:           aMessageIndex = 2024;                           break;
                 case STORE_ITEM_STINKY_THE_SNAIL:       aMessageIndex = 2025;                           break;
                 case STORE_ITEM_PACKET_UPGRADE:
-                    if (mApp->mPlayerInfo->mPurchases[STORE_ITEM_PACKET_UPGRADE] < 4)
+                    if (mApp->mPlayerInfo->mPurchases[STORE_ITEM_PACKET_UPGRADE] < 4 + 4)
                         aMessageIndex = mApp->mPlayerInfo->mPurchases[STORE_ITEM_PACKET_UPGRADE] + 2011;
                     else
                         aMessageIndex = 2014;                                                           break;

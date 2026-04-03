@@ -424,7 +424,8 @@ public:
     void                            PlantsStackIceTrap();
     void                            DropAllSunBeanSun();
     void                            EatGridItem(GridItem* theGridItem);
-    TodParticleSystem*                            TryToGetAttachedParticle(ParticleEffect theParticleEffect);
+    bool                            IsBuffedByHypnoShroom();
+    TodParticleSystem*              TryToGetAttachedParticle(ParticleEffect theParticleEffect);
     void                            DetachParticleAndRemoveFromStorage(ParticleEffect theParticleEffect);
     GridItem* FindGridItemTarget();
 

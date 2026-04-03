@@ -1171,6 +1171,9 @@ void Zombie::PickRandomSpeed()
             mAnimTicksPerFrame = 15;
         }
     }
+    if (mMindControlled && IsBuffedByHypnoShroom()) {
+        mVelX *= 3.0f;
+    }
 
     UpdateAnimSpeed();
 }
@@ -2351,43 +2354,6 @@ void Zombie::UpdateZombiePeaHead()
     }
 }
 
-void Zombie::EatGridItem(GridItem* theGridItem)
-{
-    int anActualDamage = DAMAGE_PER_EAT;
-    Plant* aPlant = nullptr;
-    while (mBoard->IteratePlants(aPlant))
-    {
-        if (aPlant->mTargetZombieID == mBoard->ZombieGetID(this) && aPlant->mSeedType == SeedType::SEED_HYPNOSHROOM && aPlant->mSide == 1)
-        {
-            anActualDamage *= 2;
-            aPlant->mStateCountdown += 0.5f;
-        }
-    }
-    theGridItem->TakeDamage(anActualDamage, 8U);
-    StartEating();
-}
-
-
-GridItem* Zombie::FindGridItemTarget()
-{
-    Rect aAttackRect = GetZombieAttackRect();
-
-    GridItem* aGridItem = nullptr;
-    while (mBoard->IterateGridItems(aGridItem))
-    {
-        if (mMindControlled &&
-            aGridItem->mGridY == mRow)
-        {
-            Rect aGridItemRect = aGridItem->GetPVZ2GraveRect();
-            if (GetRectOverlap(aAttackRect, aGridItemRect) > 0)
-            {
-                return aGridItem;
-            }
-        }
-    }
-
-    return nullptr;
-}
 
 
 void Zombie::BurnRow(int theRow)  
@@ -4114,6 +4080,8 @@ void Zombie::UpdateZombieWalking()
             }
         }
 
+
+
         if (IsWalkingBackwards() || mZombiePhase == ZombiePhase::PHASE_DANCER_DANCING_IN)
         {
             mPosX += aSpeed;
@@ -4877,7 +4845,7 @@ void Zombie::AnimateChewSound()
     Plant* aPlant = FindPlantTarget(ZombieAttackType::ATTACKTYPE_CHEW);
     if (aPlant)
     {
-        if (aPlant->mSeedType == SeedType::SEED_HYPNOSHROOM && !aPlant->mIsAsleep)
+        if (aPlant->mSeedType == SeedType::SEED_HYPNOSHROOM && !aPlant->mIsAsleep && aPlant->mSide != 0)
         {
             mApp->PlayFoley(FoleyType::FOLEY_FLOOP);
             aPlant->Die();
@@ -6746,16 +6714,30 @@ void Zombie::UpdateAnimSpeed()
 
     if (mIsEating)
     {
-        if (mZombieType == ZombieType::ZOMBIE_POLEVAULTER || mZombieType == ZombieType::ZOMBIE_BALLOON || mZombieType == ZombieType::ZOMBIE_IMP || 
-            mZombieType == ZombieType::ZOMBIE_DIGGER || mZombieType == ZombieType::ZOMBIE_JACK_IN_THE_BOX || mZombieType == ZombieType::ZOMBIE_SNORKEL || 
-            mZombieType == ZombieType::ZOMBIE_YETI)
+        float anAnimRate;
+
+        switch (mZombieType)
         {
-            ApplyAnimRate(20.0f);
+        case ZombieType::ZOMBIE_POLEVAULTER:
+        case ZombieType::ZOMBIE_BALLOON:
+        case ZombieType::ZOMBIE_IMP:
+        case ZombieType::ZOMBIE_DIGGER:
+        case ZombieType::ZOMBIE_JACK_IN_THE_BOX:
+        case ZombieType::ZOMBIE_SNORKEL:
+        case ZombieType::ZOMBIE_YETI:
+            anAnimRate = 20.0f;
+            break;
+        default:
+            anAnimRate = 36.0f;
+            break;
         }
-        else
-        {
-            ApplyAnimRate(36.0f);
-        }
+
+        //if (mMindControlled && IsBuffedByHypnoShroom())
+        //{
+        //    anAnimRate *= 1.5f;
+        //}
+
+        ApplyAnimRate(anAnimRate);
     }
     else 
     {
@@ -6948,6 +6930,9 @@ void Zombie::CheckIfPreyCaught()
         float scaleFactor = -1.0f / 15.0f * (aChilledCounter - 1500.0f);
         aTicksBetweenEats *= 2.5f + (-0.0150f * scaleFactor);
     }
+    //if (mMindControlled && IsBuffedByHypnoShroom()) {
+    //    aTicksBetweenEats *= 1.5f;
+    //}
 
     if (mZombieAge % aTicksBetweenEats != 0)
     {
@@ -7297,19 +7282,51 @@ void Zombie::EatPlant(Plant* thePlant)
         }
     }
 }
+bool Zombie::IsBuffedByHypnoShroom() {
+    Plant* aPlant = nullptr;
+    while (mBoard->IteratePlants(aPlant)) {
+        if (aPlant->mTargetZombieID == mBoard->ZombieGetID(this) &&
+            aPlant->mSeedType == SeedType::SEED_HYPNOSHROOM &&
+            aPlant->mSide == 1) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void Zombie::EatGridItem(GridItem* theGridItem)
+{
+    int anActualDamage = DAMAGE_PER_EAT;
+    theGridItem->TakeDamage(anActualDamage, 8U);
+    StartEating();
+}
+
+
+GridItem* Zombie::FindGridItemTarget()
+{
+    Rect aAttackRect = GetZombieAttackRect();
+
+    GridItem* aGridItem = nullptr;
+    while (mBoard->IterateGridItems(aGridItem))
+    {
+        if (mMindControlled &&
+            aGridItem->mGridY == mRow)
+        {
+            Rect aGridItemRect = aGridItem->GetPVZ2GraveRect();
+            if (GetRectOverlap(aAttackRect, aGridItemRect) > 0)
+            {
+                return aGridItem;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
 
 void Zombie::EatZombie(Zombie* theZombie)
 {
     int anActualDamage = DAMAGE_PER_EAT;
-    Plant* aPlant = nullptr;
-    while (mBoard->IteratePlants(aPlant))
-    {
-        if (aPlant->mTargetZombieID == mBoard->ZombieGetID(this) && aPlant->mSeedType == SeedType::SEED_HYPNOSHROOM && aPlant->mSide == 1)
-        {
-            anActualDamage *= 2;
-            aPlant->mStateCountdown += 0.5f;
-        }
-    }
     theZombie->TakeDamage(anActualDamage, 9U);
     StartEating();
     if (theZombie->mBodyHealth <= 0)

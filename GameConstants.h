@@ -25,7 +25,7 @@ const int			ROOF_POLE_END = -BOARD_WIDTH;
 const int			ROOF_TREE_START = WIDE_BOARD_WIDTH + 130 - BOARD_ADDITIONAL_WIDTH;
 const int			ROOF_TREE_END = -670;
 
-const int           SEEDBANK_MAX = 10;
+const int           SEEDBANK_MAX = 14;
 const int           SEED_BANK_OFFSET_X = 0;
 const int           SEED_BANK_OFFSET_X_END = 10;
 const int			SEED_CHOOSER_EXTRA_HEIGHT = 120;

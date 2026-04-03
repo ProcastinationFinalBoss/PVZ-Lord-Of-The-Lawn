@@ -670,7 +670,11 @@ void Plant::PlantInitialize(int theGridX, int theGridY, SeedType theSeedType, Se
         }
         break;
     case SeedType::SEED_HYPNOSHROOM:
-        mStateCountdown = 1500;
+        if (mSide == 1)
+        {
+            mStateCountdown = 1500;
+            mBonkChoyPunchCD = 0.0f;
+        }
         break;
     case SeedType::SEED_CHOMPER:
         mState = PlantState::STATE_READY;
@@ -2031,24 +2035,40 @@ void Plant::UpdateSpikeweed()
 
 void Plant::UpdateHypnoShroom()
 {
+    int anActualStateCountdown = mStateCountdown - mBonkChoyPunchCD;
     if (mState == PlantState::STATE_NOTREADY)
     {
-        if (mStateCountdown <= 0)
+        if (anActualStateCountdown <= 0)
         {
-            PlayBodyReanim("anim_shooting", ReanimLoopType::REANIM_LOOP, 10, 0.0f);
+            PlayBodyReanim("anim_shooting", ReanimLoopType::REANIM_LOOP, 20, 16.0f);
             mState = PlantState::STATE_READY;
-            mStateCountdown = 500;
+            mStateCountdown = 1000;
         }
     }
     else if (mState == PlantState::STATE_READY)
     {
+        mBonkChoyPunchCD += 0.25f;
         if (mBoard->ZombieTryToGet(mTargetZombieID))
         {
             Zombie* aZombie = mBoard->ZombieTryToGet(mTargetZombieID);
-            if (aZombie->IsWalkingBackwards() && aZombie->mPosX > BOARD_WIDTH - 150)
+            //int aZombieCount = 0;
+            //Zombie* anAnotherZombie = nullptr;
+            //while (mBoard->IterateZombies(anAnotherZombie))
+            //{
+            //    if (!anAnotherZombie->IsDeadOrDying() && anAnotherZombie->IsOnBoard() && anAnotherZombie->mHasHead && !anAnotherZombie->mMindControlled && anAnotherZombie->mRow == aZombie->mRow)
+            //    {
+            //        aZombieCount++;
+            //    }
+            //}
+            //if (aZombieCount == 0)
+            //{
+            //    mTargetZombieID = ZombieID::ZOMBIEID_NULL;
+            //}
+            if ( aZombie->IsDeadOrDying() || aZombie->mPosX > BOARD_WIDTH - 200)
             {
                 mTargetZombieID = ZombieID::ZOMBIEID_NULL;
             }
+
 
         }
         if (!mBoard->ZombieTryToGet(mTargetZombieID))
@@ -2057,7 +2077,7 @@ void Plant::UpdateHypnoShroom()
 
             if (aZombie)
             {
-                mStateCountdown += 500;
+                mStateCountdown = min(mStateCountdown + 300, 1000);
                 mTargetZombieID = mBoard->ZombieGetID(aZombie);
                 mApp->PlayFoley(FoleyType::FOLEY_FLOOP);
 
@@ -2065,8 +2085,7 @@ void Plant::UpdateHypnoShroom()
                 mApp->AddTodParticle(aZombie->mPosX + 60.0f, aZombie->mPosY + 40.0f, mRenderOrder + 1, ParticleEffect::PARTICLE_MIND_CONTROL);
                 aZombie->TrySpawnLevelAward();
 
-                aZombie->mVelX = 1.17f;
-                aZombie->mAnimTicksPerFrame = 18;
+                aZombie->PickRandomSpeed();
                 aZombie->UpdateAnimSpeed();
 
                 if (aZombie->mZombieType == ZombieType::ZOMBIE_DANCER && !mApp->mPlayingQuickplay)
@@ -2075,16 +2094,17 @@ void Plant::UpdateHypnoShroom()
                 }
             }
         }
-        if (mStateCountdown <= 0)
+        if (anActualStateCountdown <= 0)
         {
             mTargetZombieID = ZombieID::ZOMBIEID_NULL;
             Reanimation* aBodyReanim = mApp->ReanimationGet(mBodyReanimID);
             mState = PlantState::STATE_NOTREADY;
-            mStateCountdown = 1500;
+            mStateCountdown = 2500;
             PlayIdleAnim(aBodyReanim->mDefinition->mFPS);
+            mBonkChoyPunchCD = 0.0f;
         }
     }
-    mFreeInt = mStateCountdown;
+    mFreeInt = anActualStateCountdown;
 }
 
 
@@ -6798,6 +6818,8 @@ int Plant::GetCost(SeedType theSeedType, SeedType theImitaterType)
         return 200;
     else if (aActualType == SeedType::SEED_INSTANT_COFFEE && GetPlantSide(aActualType) == 1)
         return 100;
+    else if (aActualType == SeedType::SEED_HYPNOSHROOM && GetPlantSide(aActualType) == 1)
+        return 175;
  
     switch (theSeedType)
     {
@@ -7086,37 +7108,92 @@ void Plant::PlayIdleAnim(float theRate)
 
 Zombie* Plant::GetRandomZombie(SeedType theSeedType)
 {
-    int aZombieCount = 0;
     Zombie* aZombie = nullptr;
+    int aRowCount[MAX_GRID_SIZE_Y] = { 0 };
+
     while (mBoard->IterateZombies(aZombie))
     {
-        if ((theSeedType == SeedType::SEED_HYPNOSHROOM && !aZombie->mMindControlled) || (theSeedType != SeedType::SEED_HYPNOSHROOM))
+        if (!aZombie->IsDeadOrDying() && aZombie->IsOnBoard() && aZombie->mHasHead)
         {
-            if (!aZombie->IsDeadOrDying() && aZombie->IsOnBoard())
+            aRowCount[aZombie->mRow]++;
+        }
+    }
+
+    int aMaxZombies = 0;
+    int aBetterRow = -1;
+    int aNumTies = 0;
+
+
+    for (int i = 0; i < MAX_GRID_SIZE_Y; ++i)
+    {
+        if (aRowCount[i] > aMaxZombies)
+        {
+            aMaxZombies = aRowCount[i];
+            aBetterRow = i;
+            aNumTies = 1;
+        }
+        else if (aRowCount[i] == aMaxZombies && aMaxZombies > 0)
+        {
+            aNumTies++;
+            if (RandRangeInt(0, aNumTies - 1) == 0)
             {
-                aZombieCount++;
+                aBetterRow = i;
             }
+        }
+    }
+
+    if (aBetterRow == -1) return nullptr;
+
+    // HYPNO-SHROOM (Weakest First, Nearest Second)
+    if (theSeedType == SeedType::SEED_HYPNOSHROOM)
+    {
+        Zombie* aBestZombie = nullptr;
+        float aHighestWeight = -9999999.0f;
+
+        aZombie = nullptr;
+        while (mBoard->IterateZombies(aZombie))
+        {
+            if (aZombie->mRow == aBetterRow && !aZombie->mMindControlled &&
+                !aZombie->IsDeadOrDying() && aZombie->IsOnBoard() && aZombie->mHasHead)
+            {
+                int aTotalHealth = aZombie->mBodyHealth * 2 + aZombie->mShieldHealth + aZombie->mHelmHealth * 2;
+
+                float aWeight = (float)(-aTotalHealth * 5);
+
+                aWeight -= aZombie->mX;
+
+                if (aBestZombie == nullptr || aWeight > aHighestWeight)
+                {
+                    aHighestWeight = aWeight;
+                    aBestZombie = aZombie;
+                }
+            }
+        }
+        return aBestZombie;
+    }
+
+    // OTHER SEEDS (Original Random Logic)
+    int aZombieCount = 0;
+    aZombie = nullptr;
+    while (mBoard->IterateZombies(aZombie))
+    {
+        if (!aZombie->IsDeadOrDying() && aZombie->IsOnBoard() && aZombie->mHasHead && !aZombie->mMindControlled)
+        {
+            aZombieCount++;
         }
     }
 
     if (aZombieCount == 0) return nullptr;
 
     int aRandomIdx = Rand(aZombieCount);
-
     int aCurrentIdx = 0;
     aZombie = nullptr;
     while (mBoard->IterateZombies(aZombie))
     {
-        if ((theSeedType == SeedType::SEED_HYPNOSHROOM && !aZombie->mMindControlled) || (theSeedType != SeedType::SEED_HYPNOSHROOM))
+        if (!aZombie->IsDeadOrDying() && aZombie->IsOnBoard() && aZombie->mHasHead && !aZombie->mMindControlled)
         {
-            if (!aZombie->IsDeadOrDying() && aZombie->IsOnBoard())
-            {
-                if (aCurrentIdx == aRandomIdx)
-                {
-                    return aZombie;
-                }
-                aCurrentIdx++;
-            }
+            if (aCurrentIdx == aRandomIdx) return aZombie;
+            aCurrentIdx++;
         }
     }
 

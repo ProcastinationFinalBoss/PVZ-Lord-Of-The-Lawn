@@ -1327,6 +1327,7 @@ void Board::InitSurvivalStage()
 	{
 		SeedPacket* aPacket = &mSeedBank->mSeedPackets[i];
 		aPacket->mX = GetSeedPacketPositionX(i);
+		aPacket->mY = GetSeedPacketPositionY(i);
 		aPacket->mPacketType = SeedType::SEED_NONE;
 	}
 
@@ -1488,7 +1489,8 @@ void Board::InitLevel()
 		SeedPacket* aPacket = &mSeedBank->mSeedPackets[i];
 		aPacket->mIndex = i;
 		aPacket->mX = GetSeedPacketPositionX(i);
-		aPacket->mY = 8;
+		//aPacket->mY = 8;
+		aPacket->mY = GetSeedPacketPositionY(i);
 		aPacket->mPacketType = SeedType::SEED_NONE;
 	}
 	if (mApp->IsSlotMachineLevel())
@@ -5115,6 +5117,8 @@ void Board::UpdateGameObjects()
 	}
 
 	Coin* aCoin = nullptr;
+	
+	
 	while (IterateCoins(aCoin))
 	{
 		aCoin->Update();
@@ -5133,6 +5137,8 @@ void Board::UpdateGameObjects()
 	{
 		mSeedBank->mSeedPackets[i].Update();
 	}
+	//mSeedBank->UpdateExtraImageAnimation();
+
 }
 
 void Board::StopAllZombieSounds()
@@ -5924,7 +5930,6 @@ void Board::Update()
 	{
 		mApp->UpdateCrazyDave();
 	}
-	// In Board::Update(), replace the single timer decrement with:
 	if (!mPaused)
 	{
 		for (int i = 0; i < MAX_DEBUG_AREA_RECTS; i++)
@@ -9278,15 +9283,27 @@ int Board::LeftFogColumn()
 	TOD_ASSERT();
 }
 
+int Board::GetSeedPacketPositionY(int theIndex)
+{
+	if (!HasConveyorBeltSeedBank())
+	{
+		return 8 + (theIndex / 10) * 80;
+	}
+	return 8;
+}
+
 int Board::GetSeedPacketPositionX(int theIndex)
 {
-	if (mApp->IsSlotMachineLevel())			return theIndex * 59 + 247;
-	if (HasConveyorBeltSeedBank())			return theIndex * 50 + 91;
-	
+	//if (mApp->IsSlotMachineLevel())			return theIndex * 59 + 247;
+	//if (HasConveyorBeltSeedBank())			return theIndex * 50 + 91;
+	if (mApp->IsSlotMachineLevel())			return (theIndex % 10) * 59 + 247;
+	if (HasConveyorBeltSeedBank())			return (theIndex % 10) * 50 + 91;
 	if (mSeedBank->mNumPackets <= 7)		return theIndex * 59 + 85;
 	else if (mSeedBank->mNumPackets == 8)	return theIndex * 54 + 81;
 	else if (mSeedBank->mNumPackets == 9)	return theIndex * 52 + 80;
-	else									return theIndex * 51 + 79;
+	//else									return theIndex * 51 + 79;
+	else									return (theIndex % 10) * 51 + 79;
+
 }
 
 int Board::GetSeedBankExtraWidth()

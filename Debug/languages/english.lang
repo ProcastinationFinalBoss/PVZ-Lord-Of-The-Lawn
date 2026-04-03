@@ -721,8 +721,8 @@ who play a valuable role in our ecology. We can and should do more to bring them
 [HYPNO_SHROOM_SIDEB]
 {STAT}SIDE B SPECIAL:
 {KEYWORD}- Every so often, Hypno-shroom activates its ability for a limited time
-{KEYWORD}- When activated, Hypno will always try to find hypnotize a zombie during the duration, prioritizing weak foes in lanes with crowds. The hypnotized zombie gains a massive increase in speed.
-{KEYWORD}- When the target dies or walks off the lawn, the time limit will increase and Hypno-shroom is allowed to find another target
+{KEYWORD}- When activated, Hypno-shroom will always try to find and hypnotize a zombie under a time limit, prioritizing weak foes in lanes with crowds. The hypnotized zombie gains a massive increase in speed.
+{KEYWORD}- Target dying or walking off the lawn, increase the time limit and allows Hypno-shroom to find another target
 {KEYWORD}- The longer the ability goes on, the faster the time will deplete
 
 [SCAREDY_SHROOM_DESCRIPTION_HEADER]

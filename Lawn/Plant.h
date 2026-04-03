@@ -364,7 +364,7 @@ public:
     int                     mSideMask;
 };
 
-extern const int kPlantAlmanacStatAllSides; // Use -1 for all sides, or 1 << sideIndex for a specific side (Side A = 1).
+extern const int kPlantAlmanacStatAllSides; // Use -1 for all sides
 extern std::vector<PlantAlmanacStat> gPlantAlmanacStats[SeedType::NUM_SEED_TYPES];
 
 int GetPlantAlmanacStatSideMaskForSide(int theSide);
