@@ -6,8 +6,66 @@
 #include "../../Sexy.TodLib/TodCommon.h"
 #include "../../SexyAppFramework/Buffer.h"
 #include "../../SexyAppFramework/SexyAppBase.h"
+// CHANGE 5
+#include <climits>
+#include <cstdlib>
+// END OF CHANGE 5
 
-static int gUserVersion = 12;
+// CHANGE 2
+static int gUserVersion = 13;
+static int gLegacyUserVersion = 12;
+
+static int InferLegacyPlantSideCount(DataSync& theSync)
+{
+	DataReader* aReader = theSync.GetReader();
+	if (!aReader)
+	{
+		return SeedType::NUM_SEED_TYPES;
+	}
+
+	const int aCurrentPlantSideCount = SeedType::NUM_SEED_TYPES;
+	const long aBytesPerPlantSideEntry = (long)sizeof(unsigned long);
+	const long aFixedLongBytesAfterPlantSides = 21L * (long)sizeof(unsigned long);
+	const long aFixedBoolBytesAfterPlantSides = 40L * (long)sizeof(bool);
+	const long aFixedTailBytes = aFixedLongBytesAfterPlantSides + aFixedBoolBytesAfterPlantSides;
+	const long aBytesLeft = (long)aReader->GetDataLen() - (long)aReader->GetDataPos();
+
+	int aBestCount = aCurrentPlantSideCount;
+	int aBestDistance = INT_MAX;
+	for (int aCandidateCount = 0; aCandidateCount <= 512; aCandidateCount++)
+	{
+		long aBytesAfterPlantSides = aBytesLeft - (long)aCandidateCount * aBytesPerPlantSideEntry - aFixedTailBytes;
+		if (aBytesAfterPlantSides < 0)
+		{
+			break;
+		}
+
+		if (aBytesAfterPlantSides % (long)sizeof(PottedPlant) != 0)
+		{
+			continue;
+		}
+
+		long aPlantCount = aBytesAfterPlantSides / (long)sizeof(PottedPlant);
+		if (aPlantCount < 0 || aPlantCount > MAX_POTTED_PLANTS)
+		{
+			continue;
+		}
+
+		int aDistance = abs(aCandidateCount - aCurrentPlantSideCount);
+		if (aDistance < aBestDistance)
+		{
+			aBestDistance = aDistance;
+			aBestCount = aCandidateCount;
+			if (aDistance == 0)
+			{
+				break;
+			}
+		}
+	}
+
+	return aBestCount;
+}
+// END OF CHANGE 2
 
 PlayerInfo::PlayerInfo()
 {
@@ -31,10 +89,12 @@ void PlayerInfo::SyncDetails(DataSync& theSync)
 	int aVersion = gUserVersion;
 	theSync.SyncLong(aVersion);
 	theSync.SetVersion(aVersion);
-	if (aVersion != gUserVersion)
+	// CHANGE 3
+	if (aVersion != gUserVersion && aVersion != gLegacyUserVersion)
 	{
 		return;
 	}
+	// END OF CHANGE 3
 
 	theSync.SyncLong(mLevel);
 	theSync.SyncLong(mCoins);
@@ -47,10 +107,29 @@ void PlayerInfo::SyncDetails(DataSync& theSync)
 	{
 		theSync.SyncLong(mPurchases[i]);
 	}
-	for (int i = 0; i < SeedType::NUM_SEED_TYPES; i++)
+	// CHANGE 4
+	int aSerializedPlantSideCount = SeedType::NUM_SEED_TYPES;
+	if (aVersion >= gUserVersion)
+	{
+		theSync.SyncLong(aSerializedPlantSideCount);
+	}
+	else if (theSync.GetReader())
+	{
+		aSerializedPlantSideCount = InferLegacyPlantSideCount(theSync);
+	}
+
+	int aPlantSideCopyCount = min(aSerializedPlantSideCount, (int)SeedType::NUM_SEED_TYPES);
+	for (int i = 0; i < aPlantSideCopyCount; i++)
 	{
 		theSync.SyncLong(mPlantSides[i]);
 	}
+
+	for (int i = aPlantSideCopyCount; i < aSerializedPlantSideCount; i++)
+	{
+		int aIgnoredPlantSide = 0;
+		theSync.SyncLong(aIgnoredPlantSide);
+	}
+	// END OF CHANGE 4
 	theSync.SyncLong(mPlayTimeActivePlayer);
 	theSync.SyncLong(mPlayTimeInactivePlayer);
 	theSync.SyncLong(mHasUsedCheatKeys);
@@ -72,7 +151,7 @@ void PlayerInfo::SyncDetails(DataSync& theSync)
 	theSync.SyncLong(mHasSeenUpsell);
 	theSync.SyncLong(mPlaceHolderPlayerStats);
 	theSync.SyncLong(mNumPottedPlants);
-	
+
 	TOD_ASSERT(mNumPottedPlants <= MAX_POTTED_PLANTS);
 	for (int i = 0; i < mNumPottedPlants; i++)
 	{

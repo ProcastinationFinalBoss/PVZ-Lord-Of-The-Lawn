@@ -990,7 +990,7 @@ void SeedBank::UpdateExtraImageAnimation()
 {
 	constexpr int ANIMATION_TIME = 40;
 	int anExtraImageHeight = IMAGE_SEEDBANK->GetHeight() - 8;
-	constexpr int SLIDING_DELAY = 20; 
+	constexpr int SLIDING_DELAY = 60; 
 
 	int aChosenSeedsCount = CountChosenSeeds();
 
@@ -1054,10 +1054,27 @@ void SeedBank::Draw(Graphics* g)
 		Rect theSrcRect(IMAGE_SEEDBANK->mWidth - aExtraWidth - 12, 0, aExtraWidth + 12, IMAGE_SEEDBANK->mHeight);
 		Rect theSrcRectExtra(IMAGE_SEEDBANK->mWidth - aExtraWidth - 12, 0, aExtraWidth + 12, IMAGE_SEEDBANK->mHeight);
 
-		int aExtraImageY = FloatRoundToInt(mExtraImageOffset);
-		g->DrawImage(IMAGE_SEEDBANK, 0, aExtraImageY);
-		g->DrawImage(IMAGE_SEEDBANK, IMAGE_SEEDBANK->mWidth - 12, aExtraImageY, theSrcRectExtra);
-		
+		bool aDrawExtraSeedBankInBoardLayer = !(mApp->mGameScene == GameScenes::SCENE_LEVEL_INTRO && mApp->mSeedChooserScreen && mBoard->mCutScene && mBoard->mCutScene->mSeedChoosing);
+
+		if (aDrawExtraSeedBankInBoardLayer)
+		{
+			//int aExtraImageY = FloatRoundToInt(mExtraImageOffset);
+			//g->DrawImage(IMAGE_SEEDBANK, 0, aExtraImageY);
+			mBoard->mSeedBank->UpdateExtraImageAnimation();
+			int aSeedBankY = mBoard->mSeedBank->mY - mY;
+			int aExtraImageY = FloatRoundToInt(mBoard->mSeedBank->mExtraImageOffset);
+
+			int aImageWidth = IMAGE_SEEDBANK->GetWidth();
+			int aImageHeight = IMAGE_SEEDBANK->GetHeight();
+			int aHalfWidth = aImageWidth / 2;
+
+			// Right half source rect
+			Rect aRightHalfSrcRect(aHalfWidth, 0, aHalfWidth, aImageHeight);
+
+
+			// Draw right half normally on the right (x=400 to x=600)
+			g->DrawImage(IMAGE_SEEDBANK, 600 - aHalfWidth, aSeedBankY + aExtraImageY, aRightHalfSrcRect);
+		}
 		g->DrawImage(IMAGE_SEEDBANK, 0, 0);
 		g->DrawImage(IMAGE_SEEDBANK, IMAGE_SEEDBANK->mWidth - 12, 0, theSrcRect);
 	}

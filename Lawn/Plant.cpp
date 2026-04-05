@@ -284,6 +284,8 @@ PlantDefinition gPlantDefs[SeedType::NUM_SEED_TYPES] = {
     { SeedType::SEED_SUNBEAN,        nullptr, ReanimationType::REANIM_SUNBEANFEMALE,    0,  75,    1500,    PlantSubClass::SUBCLASS_NORMAL,    0,    _S("SUNBEAN") },
     { SeedType::SEED_SAKURA,        nullptr, ReanimationType::REANIM_SAKURA,    0,  425,    1500,    PlantSubClass::SUBCLASS_NORMAL,    0,    _S("SAKURA") },
     { SeedType::SEED_SPORESHROOM,        nullptr, ReanimationType::REANIM_SPORESHROOM,    0,  175,    1500,    PlantSubClass::SUBCLASS_SHOOTER,    400,    _S("SPORESHROOM") },
+    { SeedType::SEED_ACIDLEMON,        nullptr, ReanimationType::REANIM_ACIDLEMON,    0,  200,    750,    PlantSubClass::SUBCLASS_SHOOTER,    250,    _S("ACIDLEMON") },
+    { SeedType::SEED_STINGER,        nullptr, ReanimationType::REANIM_STINGER,    0,  200,    750,    PlantSubClass::SUBCLASS_NORMAL,    400,    _S("STINGER") },
     { SeedType::SEED_SLINGPEA,        nullptr, ReanimationType::REANIM_SLINGPEA,    0,  175,    5000,    PlantSubClass::SUBCLASS_SHOOTER,    300,    _S("SLINGPEA") },
     { SeedType::SEED_IMITATER,          nullptr, ReanimationType::REANIM_IMITATER,      33, 0,      750,    PlantSubClass::SUBCLASS_NORMAL,     0,      _S("IMITATER") },
     { SeedType::SEED_EXPLODE_O_NUT,     nullptr, ReanimationType::REANIM_WALLNUT,       2,  0,      3000,   PlantSubClass::SUBCLASS_NORMAL,     0,      _S("EXPLODE_O_NUT") },
@@ -2051,6 +2053,10 @@ void Plant::UpdateHypnoShroom()
         if (mBoard->ZombieTryToGet(mTargetZombieID))
         {
             Zombie* aZombie = mBoard->ZombieTryToGet(mTargetZombieID);
+            if (aZombie->mZombieAge % 5 == 0)
+            {
+                aZombie->TakeDamage(1, 8U);
+            }
             //int aZombieCount = 0;
             //Zombie* anAnotherZombie = nullptr;
             //while (mBoard->IterateZombies(anAnotherZombie))
@@ -2064,7 +2070,7 @@ void Plant::UpdateHypnoShroom()
             //{
             //    mTargetZombieID = ZombieID::ZOMBIEID_NULL;
             //}
-            if ( aZombie->IsDeadOrDying() || aZombie->mPosX > BOARD_WIDTH - 200)
+            if ( aZombie->IsDeadOrDying() || aZombie->mPosX > BOARD_WIDTH - 200 || !aZombie->mHasHead)
             {
                 mTargetZombieID = ZombieID::ZOMBIEID_NULL;
             }
@@ -2086,6 +2092,10 @@ void Plant::UpdateHypnoShroom()
                 aZombie->TrySpawnLevelAward();
 
                 aZombie->PickRandomSpeed();
+                if (mBoard->PixelToGridXKeepOnBoard(aZombie->mX, aZombie->mY) < 3)
+                {
+                    aZombie->mVelX *= 2;
+                }
                 aZombie->UpdateAnimSpeed();
 
                 if (aZombie->mZombieType == ZombieType::ZOMBIE_DANCER && !mApp->mPlayingQuickplay)
@@ -7113,7 +7123,7 @@ Zombie* Plant::GetRandomZombie(SeedType theSeedType)
 
     while (mBoard->IterateZombies(aZombie))
     {
-        if (!aZombie->IsDeadOrDying() && aZombie->IsOnBoard() && aZombie->mHasHead)
+        if (!aZombie->IsDeadOrDying() && aZombie->IsOnBoard() && aZombie->mHasHead && !aZombie->mMindControlled)
         {
             aRowCount[aZombie->mRow]++;
         }

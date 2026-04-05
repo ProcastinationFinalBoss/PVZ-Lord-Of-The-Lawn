@@ -6867,6 +6867,11 @@ void Board::DrawGameObjects(Graphics* g)
 			break;
 		}
 	}
+	//SexyString aMouseCoords = StrFormat(_S("(%d, %d)"),
+	//	mApp->mWidgetManager->mLastMouseX - mX,
+	//	mApp->mWidgetManager->mLastMouseY - mY);
+	//int aStringWidth = Sexy::FONT_HOUSEOFTERROR16->StringWidth(aMouseCoords);
+	//TodDrawString(g, aMouseCoords, mApp->mWidgetManager->mLastMouseX - mX, mApp->mWidgetManager->mLastMouseY - mY - 10, Sexy::FONT_CONTINUUMBOLD14, Color::White, DrawStringJustification::DS_ALIGN_CENTER);
 
 	TodHesitationTrace("end draw");
 }
@@ -7854,7 +7859,6 @@ void Board::DrawUITop(Graphics* g)
 		g->SetColor(Color(0, 0, 0));
 		g->FillRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT);
 	}
-
 	if (StageHasFog())
 	{
 		DrawTopRightUI(g);

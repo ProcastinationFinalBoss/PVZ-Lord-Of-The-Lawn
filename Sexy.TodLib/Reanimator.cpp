@@ -173,6 +173,8 @@ ReanimationParams gLawnReanimationArray[(int)ReanimationType::NUM_REANIMS] = {
 	{ ReanimationType::REANIM_SAKURA,							"reanim\\DanmakuSakura.reanim",							0 },
 	{ ReanimationType::REANIM_SUNBEANFEMALE,							"reanim\\SunBean.reanim",							0 },
 	{ ReanimationType::REANIM_SPORESHROOM,							"reanim\\SporeShroom.reanim",							0 },
+	{ ReanimationType::REANIM_ACIDLEMON,							"reanim\\AcidicLemon.reanim",							0 },
+	{ ReanimationType::REANIM_STINGER,							"reanim\\Stinger_animation.reanim",							0 },
 	{ ReanimationType::REANIM_SLINGPEA,							"reanim\\SlingPea.reanim",							0 },
 };
 

@@ -4845,7 +4845,7 @@ void Zombie::AnimateChewSound()
     Plant* aPlant = FindPlantTarget(ZombieAttackType::ATTACKTYPE_CHEW);
     if (aPlant)
     {
-        if (aPlant->mSeedType == SeedType::SEED_HYPNOSHROOM && !aPlant->mIsAsleep && aPlant->mSide != 0)
+        if (aPlant->mSeedType == SeedType::SEED_HYPNOSHROOM && !aPlant->mIsAsleep && aPlant->mSide != 1)
         {
             mApp->PlayFoley(FoleyType::FOLEY_FLOOP);
             aPlant->Die();
@@ -7066,35 +7066,35 @@ void Zombie::StartMindControlled()
     DropAllSunBeanSun();
     mMindControlled = true;
     mLastPortalX = -1;
-    mBodyHealth = mBodyMaxHealth;
-    if (mHelmType != HelmType::HELMTYPE_NONE)
-    {
-        mHelmHealth = mHelmMaxHealth;
-    }
-    if (mShieldType != ShieldType::SHIELDTYPE_NONE)
-    {
-        mShieldHealth = mShieldMaxHealth;
-    }
-        int aDamageIndexAfterDamage = GetHelmDamageIndex();
-    Reanimation* aBodyReanim = mApp->ReanimationTryToGet(mBodyReanimID);
-    if (mHelmType == HelmType::HELMTYPE_TRAFFIC_CONE)
-    {
-        aBodyReanim->SetImageOverride("anim_cone", IMAGE_REANIM_ZOMBIE_CONE1);
-    }
-    else if (mHelmType == HelmType::HELMTYPE_PAIL)
-    {
-        aBodyReanim->SetImageOverride("anim_bucket", IMAGE_REANIM_ZOMBIE_BUCKET1);
-    }
-    else if (mHelmType == HelmType::HELMTYPE_DIGGER)
-    {
-        TOD_ASSERT(aBodyReanim);
-        aBodyReanim->SetImageOverride("Zombie_digger_hardhat", IMAGE_REANIM_ZOMBIE_DIGGER_HARDHAT);
-    }
-    else if (mHelmType == HelmType::HELMTYPE_FOOTBALL)
-    {
-        TOD_ASSERT(aBodyReanim);
-        aBodyReanim->SetImageOverride("zombie_football_helmet", IMAGE_REANIM_ZOMBIE_FOOTBALL_HELMET);
-    }
+    //mBodyHealth = mBodyMaxHealth;
+    //if (mHelmType != HelmType::HELMTYPE_NONE)
+    //{
+    //    mHelmHealth = mHelmMaxHealth;
+    //}
+    //if (mShieldType != ShieldType::SHIELDTYPE_NONE)
+    //{
+    //    mShieldHealth = mShieldMaxHealth;
+    //}
+    //    int aDamageIndexAfterDamage = GetHelmDamageIndex();
+    //Reanimation* aBodyReanim = mApp->ReanimationTryToGet(mBodyReanimID);
+    //if (mHelmType == HelmType::HELMTYPE_TRAFFIC_CONE)
+    //{
+    //    aBodyReanim->SetImageOverride("anim_cone", IMAGE_REANIM_ZOMBIE_CONE1);
+    //}
+    //else if (mHelmType == HelmType::HELMTYPE_PAIL)
+    //{
+    //    aBodyReanim->SetImageOverride("anim_bucket", IMAGE_REANIM_ZOMBIE_BUCKET1);
+    //}
+    //else if (mHelmType == HelmType::HELMTYPE_DIGGER)
+    //{
+    //    TOD_ASSERT(aBodyReanim);
+    //    aBodyReanim->SetImageOverride("Zombie_digger_hardhat", IMAGE_REANIM_ZOMBIE_DIGGER_HARDHAT);
+    //}
+    //else if (mHelmType == HelmType::HELMTYPE_FOOTBALL)
+    //{
+    //    TOD_ASSERT(aBodyReanim);
+    //    aBodyReanim->SetImageOverride("zombie_football_helmet", IMAGE_REANIM_ZOMBIE_FOOTBALL_HELMET);
+    //}
     // SELF NOTE: Add more helmet + shield fixes (after assigning reanims for them)
     if (mZombieType == ZombieType::ZOMBIE_DANCER)
     {
@@ -7161,7 +7161,7 @@ void Zombie::EatPlant(Plant* thePlant)
         thePlant->mSeedType == SeedType::SEED_CHERRYBOMB || 
         thePlant->mSeedType == SeedType::SEED_DOOMSHROOM ||
         thePlant->mSeedType == SeedType::SEED_ICESHROOM || 
-        thePlant->mSeedType == SeedType::SEED_HYPNOSHROOM || 
+        (thePlant->mSeedType == SeedType::SEED_HYPNOSHROOM && thePlant->mSide != 1) ||
         thePlant->mState == PlantState::STATE_FLOWERPOT_INVULNERABLE ||
         thePlant->mState == PlantState::STATE_LILYPAD_INVULNERABLE || 
         thePlant->mState == PlantState::STATE_SQUASH_LOOK || 

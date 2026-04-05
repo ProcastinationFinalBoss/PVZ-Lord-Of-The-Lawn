@@ -21,7 +21,19 @@
 #include "../../SexyAppFramework/WidgetManager.h"
 #include "../../SexyAppFramework/Slider.h"
 
-const Rect cSeedClipRect = Rect(0, 123, BOARD_WIDTH, 420 + SEED_CHOOSER_EXTRA_HEIGHT);
+static int GetChooserTopPaddingForSeedBank(const SeedChooserScreen* theSeedChooserScreen)
+{
+	if (theSeedChooserScreen == nullptr || theSeedChooserScreen->mBoard == nullptr || theSeedChooserScreen->mBoard->mSeedBank == nullptr)
+		return 0;
+
+	SeedBank* aSeedBank = theSeedChooserScreen->mBoard->mSeedBank;
+	if (theSeedChooserScreen->mBoard->HasConveyorBeltSeedBank())
+		return 0;
+
+	return FloatRoundToInt(max(0.0f, aSeedBank->mExtraImageOffset));
+}
+
+Rect cSeedClipRect = Rect(0, 123, BOARD_WIDTH, 420 + SEED_CHOOSER_EXTRA_HEIGHT);
 const int cSeedPacketYOffset = 2;
 const int cSeedPacketRows = 8;
 
@@ -304,7 +316,8 @@ void SeedChooserScreen::GetSeedPositionInChooser(int theIndex, int& x, int& y)
 	else
 	{
 		x = theIndex % cSeedPacketRows * 53 + 22;
-		y = theIndex / cSeedPacketRows * (SEED_PACKET_HEIGHT + cSeedPacketYOffset) + (SEED_PACKET_HEIGHT + 53) - mScrollPosition;
+		//y = theIndex / cSeedPacketRows * (SEED_PACKET_HEIGHT + cSeedPacketYOffset) + (SEED_PACKET_HEIGHT + 53) - mScrollPosition;
+		y = theIndex / cSeedPacketRows * (SEED_PACKET_HEIGHT + cSeedPacketYOffset) + (SEED_PACKET_HEIGHT + 53) + GetChooserTopPaddingForSeedBank(this) - mScrollPosition;
 	}
 }
 
@@ -370,12 +383,47 @@ void SeedChooserScreen::Draw(Graphics* g)
 	if (!mBoard->ChooseSeedsOnCurrentLevel() || (mBoard->mCutScene && mBoard->mCutScene->IsBeforePreloading()))
 		return;
 
-	g->DrawImage(Sexy::IMAGE_SEEDCHOOSER_BACKGROUND, 0, 87);
+	//g->DrawImage(Sexy::IMAGE_SEEDCHOOSER_BACKGROUND, 0, 87);
+	//if (mApp->SeedTypeAvailable(SEED_IMITATER))
+	//	g->DrawImage(Sexy::IMAGE_SEEDCHOOSER_IMITATERADDON, IMITATER_POS_X, IMITATER_POS_Y + SEED_CHOOSER_EXTRA_HEIGHT);
+	//TodDrawString(g, _S("[CHOOSE_YOUR_PLANTS]"), 229, 110, Sexy::FONT_DWARVENTODCRAFT18YELLOW, Color::White, DS_ALIGN_CENTER);
+	int aChooserTopPadding = GetChooserTopPaddingForSeedBank(this);
+	int aSeedChooserBackgroundHeight = Sexy::IMAGE_SEEDCHOOSER_BACKGROUND->mHeight;
+	int aSeedChooserHalfHeight = aSeedChooserBackgroundHeight / 2;
+	Rect aTopHalfSrcRect(0, 0, Sexy::IMAGE_SEEDCHOOSER_BACKGROUND->mWidth, aSeedChooserHalfHeight);
+	Rect aBottomHalfSrcRect(0, aSeedChooserHalfHeight, Sexy::IMAGE_SEEDCHOOSER_BACKGROUND->mWidth, aSeedChooserBackgroundHeight - aSeedChooserHalfHeight);
+	g->DrawImage(Sexy::IMAGE_SEEDCHOOSER_BACKGROUND, 0, 87 + aChooserTopPadding, aTopHalfSrcRect);
+	g->DrawImage(Sexy::IMAGE_SEEDCHOOSER_BACKGROUND, 0, 87 + aSeedChooserHalfHeight, aBottomHalfSrcRect);
 	if (mApp->SeedTypeAvailable(SEED_IMITATER))
 		g->DrawImage(Sexy::IMAGE_SEEDCHOOSER_IMITATERADDON, IMITATER_POS_X, IMITATER_POS_Y + SEED_CHOOSER_EXTRA_HEIGHT);
 
-	TodDrawString(g, _S("[CHOOSE_YOUR_PLANTS]"), 229, 110, Sexy::FONT_DWARVENTODCRAFT18YELLOW, Color::White, DS_ALIGN_CENTER);
+	TodDrawString(g, _S("[CHOOSE_YOUR_PLANTS]"), 229, 110 + aChooserTopPadding, Sexy::FONT_DWARVENTODCRAFT18YELLOW, Color::White, DS_ALIGN_CENTER);
 	mSlider->SliderDraw(g);
+	if (!mBoard->HasConveyorBeltSeedBank() && mBoard->mCutScene && mBoard->mCutScene->mSeedChoosing)
+	{
+		//mBoard->mSeedBank->UpdateExtraImageAnimation();
+		//int aExtraWidth = mBoard->GetSeedBankExtraWidth();
+		//Rect aSrcRectExtra(IMAGE_SEEDBANK->mWidth - aExtraWidth - 12, 0, aExtraWidth + 12, IMAGE_SEEDBANK->mHeight);
+		//int aSeedBankX = mBoard->mSeedBank->mX - mX;
+		//int aSeedBankY = mBoard->mSeedBank->mY - mY;
+		//int aExtraImageY = FloatRoundToInt(mBoard->mSeedBank->mExtraImageOffset);
+		//g->DrawImage(IMAGE_SEEDBANK, aSeedBankX, aSeedBankY + aExtraImageY);
+		//g->DrawImage(IMAGE_SEEDBANK, aSeedBankX + IMAGE_SEEDBANK->mWidth - 12, aSeedBankY + aExtraImageY, aSrcRectExtra);
+		mBoard->mSeedBank->UpdateExtraImageAnimation();
+		int aSeedBankY = mBoard->mSeedBank->mY - mY;
+		int aExtraImageY = FloatRoundToInt(mBoard->mSeedBank->mExtraImageOffset);
+
+		int aImageWidth = IMAGE_SEEDBANK->GetWidth();
+		int aImageHeight = IMAGE_SEEDBANK->GetHeight();
+		int aHalfWidth = aImageWidth / 2;
+
+		// Right half source rect
+		Rect aRightHalfSrcRect(aHalfWidth, 0, aHalfWidth, aImageHeight);
+
+
+		// Draw right half normally on the right (x=400 to x=600)
+		g->DrawImage(IMAGE_SEEDBANK, 600 - aHalfWidth, aSeedBankY + aExtraImageY, aRightHalfSrcRect);
+	}
 	for (SeedType aSeedType = SEED_PEASHOOTER; aSeedType < NUM_SEEDS_IN_CHOOSER; aSeedType = (SeedType)(aSeedType + 1))
 	{
 		if (aSeedType != SEED_IMITATER)
@@ -585,7 +633,14 @@ void SeedChooserScreen::Update()
 
 	mRandomButton->mBtnNoDraw = !mApp->mTodCheatKeys;
 	mRandomButton->mDisabled = !mApp->mTodCheatKeys;
+
+	int aChooserTopPadding = GetChooserTopPaddingForSeedBank(this);
+	cSeedClipRect.mY = 123 + aChooserTopPadding;
+	cSeedClipRect.mHeight = 420 + SEED_CHOOSER_EXTRA_HEIGHT - aChooserTopPadding;
+
+
 	mMaxScrollPosition = max(0, (((NUM_SEEDS_IN_CHOOSER - 2) / cSeedPacketRows) * (SEED_PACKET_HEIGHT + cSeedPacketYOffset)) + SEED_PACKET_HEIGHT - cSeedClipRect.mHeight);
+	ResizeSlider();
 	mSlider->mVisible = mMaxScrollPosition != 0;
 	if (mSlider->mVisible)
 	{
@@ -638,9 +693,17 @@ void SeedChooserScreen::Update()
 
 void SeedChooserScreen::MouseWheel(int theDelta)
 {
+	//if (mChooseState != CHOOSE_NORMAL) return;
+	//mScrollAmount -= mBaseScrollSpeed * theDelta;
+	//mScrollAmount -= mScrollAmount * mScrollAccel;
 	if (mChooseState != CHOOSE_NORMAL) return;
 
-	mScrollAmount -= mBaseScrollSpeed * theDelta;
+	int aChooserTopPadding = GetChooserTopPaddingForSeedBank(this);
+
+	float aScrollSpeedMultiplier = (cSeedClipRect.mHeight > 0) ?
+		(float)(420 + SEED_CHOOSER_EXTRA_HEIGHT) / (float)cSeedClipRect.mHeight * 1.25f : 1.0f;
+
+	mScrollAmount -= (mBaseScrollSpeed * aScrollSpeedMultiplier) * theDelta;
 	mScrollAmount -= mScrollAmount * mScrollAccel;
 }
 
@@ -868,7 +931,10 @@ SeedType SeedChooserScreen::SeedHitTest(int x, int y)
 			if (!mApp->SeedTypeAvailable(aSeedType) || aChosenSeed.mSeedState == SEED_PACKET_HIDDEN) continue;
 			if (aChosenSeed.mSeedState == SEED_IN_CHOOSER)
 			{
-				Rect aChosenSeedRect = Rect(aChosenSeed.mX, aChosenSeed.mY + (aChosenSeed.mSeedType != SEED_IMITATER ? -mScrollPosition : 0), SEED_PACKET_WIDTH, SEED_PACKET_HEIGHT);
+				//Rect aChosenSeedRect = Rect(aChosenSeed.mX, aChosenSeed.mY + (aChosenSeed.mSeedType != SEED_IMITATER ? -mScrollPosition : 0), SEED_PACKET_WIDTH, SEED_PACKET_HEIGHT);
+				int aSeedX, aSeedY;
+				GetSeedPositionInChooser(aSeedType, aSeedX, aSeedY);
+				Rect aChosenSeedRect = Rect(aSeedX, aSeedY, SEED_PACKET_WIDTH, SEED_PACKET_HEIGHT);
 				if ((aChosenSeed.mSeedType != SEED_IMITATER ? cSeedClipRect.Contains(x, y) : true) && aChosenSeedRect.Contains(x, y))
 				{
 					return aSeedType;
@@ -938,7 +1004,8 @@ void SeedChooserScreen::ClickedSeedInBank(ChosenSeed& theChosenSeed)
 	theChosenSeed.mStartX = theChosenSeed.mX;
 	theChosenSeed.mStartY = theChosenSeed.mY;
 	GetSeedPositionInChooser(theChosenSeed.mSeedType, theChosenSeed.mEndX, theChosenSeed.mEndY);
-	theChosenSeed.mEndY += theChosenSeed.mSeedType == SEED_IMITATER ? 0 : mScrollPosition;
+	//theChosenSeed.mEndY += theChosenSeed.mSeedType == SEED_IMITATER ? 0 : mScrollPosition;
+
 	theChosenSeed.mSeedState = SEED_FLYING_TO_CHOOSER;
 	theChosenSeed.mImitaterType = SEED_NONE;
 	theChosenSeed.mSeedIndexInBank = 0;
@@ -965,8 +1032,9 @@ void SeedChooserScreen::ClickedSeedInChooser(ChosenSeed& theChosenSeed)
 
 	theChosenSeed.mTimeStartMotion = mSeedChooserAge;
 	theChosenSeed.mTimeEndMotion = mSeedChooserAge + 25;
-	theChosenSeed.mStartX = theChosenSeed.mX;
-	theChosenSeed.mStartY = theChosenSeed.mY - (theChosenSeed.mSeedType == SEED_IMITATER ? 0 : mScrollPosition);
+	//theChosenSeed.mStartX = theChosenSeed.mX;
+	//theChosenSeed.mStartY = theChosenSeed.mY - (theChosenSeed.mSeedType == SEED_IMITATER ? 0 : mScrollPosition);
+	GetSeedPositionInChooser(theChosenSeed.mSeedType, theChosenSeed.mStartX, theChosenSeed.mStartY);
 	GetSeedPositionInBank(mSeedsInBank, theChosenSeed.mEndX, theChosenSeed.mEndY);
 	theChosenSeed.mSeedState = SEED_FLYING_TO_BANK;
 	theChosenSeed.mSeedIndexInBank = mSeedsInBank;
@@ -1124,7 +1192,10 @@ bool SeedChooserScreen::IsOverImitater(int x, int y)
 
 void SeedChooserScreen::ResizeSlider()
 {
-	mSlider->Resize(472, 92, 40, IMAGE_SEEDCHOOSER_BACKGROUND->mHeight - (mApp->SeedTypeAvailable(SEED_IMITATER) ? IMAGE_SEEDCHOOSER_IMITATERADDON->mHeight + 4 : 0) - 11);
+	//mSlider->Resize(472, 92, 40, IMAGE_SEEDCHOOSER_BACKGROUND->mHeight - (mApp->SeedTypeAvailable(SEED_IMITATER) ? IMAGE_SEEDCHOOSER_IMITATERADDON->mHeight + 4 : 0) - 11);
+	int aChooserTopPadding = GetChooserTopPaddingForSeedBank(this);
+	int aSliderHeight = IMAGE_SEEDCHOOSER_BACKGROUND->mHeight - (mApp->SeedTypeAvailable(SEED_IMITATER) ? IMAGE_SEEDCHOOSER_IMITATERADDON->mHeight + 4 : 0) - 11 - aChooserTopPadding;
+	mSlider->Resize(472, 92 + aChooserTopPadding, 40, max(32, aSliderHeight));
 }
 
 void SeedChooserScreen::MouseUp(int x, int y, int theClickCount)

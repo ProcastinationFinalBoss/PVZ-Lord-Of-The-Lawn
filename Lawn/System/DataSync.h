@@ -28,6 +28,10 @@ public:
 	float					ReadFloat();
 	double					ReadDouble();
 	void					ReadString(SexyString& theStr);
+	// CHANGE 1
+	inline unsigned long	GetDataLen() const { return mDataLen; }
+	inline unsigned long	GetDataPos() const { return mDataPos; }
+	// END OF CHANGE 1
 };
 class DataReaderException : public std::exception
 {
